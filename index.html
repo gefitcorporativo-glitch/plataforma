@@ -291,6 +291,7 @@ tbody tr:hover td{background:var(--s2)}
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('painel')">Painel</div>
+    <div class="tab" onclick="switchTab('planejamento')">Planejamento</div>
     <div class="tab" onclick="switchTab('funis')">Funis & Indicadores</div>
     <div class="tab" onclick="switchTab('consultoras')">Equipe</div>
     <div class="tab" onclick="switchTab('relatorio')">Relatório</div>
@@ -336,6 +337,84 @@ tbody tr:hover td{background:var(--s2)}
       <div class="chart-card">
         <h3>Matrículas por dia do desafio</h3>
         <div style="position:relative;height:180px"><canvas id="ch-evol" role="img" aria-label="Evolução">Sem dados.</canvas></div>
+      </div>
+    </div>
+
+    <div id="pan-planejamento" class="panel">
+      <div id="planejamento-restrito" style="display:none;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:14px;padding:32px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:8px">🔒</div><strong>Acesso restrito ao Gestor(a)</strong><br>
+        <span style="font-size:12px;color:var(--td)">O planejamento e as metas são configurados pelo(a) gestor(a) da academia.</span>
+      </div>
+
+      <div id="planejamento-conteudo">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="lbl" style="margin:0">Planejamento do mês</div>
+          <input class="fi" type="month" id="pj-mes" style="max-width:170px" onchange="carregarPlanejamento()">
+        </div>
+        <p style="font-size:12px;color:var(--td);margin-bottom:20px">Estas metas aparecem travadas na tela de lançamento diário.</p>
+
+        <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-lbl">🎯 Metas de faturamento</div><div class="sec-div-line"></div></div>
+        <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
+          <div>
+            <div style="font-weight:700;margin-bottom:8px">Meta 1 — Base</div>
+            <div class="fg"><label class="fl">Faturamento total (R$)</label><input class="fi" type="number" id="pj-m1-fat" placeholder="Ex: 60000"></div>
+            <div class="fg"><label class="fl">Planos novos</label><input class="fi" type="number" id="pj-m1-planos" placeholder="Ex: 20"></div>
+            <div class="fg"><label class="fl">Alunos ativos alvo</label><input class="fi" type="number" id="pj-m1-ativos" placeholder="Ex: 380"></div>
+          </div>
+          <div>
+            <div style="font-weight:700;margin-bottom:8px">Meta 2 — Crescimento</div>
+            <div class="fg"><label class="fl">Faturamento total (R$)</label><input class="fi" type="number" id="pj-m2-fat" placeholder="Ex: 75000"></div>
+            <div class="fg"><label class="fl">Planos novos</label><input class="fi" type="number" id="pj-m2-planos" placeholder="Ex: 25"></div>
+            <div class="fg"><label class="fl">Alunos ativos alvo</label><input class="fi" type="number" id="pj-m2-ativos" placeholder="Ex: 420"></div>
+          </div>
+          <div>
+            <div style="font-weight:700;margin-bottom:8px">Super Meta ⭐</div>
+            <div class="fg"><label class="fl">Faturamento total (R$)</label><input class="fi" type="number" id="pj-ms-fat" placeholder="Ex: 90000"></div>
+            <div class="fg"><label class="fl">Planos novos</label><input class="fi" type="number" id="pj-ms-planos" placeholder="Ex: 35"></div>
+            <div class="fg"><label class="fl">Alunos ativos alvo</label><input class="fi" type="number" id="pj-ms-ativos" placeholder="Ex: 500"></div>
+          </div>
+        </div>
+
+        <div class="sec-div" style="margin-top:24px"><div class="sec-div-line"></div><div class="sec-div-lbl">🏦 Fluxo de caixa — inserção manual mensal</div><div class="sec-div-line"></div></div>
+        <p style="font-size:11px;color:var(--td);margin-bottom:12px">Compensações de cartão + pagamentos à vista. Não aparece no lançamento diário.</p>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Mês atual — recebido (R$)</label><input class="fi" type="number" id="pj-fc-atual" placeholder="0"></div>
+          <div class="fg"><label class="fl">Mês anterior (R$)</label><input class="fi" type="number" id="pj-fc-ant" placeholder="0"></div>
+          <div class="fg"><label class="fl">Mesmo mês — ano anterior (R$)</label><input class="fi" type="number" id="pj-fc-ano-ant" placeholder="0"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Custo fixo mensal (R$)</label><input class="fi" type="number" id="pj-custo" placeholder="0"></div>
+          <div class="fg"><label class="fl">Inadimplência (R$)</label><input class="fi" type="number" id="pj-inadimp" placeholder="0"></div>
+          <div class="fg"><label class="fl">Faturamento mesmo mês — ano ant. (R$)</label><input class="fi" type="number" id="pj-fat-ano-ant" placeholder="0"></div>
+        </div>
+
+        <div class="sec-div" style="margin-top:24px"><div class="sec-div-line"></div><div class="sec-div-lbl">🤝 Encarteiramento e renovações</div><div class="sec-div-line"></div></div>
+        <p style="font-size:11px;color:var(--td);margin-bottom:12px">Inserido no início do mês · base para cálculo de churn e engajamento.</p>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Meta de encarteiramento (%)</label><input class="fi" type="number" id="pj-enc-meta" placeholder="85"></div>
+          <div class="fg"><label class="fl">Alunos encarteirados (atual)</label><input class="fi" type="number" id="pj-enc-atual" placeholder="0"></div>
+          <div class="fg"><label class="fl">Ciclo de renovação (dias)</label>
+            <select class="fi" id="pj-ciclo">
+              <option value="30">30 dias</option>
+              <option value="60">60 dias</option>
+              <option value="90" selected>90 dias</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Planos a renovar no ciclo</label><input class="fi" type="number" id="pj-a-renovar" placeholder="0"></div>
+          <div class="fg"><label class="fl">Renovados (encarteirados)</label><input class="fi" type="number" id="pj-renov-enc" placeholder="0"></div>
+          <div class="fg"><label class="fl">Renovados (não encarteirados)</label><input class="fi" type="number" id="pj-renov-nenc" placeholder="0"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Cancelamentos solicitados</label><input class="fi" type="number" id="pj-cancel" placeholder="0"></div>
+        </div>
+
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--td);margin:20px 0 8px">Meta de carteira por treinador(a)</div>
+        <div id="pj-carteiras" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+
+        <button class="btn-gh" style="margin-top:10px" onclick="salvarPlanejamento()">Salvar planejamento do mês</button>
+        <span id="pj-msg" style="margin-left:12px;font-size:12px;color:var(--gr)"></span>
       </div>
     </div>
 
@@ -899,6 +978,7 @@ const H={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bear
 async function sbGet(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{headers:{...H,'Prefer':''}});if(!r.ok)throw new Error(await r.text());return r.json()}
 async function sbPost(t,b){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:H,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json()}
 async function sbDelete(t,m){const p=Object.entries(m).map(([k,v])=>`${k}=eq.${v}`).join('&');const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{method:'DELETE',headers:{...H,'Prefer':''}});if(!r.ok)throw new Error(await r.text())}
+async function sbUpsert(t,b){const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...H,'Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json()}
 
 // ══ STATE ══
 let sessao=null,db={acs:{}},acId=null;
@@ -2792,8 +2872,97 @@ function exportCSV(){
 }
 
 // TABS / MODAIS / TOAST
-const TABS=['painel','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
-function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();}
+const TABS=['painel','planejamento','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
+function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();}
+
+// ══════════════════════════════════════
+// PLANEJAMENTO — metas mensais, fluxo de caixa manual, encarteiramento
+// ══════════════════════════════════════
+function initPlanejamento(){
+  const restrito=sessao.role==='consultor';
+  document.getElementById('planejamento-restrito').style.display=restrito?'block':'none';
+  document.getElementById('planejamento-conteudo').style.display=restrito?'none':'block';
+  if(restrito)return;
+  const campo=document.getElementById('pj-mes');
+  if(!campo.value)campo.value=new Date().toISOString().slice(0,7);
+  renderCarteirasPlanejamento();
+  carregarPlanejamento();
+}
+function renderCarteirasPlanejamento(){
+  const ac=db.acs[sessao.academia_id];
+  const treinadores=ac?Object.entries(ac.treinadores||{}):[];
+  const wrap=document.getElementById('pj-carteiras');
+  if(!treinadores.length){wrap.innerHTML='<div style="font-size:12px;color:var(--td)">Nenhum(a) treinador(a) cadastrado(a) ainda — cadastre na aba Equipe.</div>';return;}
+  wrap.innerHTML=treinadores.map(([id,t])=>`
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1;font-size:13px">${t.nome}</div>
+      <input class="fi" style="max-width:120px" type="number" id="pj-cart-${id}" placeholder="Meta de alunos">
+    </div>`).join('');
+}
+async function carregarPlanejamento(){
+  const mes=document.getElementById('pj-mes').value;
+  if(!mes||!sessao.academia_id)return;
+  try{
+    const rows=await sbGet('planejamento_mensal',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mes}-01`);
+    const p=rows&&rows[0];
+    const ids=['pj-m1-fat','pj-m1-planos','pj-m1-ativos','pj-m2-fat','pj-m2-planos','pj-m2-ativos','pj-ms-fat','pj-ms-planos','pj-ms-ativos','pj-fc-atual','pj-fc-ant','pj-fc-ano-ant','pj-custo','pj-inadimp','pj-fat-ano-ant','pj-enc-meta','pj-enc-atual','pj-a-renovar','pj-renov-enc','pj-renov-nenc','pj-cancel'];
+    ids.forEach(id=>document.getElementById(id).value='');
+    document.getElementById('pj-ciclo').value='90';
+    if(p){
+      document.getElementById('pj-m1-fat').value=p.meta1_faturamento??'';
+      document.getElementById('pj-m1-planos').value=p.meta1_planos??'';
+      document.getElementById('pj-m1-ativos').value=p.meta1_ativos??'';
+      document.getElementById('pj-m2-fat').value=p.meta2_faturamento??'';
+      document.getElementById('pj-m2-planos').value=p.meta2_planos??'';
+      document.getElementById('pj-m2-ativos').value=p.meta2_ativos??'';
+      document.getElementById('pj-ms-fat').value=p.supermeta_faturamento??'';
+      document.getElementById('pj-ms-planos').value=p.supermeta_planos??'';
+      document.getElementById('pj-ms-ativos').value=p.supermeta_ativos??'';
+      document.getElementById('pj-fc-atual').value=p.fc_atual??'';
+      document.getElementById('pj-fc-ant').value=p.fc_anterior??'';
+      document.getElementById('pj-fc-ano-ant').value=p.fc_ano_anterior??'';
+      document.getElementById('pj-custo').value=p.custo_fixo??'';
+      document.getElementById('pj-inadimp').value=p.inadimplencia??'';
+      document.getElementById('pj-fat-ano-ant').value=p.fat_ano_anterior??'';
+      document.getElementById('pj-enc-meta').value=p.encarteiramento_meta??'';
+      document.getElementById('pj-enc-atual').value=p.encarteirados_atual??'';
+      document.getElementById('pj-ciclo').value=p.ciclo_renovacao_dias||90;
+      document.getElementById('pj-a-renovar').value=p.a_renovar??'';
+      document.getElementById('pj-renov-enc').value=p.renovados_encarteirados??'';
+      document.getElementById('pj-renov-nenc').value=p.renovados_nao_encarteirados??'';
+      document.getElementById('pj-cancel').value=p.cancelamentos??'';
+      const cart=p.carteiras_meta||{};
+      Object.entries(cart).forEach(([id,v])=>{const el=document.getElementById('pj-cart-'+id);if(el)el.value=v;});
+    }
+  }catch(e){console.error('Erro ao carregar planejamento:',e);}
+}
+async function salvarPlanejamento(){
+  const mes=document.getElementById('pj-mes').value;
+  if(!mes){toast('Selecione o mês do planejamento.',true);return;}
+  const num=id=>{const v=document.getElementById(id).value;return v===''?null:parseFloat(v);};
+  const ac=db.acs[sessao.academia_id];
+  const treinadores=ac?Object.keys(ac.treinadores||{}):[];
+  const carteiras_meta={};
+  treinadores.forEach(id=>{const el=document.getElementById('pj-cart-'+id);if(el&&el.value!=='')carteiras_meta[id]=parseFloat(el.value);});
+  const payload={
+    academia_id:sessao.academia_id, mes_referencia:mes+'-01',
+    meta1_faturamento:num('pj-m1-fat'), meta1_planos:num('pj-m1-planos'), meta1_ativos:num('pj-m1-ativos'),
+    meta2_faturamento:num('pj-m2-fat'), meta2_planos:num('pj-m2-planos'), meta2_ativos:num('pj-m2-ativos'),
+    supermeta_faturamento:num('pj-ms-fat'), supermeta_planos:num('pj-ms-planos'), supermeta_ativos:num('pj-ms-ativos'),
+    fc_atual:num('pj-fc-atual'), fc_anterior:num('pj-fc-ant'), fc_ano_anterior:num('pj-fc-ano-ant'),
+    custo_fixo:num('pj-custo'), inadimplencia:num('pj-inadimp'), fat_ano_anterior:num('pj-fat-ano-ant'),
+    encarteiramento_meta:num('pj-enc-meta'), encarteirados_atual:num('pj-enc-atual'),
+    ciclo_renovacao_dias:parseInt(document.getElementById('pj-ciclo').value),
+    a_renovar:num('pj-a-renovar'), renovados_encarteirados:num('pj-renov-enc'), renovados_nao_encarteirados:num('pj-renov-nenc'),
+    cancelamentos:num('pj-cancel'), carteiras_meta, updated_at:Date.now()
+  };
+  try{
+    await sbUpsert('planejamento_mensal',payload);
+    document.getElementById('pj-msg').textContent='✓ Salvo!';
+    setTimeout(()=>document.getElementById('pj-msg').textContent='',2500);
+    toast('Planejamento do mês salvo!');
+  }catch(e){console.error(e);toast('Erro ao salvar planejamento.',true);}
+}
 
 // ══ FERRAMENTAS & SCRIPTS ══
 let ftAtivo='bv';
