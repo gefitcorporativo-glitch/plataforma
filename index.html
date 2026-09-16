@@ -299,6 +299,7 @@ tbody tr:hover td{background:var(--s2)}
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('painel')">Painel</div>
+    <div class="tab" onclick="switchTab('alunos')">Alunos</div>
     <div class="tab" onclick="switchTab('planejamento')">Planejamento</div>
     <div class="tab" onclick="switchTab('diagnostico')">Diagnóstico</div>
     <div class="tab" onclick="switchTab('funis')">Funis & Indicadores</div>
@@ -471,6 +472,64 @@ tbody tr:hover td{background:var(--s2)}
       .diag-bar-fill{height:100%;border-radius:4px}
       .diag-lbl{width:70px;text-align:right;font-size:12px;font-weight:600}
     </style>
+
+    <div id="pan-alunos" class="panel">
+      <div class="grid-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px">
+        <div class="kpi"><div class="kpi-label">ALUNOS ATIVOS</div><div class="kpi-value" id="al-kpi-ativos">—</div></div>
+        <div class="kpi"><div class="kpi-label">NOVOS NO MÊS</div><div class="kpi-value" id="al-kpi-novos">—</div></div>
+        <div class="kpi"><div class="kpi-label">INATIVOS/CANCELADOS</div><div class="kpi-value" id="al-kpi-perdidos">—</div></div>
+        <div class="kpi"><div class="kpi-label">TICKET MÉDIO</div><div class="kpi-value" id="al-kpi-ticket">—</div></div>
+      </div>
+
+      <div class="hero" style="grid-template-columns:1fr;margin-bottom:16px">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:12px">Novo aluno</h3>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Nome</label><input class="fi" id="al-nome" placeholder="Nome completo"></div>
+          <div class="fg"><label class="fl">Telefone</label><input class="fi" id="al-tel" placeholder="(00) 00000-0000"></div>
+          <div class="fg"><label class="fl">Valor do plano (R$)</label><input class="fi" type="number" id="al-valor" placeholder="0,00"></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Tipo de plano</label>
+            <select class="fi" id="al-tipo">
+              <option value="anual">Anual</option><option value="semestral">Semestral</option>
+              <option value="trimestral">Trimestral</option><option value="mensal" selected>Mensal</option>
+              <option value="recorrencia">Recorrência</option><option value="especial">Especial (Programa Exclusivo)</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Grupo de receita</label>
+            <select class="fi" id="al-grupo">
+              <option value="planos_fitness" selected>Planos Fitness</option>
+              <option value="piscina_infantil">Planos Piscina Infantil</option>
+              <option value="piscina_adulto">Planos Piscina Adulto</option>
+              <option value="personal_trainer">Personal Trainer</option>
+              <option value="agregadores">Agregadores (Pass)</option>
+              <option value="produtos">Produtos</option>
+              <option value="servicos_especiais">Serviços Especiais</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Data de matrícula</label><input class="fi" type="date" id="al-data"></div>
+        </div>
+        <button class="btn-gh" onclick="salvarAluno()">Adicionar aluno</button>
+        <span id="al-msg" style="margin-left:12px;font-size:12px;color:var(--gr)"></span>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="lbl" style="margin:0">Todos os alunos</div>
+        <select class="fi" id="al-filtro" style="max-width:160px" onchange="renderAlunos()">
+          <option value="">Todos os status</option>
+          <option value="ativo">Ativos</option>
+          <option value="inativo">Inativos</option>
+          <option value="cancelado">Cancelados</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table id="al-tabela">
+          <thead><tr><th>Nome</th><th>Plano</th><th>Grupo</th><th>Valor</th><th>Matrícula</th><th>Status</th><th></th></tr></thead>
+          <tbody id="al-tbody"><tr><td colspan="7" style="color:var(--td)">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
 
     <!-- FUNIS -->
     <div id="pan-funis" class="panel">
@@ -2926,8 +2985,90 @@ function exportCSV(){
 }
 
 // TABS / MODAIS / TOAST
-const TABS=['painel','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
-function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();}
+const TABS=['painel','alunos','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
+function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();if(t==='alunos')carregarAlunos();}
+
+// ══════════════════════════════════════
+// ALUNOS — roster real
+// ══════════════════════════════════════
+let alunosCache=[];
+async function carregarAlunos(){
+  if(!sessao.academia_id)return;
+  try{
+    alunosCache=await sbGet('alunos',`academia_id=eq.${sessao.academia_id}&order=criado_em.desc`);
+  }catch(e){console.error(e);alunosCache=[];}
+  renderAlunos();
+}
+function renderAlunos(){
+  const filtro=document.getElementById('al-filtro').value;
+  const lista=filtro?alunosCache.filter(a=>a.status===filtro):alunosCache;
+  const tbody=document.getElementById('al-tbody');
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="7" style="color:var(--td)">Nenhum aluno cadastrado ainda.</td></tr>';}
+  else{
+    const tipoLbl={anual:'Anual',semestral:'Semestral',trimestral:'Trimestral',mensal:'Mensal',recorrencia:'Recorrência',especial:'Especial',outros:'Outros'};
+    const grupoLbl={planos_fitness:'Fitness',piscina_infantil:'Piscina Infantil',piscina_adulto:'Piscina Adulto',personal_trainer:'Personal',agregadores:'Agregadores',produtos:'Produtos',servicos_especiais:'Serv. Especiais'};
+    const statusCor={ativo:'var(--gr)',inativo:'var(--am)',cancelado:'var(--re)'};
+    tbody.innerHTML=lista.map(a=>`<tr>
+      <td>${a.nome}</td>
+      <td>${tipoLbl[a.plano_tipo]||'—'}</td>
+      <td>${grupoLbl[a.grupo_receita]||'—'}</td>
+      <td>R$ ${Number(a.valor_plano||0).toFixed(2)}</td>
+      <td>${a.data_matricula?new Date(a.data_matricula+'T00:00:00').toLocaleDateString('pt-BR'):'—'}</td>
+      <td>
+        <select class="fi" style="padding:4px 6px;font-size:11px;color:${statusCor[a.status]}" onchange="mudarStatusAluno('${a.id}',this.value)">
+          <option value="ativo"${a.status==='ativo'?' selected':''}>Ativo</option>
+          <option value="inativo"${a.status==='inativo'?' selected':''}>Inativo</option>
+          <option value="cancelado"${a.status==='cancelado'?' selected':''}>Cancelado</option>
+        </select>
+      </td>
+      <td><button class="btn-gh btn-sm" onclick="excluirAluno('${a.id}')">✕</button></td>
+    </tr>`).join('');
+  }
+  // KPIs
+  const ativos=alunosCache.filter(a=>a.status==='ativo');
+  const mesAtual=new Date().toISOString().slice(0,7);
+  const novos=alunosCache.filter(a=>a.data_matricula&&a.data_matricula.slice(0,7)===mesAtual).length;
+  const perdidos=alunosCache.filter(a=>a.status!=='ativo').length;
+  const ticketMedio=ativos.length?ativos.reduce((s,a)=>s+Number(a.valor_plano||0),0)/ativos.length:0;
+  document.getElementById('al-kpi-ativos').textContent=ativos.length;
+  document.getElementById('al-kpi-novos').textContent=novos;
+  document.getElementById('al-kpi-perdidos').textContent=perdidos;
+  document.getElementById('al-kpi-ticket').textContent='R$ '+ticketMedio.toFixed(2);
+}
+async function salvarAluno(){
+  const nome=document.getElementById('al-nome').value.trim();
+  if(!nome){toast('Digite o nome do aluno.',true);return;}
+  const payload={
+    academia_id:sessao.academia_id,
+    nome, telefone:document.getElementById('al-tel').value||null,
+    plano_tipo:document.getElementById('al-tipo').value,
+    grupo_receita:document.getElementById('al-grupo').value,
+    valor_plano:parseFloat(document.getElementById('al-valor').value)||0,
+    data_matricula:document.getElementById('al-data').value||null,
+    status:'ativo'
+  };
+  try{
+    await sbPost('alunos',payload);
+    document.getElementById('al-msg').textContent='✓ Adicionado!';
+    setTimeout(()=>document.getElementById('al-msg').textContent='',2000);
+    ['al-nome','al-tel','al-valor','al-data'].forEach(id=>document.getElementById(id).value='');
+    carregarAlunos();
+  }catch(e){console.error(e);toast('Erro ao salvar aluno.',true);}
+}
+async function mudarStatusAluno(id,status){
+  try{
+    await fetch(`${SB_URL}/rest/v1/alunos?id=eq.${id}`,{method:'PATCH',headers:H,body:JSON.stringify({status})});
+    toast('Status atualizado!');
+    carregarAlunos();
+  }catch(e){console.error(e);toast('Erro ao atualizar.',true);}
+}
+async function excluirAluno(id){
+  if(!confirm('Remover esse aluno da lista?'))return;
+  try{
+    await sbDelete('alunos',{id});
+    carregarAlunos();
+  }catch(e){console.error(e);toast('Erro ao remover.',true);}
+}
 
 // ══════════════════════════════════════
 // MODO TV — fullscreen, some com a navegação, aumenta fontes
