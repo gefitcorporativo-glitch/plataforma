@@ -359,7 +359,7 @@ tbody tr:hover td{background:var(--s2)}
       <div id="planejamento-conteudo">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
           <div class="lbl" style="margin:0">Planejamento do mês</div>
-          <input class="fi" type="month" id="pj-mes" style="max-width:170px" onchange="carregarPlanejamento()">
+          <input class="fi" type="month" id="pj-mes" style="max-width:170px" onchange="carregarPlanejamento();carregarDespesas(this.value)">
         </div>
         <p style="font-size:12px;color:var(--td);margin-bottom:20px">Estas metas aparecem travadas na tela de lançamento diário.</p>
 
@@ -397,6 +397,18 @@ tbody tr:hover td{background:var(--s2)}
           <div class="fg"><label class="fl">Inadimplência (R$)</label><input class="fi" type="number" id="pj-inadimp" placeholder="0"></div>
           <div class="fg"><label class="fl">Faturamento mesmo mês — ano ant. (R$)</label><input class="fi" type="number" id="pj-fat-ano-ant" placeholder="0"></div>
         </div>
+
+        <div class="sec-div" style="margin-top:24px"><div class="sec-div-line"></div><div class="sec-div-lbl">💳 Recebíveis futuros e reserva estratégica</div><div class="sec-div-line"></div></div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Recebíveis futuros 12m — cartão a compensar (R$)</label><input class="fi" type="number" id="pj-recebiveis" placeholder="0"></div>
+          <div class="fg"><label class="fl">Reserva — mínimo (meses de custo)</label><input class="fi" type="number" id="pj-reserva-min" placeholder="3"></div>
+          <div class="fg"><label class="fl">Reserva — máximo (meses de custo)</label><input class="fi" type="number" id="pj-reserva-max" placeholder="6"></div>
+        </div>
+        <p style="font-size:11px;color:var(--td);margin-top:-4px;margin-bottom:12px">A reserva alvo em R$ é calculada automaticamente: custo fixo mensal × meses definidos aqui.</p>
+
+        <div class="sec-div" style="margin-top:24px"><div class="sec-div-line"></div><div class="sec-div-lbl">📊 Despesas operacionais — meta vs. realizado do mês</div><div class="sec-div-line"></div></div>
+        <div id="pj-despesas" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+        <button class="btn-gh btn-sm" onclick="addLinhaDespesa()" style="margin-bottom:16px">+ categoria de despesa</button>
 
         <div class="sec-div" style="margin-top:24px"><div class="sec-div-line"></div><div class="sec-div-lbl">🤝 Encarteiramento e renovações</div><div class="sec-div-line"></div></div>
         <p style="font-size:11px;color:var(--td);margin-bottom:12px">Inserido no início do mês · base para cálculo de churn e engajamento.</p>
@@ -3161,6 +3173,38 @@ async function salvarDiagnostico(){
 // ══════════════════════════════════════
 // PLANEJAMENTO — metas mensais, fluxo de caixa manual, encarteiramento
 // ══════════════════════════════════════
+function renderLinhasDespesa(lista){
+  const wrap=document.getElementById('pj-despesas');
+  if(!lista.length){wrap.innerHTML='';addLinhaDespesa();return;}
+  wrap.innerHTML='';
+  lista.forEach(d=>addLinhaDespesa(d.categoria,d.meta_mensal,d.realizado_mensal));
+}
+function addLinhaDespesa(categoria='',meta='',realizado=''){
+  const wrap=document.getElementById('pj-despesas');
+  const row=document.createElement('div');
+  row.style.display='flex'; row.style.gap='8px'; row.style.alignItems='center';
+  row.innerHTML=`
+    <input class="fi" style="flex:1.4" placeholder="Categoria (ex: Pessoal, Marketing)" value="${categoria}">
+    <input class="fi" type="number" style="flex:1" placeholder="Meta R$" value="${meta}">
+    <input class="fi" type="number" style="flex:1" placeholder="Realizado R$" value="${realizado}">
+    <button class="btn-gh btn-sm" onclick="this.parentElement.remove()">✕</button>`;
+  wrap.appendChild(row);
+}
+async function carregarDespesas(mes){
+  try{
+    const rows=await sbGet('centros_custo',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mes}-01`);
+    renderLinhasDespesa(rows||[]);
+  }catch(e){console.error(e);renderLinhasDespesa([]);}
+}
+async function salvarDespesas(mes){
+  const linhas=[...document.getElementById('pj-despesas').children].map(row=>{
+    const inputs=row.querySelectorAll('input');
+    return {categoria:inputs[0].value.trim(),meta_mensal:parseFloat(inputs[1].value)||null,realizado_mensal:parseFloat(inputs[2].value)||null};
+  }).filter(d=>d.categoria);
+  for(const d of linhas){
+    await sbUpsert('centros_custo',{academia_id:sessao.academia_id,mes_referencia:mes+'-01',categoria:d.categoria,meta_mensal:d.meta_mensal,realizado_mensal:d.realizado_mensal});
+  }
+}
 function initPlanejamento(){
   const restrito=sessao.role==='consultor';
   document.getElementById('planejamento-restrito').style.display=restrito?'block':'none';
@@ -3170,6 +3214,7 @@ function initPlanejamento(){
   if(!campo.value)campo.value=new Date().toISOString().slice(0,7);
   renderCarteirasPlanejamento();
   carregarPlanejamento();
+  carregarDespesas(campo.value);
 }
 function renderCarteirasPlanejamento(){
   const ac=db.acs[sessao.academia_id];
@@ -3188,7 +3233,7 @@ async function carregarPlanejamento(){
   try{
     const rows=await sbGet('planejamento_mensal',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mes}-01`);
     const p=rows&&rows[0];
-    const ids=['pj-m1-fat','pj-m1-planos','pj-m1-ativos','pj-m2-fat','pj-m2-planos','pj-m2-ativos','pj-ms-fat','pj-ms-planos','pj-ms-ativos','pj-fc-atual','pj-fc-ant','pj-fc-ano-ant','pj-custo','pj-inadimp','pj-fat-ano-ant','pj-enc-meta','pj-enc-atual','pj-a-renovar','pj-renov-enc','pj-renov-nenc','pj-cancel'];
+    const ids=['pj-m1-fat','pj-m1-planos','pj-m1-ativos','pj-m2-fat','pj-m2-planos','pj-m2-ativos','pj-ms-fat','pj-ms-planos','pj-ms-ativos','pj-fc-atual','pj-fc-ant','pj-fc-ano-ant','pj-custo','pj-inadimp','pj-fat-ano-ant','pj-enc-meta','pj-enc-atual','pj-a-renovar','pj-renov-enc','pj-renov-nenc','pj-cancel','pj-recebiveis','pj-reserva-min','pj-reserva-max'];
     ids.forEach(id=>document.getElementById(id).value='');
     document.getElementById('pj-ciclo').value='90';
     if(p){
@@ -3214,6 +3259,9 @@ async function carregarPlanejamento(){
       document.getElementById('pj-renov-enc').value=p.renovados_encarteirados??'';
       document.getElementById('pj-renov-nenc').value=p.renovados_nao_encarteirados??'';
       document.getElementById('pj-cancel').value=p.cancelamentos??'';
+      document.getElementById('pj-recebiveis').value=p.recebiveis_futuros_12m??'';
+      document.getElementById('pj-reserva-min').value=p.reserva_estrategica_meses_min??3;
+      document.getElementById('pj-reserva-max').value=p.reserva_estrategica_meses_max??6;
       const cart=p.carteiras_meta||{};
       Object.entries(cart).forEach(([id,v])=>{const el=document.getElementById('pj-cart-'+id);if(el)el.value=v;});
     }
@@ -3237,10 +3285,14 @@ async function salvarPlanejamento(){
     encarteiramento_meta:num('pj-enc-meta'), encarteirados_atual:num('pj-enc-atual'),
     ciclo_renovacao_dias:parseInt(document.getElementById('pj-ciclo').value),
     a_renovar:num('pj-a-renovar'), renovados_encarteirados:num('pj-renov-enc'), renovados_nao_encarteirados:num('pj-renov-nenc'),
-    cancelamentos:num('pj-cancel'), carteiras_meta, updated_at:Date.now()
+    cancelamentos:num('pj-cancel'), carteiras_meta, updated_at:Date.now(),
+    recebiveis_futuros_12m:num('pj-recebiveis'),
+    reserva_estrategica_meses_min:parseInt(document.getElementById('pj-reserva-min').value)||3,
+    reserva_estrategica_meses_max:parseInt(document.getElementById('pj-reserva-max').value)||6
   };
   try{
     await sbUpsert('planejamento_mensal',payload);
+    await salvarDespesas(mes);
     document.getElementById('pj-msg').textContent='✓ Salvo!';
     setTimeout(()=>document.getElementById('pj-msg').textContent='',2500);
     toast('Planejamento do mês salvo!');
