@@ -221,6 +221,13 @@ tbody tr:hover td{background:var(--s2)}
 
 .auth-logo-img{display:block;margin:0 auto 2px;height:40px;width:auto}
 .topbar-logo-img{height:22px;width:auto;display:block}
+.tv-mode .tabs{display:none}
+.tv-mode #btn-add-cons-top,.tv-mode #btn-lancar-top,.tv-mode .admin-ac-row,
+.tv-mode a[href="mapa-ferramenta.html"],
+.tv-mode button[onclick="abrirCentralScripts()"],.tv-mode button[onclick="abrirCampanhas()"],
+.tv-mode button[onclick="abrirExperiencias()"],.tv-mode button[onclick="abrirAgendaUnificada()"]{display:none!important}
+.tv-mode .kpi-value{font-size:34px}
+.tv-mode .kpi-label{font-size:13px}
 </style>
 </head>
 <body>
@@ -285,6 +292,7 @@ tbody tr:hover td{background:var(--s2)}
       <button class="btn-gh btn-sm" onclick="abrirExperiencias()" title="Abre em nova aba, já logado">🎯 Experiências</button>
       <button class="btn-gh btn-sm" onclick="abrirAgendaUnificada()" title="Abre em nova aba, já logado">📅 Agenda</button>
       <a href="mapa-ferramenta.html" target="_blank" class="btn-gh btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;" title="Abre em nova aba, mapa e tutorial da ferramenta">🗺️ Mapa</a>
+      <button class="btn-gh btn-sm" id="btn-tv" onclick="toggleTV()" title="Modo apresentação em tela cheia">📺 TV</button>
       <button class="btn-logout" onclick="doLogout()">Sair</button>
     </div>
   </div>
@@ -292,6 +300,7 @@ tbody tr:hover td{background:var(--s2)}
   <div class="tabs">
     <div class="tab active" onclick="switchTab('painel')">Painel</div>
     <div class="tab" onclick="switchTab('planejamento')">Planejamento</div>
+    <div class="tab" onclick="switchTab('diagnostico')">Diagnóstico</div>
     <div class="tab" onclick="switchTab('funis')">Funis & Indicadores</div>
     <div class="tab" onclick="switchTab('consultoras')">Equipe</div>
     <div class="tab" onclick="switchTab('relatorio')">Relatório</div>
@@ -417,6 +426,51 @@ tbody tr:hover td{background:var(--s2)}
         <span id="pj-msg" style="margin-left:12px;font-size:12px;color:var(--gr)"></span>
       </div>
     </div>
+
+    <div id="pan-diagnostico" class="panel">
+      <div id="diag-restrito" style="display:none;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:14px;padding:32px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:8px">🔒</div><strong>Acesso restrito ao Gestor(a)</strong>
+      </div>
+
+      <div id="diag-conteudo">
+        <div class="lbl" style="margin-bottom:2px">Diagnóstico de maturidade</div>
+        <p style="font-size:12px;color:var(--td);margin-bottom:20px">30 indicadores nas 3 Alavancas. Dê uma nota de 0 a 10 pra cada, ou marque "Não monit." se ainda não acompanha isso.</p>
+
+        <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:24px">
+          <div class="kpi" style="text-align:center"><div class="kpi-label" style="justify-content:center">🧭 ESTRATÉGIA</div><div class="kpi-value" id="diag-media-estrategia">—</div></div>
+          <div class="kpi" style="text-align:center"><div class="kpi-label" style="justify-content:center">📈 VENDAS</div><div class="kpi-value" id="diag-media-vendas">—</div></div>
+          <div class="kpi" style="text-align:center"><div class="kpi-label" style="justify-content:center">🤝 RETENÇÃO</div><div class="kpi-value" id="diag-media-retencao">—</div></div>
+        </div>
+
+        <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-lbl">🧭 Alavanca Estratégia — ADM/Estratégico</div><div class="sec-div-line"></div></div>
+        <div id="diag-pi-adm" class="diag-lista"></div>
+
+        <div class="sec-div" style="margin-top:20px"><div class="sec-div-line"></div><div class="sec-div-lbl">🧭 Alavanca Estratégia — Marketing</div><div class="sec-div-line"></div></div>
+        <div id="diag-pi-mkt" class="diag-lista"></div>
+
+        <div class="sec-div" style="margin-top:20px"><div class="sec-div-line"></div><div class="sec-div-lbl">📈 Alavanca Vendas — Comercial</div><div class="sec-div-line"></div></div>
+        <div id="diag-pi-com" class="diag-lista"></div>
+
+        <div class="sec-div" style="margin-top:20px"><div class="sec-div-line"></div><div class="sec-div-lbl">🤝 Alavanca Retenção — Técnico</div><div class="sec-div-line"></div></div>
+        <div id="diag-pi-tec" class="diag-lista"></div>
+
+        <div class="sec-div" style="margin-top:20px"><div class="sec-div-line"></div><div class="sec-div-lbl">🤝 Alavanca Retenção — Sucesso do Cliente</div><div class="sec-div-line"></div></div>
+        <div id="diag-pi-suc" class="diag-lista"></div>
+
+        <button class="btn-gh" style="margin-top:20px" onclick="salvarDiagnostico()">Salvar diagnóstico</button>
+        <span id="diag-msg" style="margin-left:12px;font-size:12px;color:var(--gr)"></span>
+      </div>
+    </div>
+    <style>
+      .diag-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd)}
+      .diag-row:last-child{border-bottom:none}
+      .diag-name{flex:1;font-size:13px}
+      .diag-name small{display:block;color:var(--td);font-size:11px;margin-top:2px}
+      .diag-row select{background:var(--s2);border:1px solid var(--bd);color:var(--tx);border-radius:7px;padding:6px 8px;font-family:'Barlow';font-size:12.5px;width:110px}
+      .diag-bar{width:90px;height:7px;background:var(--s2);border-radius:4px;overflow:hidden}
+      .diag-bar-fill{height:100%;border-radius:4px}
+      .diag-lbl{width:70px;text-align:right;font-size:12px;font-weight:600}
+    </style>
 
     <!-- FUNIS -->
     <div id="pan-funis" class="panel">
@@ -2872,8 +2926,96 @@ function exportCSV(){
 }
 
 // TABS / MODAIS / TOAST
-const TABS=['painel','planejamento','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
-function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();}
+const TABS=['painel','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
+function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();}
+
+// ══════════════════════════════════════
+// MODO TV — fullscreen, some com a navegação, aumenta fontes
+// ══════════════════════════════════════
+let tvOn=false;
+function toggleTV(){
+  tvOn=!tvOn;
+  const btn=document.getElementById('btn-tv');
+  document.getElementById('app').classList.toggle('tv-mode',tvOn);
+  if(tvOn){
+    btn.textContent='✕ Sair da TV';
+    document.documentElement.requestFullscreen?.().catch(()=>{});
+  }else{
+    btn.textContent='📺 TV';
+    document.exitFullscreen?.().catch(()=>{});
+  }
+}
+document.addEventListener('fullscreenchange',()=>{
+  if(!document.fullscreenElement&&tvOn){tvOn=false;document.getElementById('app').classList.remove('tv-mode');const btn=document.getElementById('btn-tv');if(btn)btn.textContent='📺 TV';}
+});
+
+// ══════════════════════════════════════
+// DIAGNÓSTICO — 30 indicadores de maturidade, 5 pilares, 3 Alavancas
+// ══════════════════════════════════════
+const PILARES_DIAG={
+  adm:[{id:'d_pos',n:'Posicionamento por escrito',s:'Para quem e por quê'},{id:'d_metas',n:'Metas documentadas',s:'KPIs monitorados'},{id:'d_ind',n:'Análise semanal',s:'Gestão à vista ativa'},{id:'d_plan',n:'Planejamento financeiro',s:'Margem, PE, reserva'},{id:'d_sis',n:'Sistema de gestão',s:'Dados confiáveis'}],
+  mkt:[{id:'d_leads',n:'Geração de leads',s:'Volume e qualidade'},{id:'d_cont',n:'Conteúdo regular',s:'Frequência e consistência'},{id:'d_camp',n:'Campanhas pagas',s:'Tráfego com resultado'},{id:'d_cpl',n:'CPL monitorado',s:'Custo por lead'},{id:'d_roi',n:'ROI de marketing',s:'Retorno sobre investimento'}],
+  com:[{id:'d_qual',n:'Pré-qualificação',s:'Perfil antes da visita'},{id:'d_reg',n:'100% leads registrados',s:'CRM sem lead perdido'},{id:'d_script',n:'Script de atendimento',s:'Recepção treinada'},{id:'d_exp',n:'Experiência de Resultados',s:'Experimental consultiva'},{id:'d_fup',n:'Follow-up sistemático',s:'Retorno em 24h'},{id:'d_prop',n:'Proposta consultiva',s:'Projeto, não tabela'},{id:'d_tick',n:'Ticket crescente',s:'Mix de planos otimizado'}],
+  tec:[{id:'d_consult',n:'Consultoria / Planejamento Inicial',s:'Mapeamento completo + metas personalizadas'},{id:'d_bio',n:'Avaliação Física com Bioimpedância',s:'Tecnologia embarcada na entrada e revisões'},{id:'d_proto_jorn',n:'Protocolo de Acompanhamento de Jornada',s:'Revisões periódicas e checkpoints sistemáticos'},{id:'d_onb',n:'Onboarding 4 semanas mapeado',s:'Acolher → Adaptar → Engajar → Evoluir'},{id:'d_exp_map',n:'Experiência Mapeada vs. Experimental convencional',s:'Diferenciar e estruturar a entrada do lead'},{id:'d_proc_atend',n:'Processos e protocolos de atendimento',s:'Time treinado com identidade e padrão definido'},{id:'d_cart_meta',n:'Carteira por treinador com metas de engajamento',s:'Alunos encarteirados + responsabilidade individual'}],
+  suc:[{id:'d_freq_enc',n:'Frequência — alunos encarteirados',s:'Índice de presença dos alunos com treinador'},{id:'d_freq_nenc',n:'Frequência — alunos não encarteirados',s:'Índice de presença sem vínculo com treinador'},{id:'d_reat2',n:'Protocolo de Reativação',s:'Consultoria + avaliação com treinador para ausentes'},{id:'d_ind2',n:'Indicação Ativa',s:'Feedbacks e indicações estruturadas'},{id:'d_nps2',n:'NPS',s:'Net Promoter Score — satisfação geral'},{id:'d_score_eng',n:'Score de Engajamento',s:'Vínculo treinador + frequência + revisões 12 sem. + avaliações 12 meses'}],
+};
+let diagValores={};
+function initDiagnostico(){
+  const restrito=sessao.role==='consultor';
+  document.getElementById('diag-restrito').style.display=restrito?'block':'none';
+  document.getElementById('diag-conteudo').style.display=restrito?'none':'block';
+  if(restrito)return;
+  carregarDiagnostico();
+}
+function corDiag(v){return v<=0?'var(--td)':v<=3?'var(--re)':v<=5?'var(--am)':v<=7?'var(--bl)':'var(--gr)';}
+function renderDiagnostico(){
+  const map={adm:'diag-pi-adm',mkt:'diag-pi-mkt',com:'diag-pi-com',tec:'diag-pi-tec',suc:'diag-pi-suc'};
+  Object.entries(PILARES_DIAG).forEach(([k,inds])=>{
+    const el=document.getElementById(map[k]); if(!el)return;
+    el.innerHTML=inds.map(ind=>{
+      const v=diagValores[ind.id]||0;
+      const col=corDiag(v);
+      return `<div class="diag-row">
+        <div class="diag-name">${ind.n}<small>${ind.s}</small></div>
+        <select onchange="setDiagScore('${ind.id}',+this.value)">
+          <option value="0">—</option>
+          <option value="-1"${v===-1?' selected':''}>Não monit.</option>
+          ${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="${n}"${v===n?' selected':''}>${n}</option>`).join('')}
+        </select>
+        <div class="diag-bar"><div class="diag-bar-fill" style="width:${v>0?v*10:0}%;background:${col}"></div></div>
+        <div class="diag-lbl" style="color:${col}">${v>0?v+'/10':(v===-1?'Não monit.':'—')}</div>
+      </div>`;
+    }).join('');
+  });
+  atualizarMediasDiag();
+}
+function setDiagScore(id,v){diagValores[id]=v;renderDiagnostico();}
+function mediaPilares(...chaves){
+  const vals=[];
+  chaves.forEach(k=>PILARES_DIAG[k].forEach(ind=>{const v=diagValores[ind.id];if(v>0)vals.push(v);}));
+  return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1):'—';
+}
+function atualizarMediasDiag(){
+  document.getElementById('diag-media-estrategia').textContent=mediaPilares('adm','mkt');
+  document.getElementById('diag-media-vendas').textContent=mediaPilares('com');
+  document.getElementById('diag-media-retencao').textContent=mediaPilares('tec','suc');
+}
+async function carregarDiagnostico(){
+  if(!sessao.academia_id)return;
+  try{
+    const rows=await sbGet('diagnostico_avaliacao',`academia_id=eq.${sessao.academia_id}`);
+    diagValores=(rows&&rows[0]&&rows[0].indicadores)||{};
+  }catch(e){console.error('Erro ao carregar diagnóstico:',e);diagValores={};}
+  renderDiagnostico();
+}
+async function salvarDiagnostico(){
+  try{
+    await sbUpsert('diagnostico_avaliacao',{academia_id:sessao.academia_id,indicadores:diagValores,updated_at:Date.now()});
+    document.getElementById('diag-msg').textContent='✓ Salvo!';
+    setTimeout(()=>document.getElementById('diag-msg').textContent='',2500);
+    toast('Diagnóstico salvo!');
+  }catch(e){console.error(e);toast('Erro ao salvar diagnóstico.',true);}
+}
 
 // ══════════════════════════════════════
 // PLANEJAMENTO — metas mensais, fluxo de caixa manual, encarteiramento
