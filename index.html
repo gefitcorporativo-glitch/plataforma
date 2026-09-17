@@ -298,7 +298,8 @@ tbody tr:hover td{background:var(--s2)}
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('painel')">Painel</div>
+    <div class="tab active" onclick="switchTab('geral')">Visão Executiva</div>
+    <div class="tab" onclick="switchTab('painel')">Painel</div>
     <div class="tab" onclick="switchTab('alunos')">Alunos</div>
     <div class="tab" onclick="switchTab('planejamento')">Planejamento</div>
     <div class="tab" onclick="switchTab('diagnostico')">Diagnóstico</div>
@@ -314,7 +315,55 @@ tbody tr:hover td{background:var(--s2)}
   <div class="main">
 
     <!-- PAINEL -->
-    <div id="pan-painel" class="panel active">
+    <div id="pan-geral" class="panel active">
+      <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
+        <div class="kpi"><div class="kpi-label">TOTAL VENDIDO (MÊS)</div><div class="kpi-value" id="ge-vendido">—</div><div style="font-size:11px;color:var(--td);margin-top:6px">soma dos lançamentos diários</div></div>
+        <div class="kpi"><div class="kpi-label">RECEBIDO — FLUXO DE CAIXA</div><div class="kpi-value" id="ge-recebido">—</div><div style="font-size:11px;color:var(--td);margin-top:6px">input manual do gestor(a)</div></div>
+        <div class="kpi"><div class="kpi-label">FATURAMENTO MÉDIO — ANO ANTERIOR</div><div class="kpi-value" id="ge-fat-ano-ant">—</div><div style="font-size:11px;color:var(--td);margin-top:6px" id="ge-fat-comp"></div></div>
+      </div>
+      <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
+        <div class="kpi"><div class="kpi-label">ALUNOS ATIVOS</div><div class="kpi-value" id="ge-ativos">—</div><div style="font-size:11px;margin-top:6px"><span style="color:var(--gr)" id="ge-novos"></span> &nbsp; <span style="color:var(--re)" id="ge-perdidos"></span></div></div>
+        <div class="kpi"><div class="kpi-label">TICKET MÉDIO</div><div class="kpi-value" id="ge-ticket">—</div></div>
+        <div class="kpi"><div class="kpi-label">RECEBÍVEIS 12M × RESERVA</div><div class="kpi-value" id="ge-recebiveis">—</div><div style="font-size:11px;color:var(--td);margin-top:6px" id="ge-reserva"></div></div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px">
+        <h3>Faturamento vendido por mês (ano atual)</h3>
+        <div style="position:relative;height:180px"><canvas id="ch-ge-fat"></canvas></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="chart-card">
+          <h3>Planos vendidos no período · nº</h3>
+          <div id="ge-planos" style="margin-top:12px"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Despesas operacionais — meta × realizado</h3>
+          <div style="position:relative;height:180px"><canvas id="ch-ge-despesas"></canvas></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="chart-card">
+          <h3>NPS Geral</h3>
+          <div style="display:flex;align-items:center;gap:20px;margin-top:10px">
+            <div style="font-family:'Barlow Condensed';font-size:42px;font-weight:800;color:var(--or)" id="ge-nps-geral">—</div>
+            <div style="font-size:12px;color:var(--tm)" id="ge-nps-geral-n"></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>NPS Pontual · por experiência</h3>
+          <div id="ge-nps-pontual" style="margin-top:10px;font-size:12.5px"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Total vendido por grupo de receita</h3>
+        <div id="ge-grupos" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div id="pan-painel" class="panel">
       <div class="hero">
         <div>
           <div class="lbl">Academia</div>
@@ -1351,7 +1400,7 @@ function renderConsManage(){
     ${en.map(([id,c])=>{
     const metaStr=c.meta_tipo==='treino'?'Treinamento':c.meta_tipo==='rs'?`R$ ${c.meta}`:`${c.meta} planos`;
     const temMetasProprias=c.metas&&(c.metas.meta1||c.metas.meta2||c.metas.meta3);
-    return`<div class="manage-item"><span class="manage-item-nm">${c.nome}</span><span class="manage-item-sub">${metaStr} · ${c.horas}h/dia · ${(c.funis||[]).map(f=>fInfo(f)?.nome||f).join(', ')}${temMetasProprias?` · Metas próprias: R$${c.metas.meta1||0}/${c.metas.meta2||0}/${c.metas.meta3||0}`:' · Usa metas padrão da academia'}</span><button class="btn-gh" style="font-size:11px;padding:4px 9px;" onclick="abrirEditarConsultor('${id}')">✎ Editar</button><button class="btn-gh" style="font-size:11px;padding:4px 9px;" onclick="abrirEditarMetasConsultor('${id}')">🎯 Metas</button><button class="btn-danger" onclick="removeCons('${id}')">Remover</button></div>`;
+    return`<div class="manage-item"><span class="manage-item-nm">${c.nome}</span><span class="manage-item-sub">${metaStr} · ${c.horas}h/dia · ${(c.funis||[]).map(f=>fInfo(f)?.nome||f).join(', ')}${temMetasProprias?` · Metas próprias: R$${c.metas.meta1||0}/${c.metas.meta2||0}/${c.metas.meta3||0}`:' · Usa metas padrão da academia'}</span><button class="btn-gh" style="font-size:11px;padding:4px 9px;" onclick="window.location.href='perfil-consultor.html?uid=${sessao.id}&id=${id}'">👤 Perfil</button><button class="btn-gh" style="font-size:11px;padding:4px 9px;" onclick="abrirEditarConsultor('${id}')">✎ Editar</button><button class="btn-gh" style="font-size:11px;padding:4px 9px;" onclick="abrirEditarMetasConsultor('${id}')">🎯 Metas</button><button class="btn-danger" onclick="removeCons('${id}')">Remover</button></div>`;
   }).join('')}`;
 }
 
@@ -1746,7 +1795,7 @@ function calcProdutividade(regs){
 async function renderAll(){
   const a=ac();
   document.getElementById('topbar-ac-nome').textContent=a?a.nome:'Desafio ROI 21 Dias';
-  if(a){renderPainel(a);renderFunis();renderConsGrid(a);renderTreinadoresGrid(a);renderRelatorio();}
+  if(a){renderPainel(a);renderFunis();renderConsGrid(a);renderTreinadoresGrid(a);renderRelatorio();carregarGeral();}
   renderRanking();if(isAdmin())await renderAdminPanel();
   populateFilters();populateLancCons();
 }
@@ -2185,6 +2234,7 @@ function renderTreinadoresGrid(a){
       <div class="cons-head">
         <div class="avatar">${initials(t.nome)}</div>
         <div><div class="cons-nm">${t.nome}</div><div class="cons-sub">Time técnico · Experiências</div></div>
+        <button class="btn-gh btn-sm" style="flex-shrink:0;font-size:11px;padding:3px 10px;margin-left:6px" onclick="window.location.href='perfil-treinador.html?uid=${sessao.id}&id=${id}'">👤 Perfil</button>
         <button class="btn-gh btn-sm" style="flex-shrink:0;font-size:11px;padding:3px 10px;margin-left:6px" onclick="abrirAcessoPessoa('treinador','${id}','${t.nome.replace(/'/g,"\\'")}')">🔑 Acesso</button>
       </div>
     </div>`).join('');
@@ -2997,8 +3047,125 @@ function exportCSV(){
 }
 
 // TABS / MODAIS / TOAST
-const TABS=['painel','alunos','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
-function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();if(t==='alunos')carregarAlunos();}
+const TABS=['geral','painel','alunos','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
+function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();if(t==='alunos')carregarAlunos();if(t==='geral')carregarGeral();}
+
+// ══════════════════════════════════════
+// VISÃO EXECUTIVA — Painel Geral consolidado
+// ══════════════════════════════════════
+let chGeFat=null, chGeDespesas=null;
+function fmtR$(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+async function carregarGeral(){
+  if(!sessao.academia_id)return;
+  const mesAtual=new Date().toISOString().slice(0,7);
+  const anoAtual=mesAtual.slice(0,4);
+  try{
+    const [registros, planRows, alunos, despesas, npsRows] = await Promise.all([
+      sbGet('registros',`academia_id=eq.${sessao.academia_id}&data=gte.${anoAtual}-01-01`),
+      sbGet('planejamento_mensal',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mesAtual}-01`),
+      sbGet('alunos',`academia_id=eq.${sessao.academia_id}`),
+      sbGet('centros_custo',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mesAtual}-01`),
+      sbGet('nps_respostas',`academia_id=eq.${sessao.academia_id}`)
+    ]);
+    const plan=planRows&&planRows[0];
+
+    // ---- Total vendido (mês atual) e série mensal do ano ----
+    const vendidoPorMes=Array(12).fill(0);
+    (registros||[]).forEach(r=>{
+      if(!r.funis)return;
+      const mesIdx=new Date(r.data+'T00:00:00').getMonth();
+      const soma=Object.values(r.funis).reduce((s,fd)=>s+(fd.vendido||0),0);
+      vendidoPorMes[mesIdx]+=soma;
+    });
+    const idxMesAtual=new Date().getMonth();
+    document.getElementById('ge-vendido').textContent=fmtR$(vendidoPorMes[idxMesAtual]);
+
+    // ---- Recebido / Faturamento ano anterior ----
+    document.getElementById('ge-recebido').textContent=plan?fmtR$(plan.fc_atual):'—';
+    document.getElementById('ge-fat-ano-ant').textContent=plan&&plan.fat_ano_anterior?fmtR$(plan.fat_ano_anterior):'—';
+    if(plan&&plan.fat_ano_anterior){
+      const diff=((vendidoPorMes[idxMesAtual]-plan.fat_ano_anterior)/plan.fat_ano_anterior*100);
+      document.getElementById('ge-fat-comp').textContent=(diff>=0?'▲ ':'▼ ')+Math.abs(diff).toFixed(1)+'% vs mesmo mês ano anterior';
+    }
+
+    // ---- Recebíveis x Reserva ----
+    if(plan){
+      document.getElementById('ge-recebiveis').textContent=plan.recebiveis_futuros_12m?fmtR$(plan.recebiveis_futuros_12m):'—';
+      const custoFixo=plan.custo_fixo||0;
+      const min=(plan.reserva_estrategica_meses_min||3)*custoFixo;
+      const max=(plan.reserva_estrategica_meses_max||6)*custoFixo;
+      document.getElementById('ge-reserva').textContent=custoFixo?`Reserva alvo: ${fmtR$(min)} – ${fmtR$(max)}`:'Defina o custo fixo no Planejamento';
+    }
+
+    // ---- Alunos ----
+    const ativos=(alunos||[]).filter(a=>a.status==='ativo');
+    const novos=(alunos||[]).filter(a=>a.data_matricula&&a.data_matricula.slice(0,7)===mesAtual).length;
+    const perdidos=(alunos||[]).filter(a=>a.status!=='ativo').length;
+    const ticket=ativos.length?ativos.reduce((s,a)=>s+Number(a.valor_plano||0),0)/ativos.length:0;
+    document.getElementById('ge-ativos').textContent=ativos.length;
+    document.getElementById('ge-novos').textContent='▲ '+novos+' novos';
+    document.getElementById('ge-perdidos').textContent='▼ '+perdidos+' perdidos';
+    document.getElementById('ge-ticket').textContent=fmtR$(ticket);
+
+    // ---- Gráfico faturamento por mês ----
+    const mesesLbl=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].slice(0,idxMesAtual+1);
+    const dadosMes=vendidoPorMes.slice(0,idxMesAtual+1);
+    if(chGeFat)chGeFat.destroy();
+    chGeFat=new Chart(document.getElementById('ch-ge-fat'),{type:'line',data:{labels:mesesLbl,datasets:[{label:'Vendido',data:dadosMes,borderColor:'#0A4FAA',backgroundColor:'rgba(10,79,170,.15)',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}}});
+
+    // ---- Planos vendidos (contagem por tipo, todos ativos) ----
+    const tipoLbl={anual:'Anual',semestral:'Semestral',trimestral:'Trimestral',mensal:'Mensal',recorrencia:'Recorrência',especial:'Especial',outros:'Outros'};
+    const porTipo={};
+    ativos.forEach(a=>{const t=a.plano_tipo||'outros';porTipo[t]=(porTipo[t]||0)+1;});
+    const maxTipo=Math.max(1,...Object.values(porTipo));
+    document.getElementById('ge-planos').innerHTML=Object.entries(tipoLbl).map(([k,l])=>{
+      const v=porTipo[k]||0;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px">
+        <div style="width:100px">${l}</div>
+        <div style="flex:1;background:var(--s2);border-radius:5px;height:12px"><div style="width:${v/maxTipo*100}%;background:var(--or);height:100%;border-radius:5px"></div></div>
+        <div style="width:24px;text-align:right;font-weight:700">${v}</div>
+      </div>`;
+    }).join('');
+
+    // ---- Despesas operacionais ----
+    if(chGeDespesas)chGeDespesas.destroy();
+    const catsD=(despesas||[]).map(d=>d.categoria);
+    chGeDespesas=new Chart(document.getElementById('ch-ge-despesas'),{type:'bar',data:{labels:catsD.length?catsD:['Sem dados'],datasets:[
+      {label:'Meta',data:(despesas||[]).map(d=>d.meta_mensal||0),backgroundColor:'rgba(255,255,255,.12)'},
+      {label:'Realizado',data:(despesas||[]).map(d=>d.realizado_mensal||0),backgroundColor:'#0A4FAA'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#999',boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}}});
+
+    // ---- NPS ----
+    const geral=(npsRows||[]).filter(n=>n.tipo==='geral');
+    const mediaGeral=geral.length?(geral.reduce((s,n)=>s+n.nota,0)/geral.length).toFixed(1):'—';
+    document.getElementById('ge-nps-geral').textContent=mediaGeral;
+    document.getElementById('ge-nps-geral-n').textContent=geral.length+' avaliações recebidas';
+    const contLbl={time_tecnico:'Time Técnico',consultoria:'Consultoria',avaliacao_fisica:'Avaliação Física',revisao_treino:'Revisão de Treino'};
+    const pontual=(npsRows||[]).filter(n=>n.tipo==='pontual');
+    const porContexto={};
+    pontual.forEach(n=>{if(!porContexto[n.contexto])porContexto[n.contexto]=[];porContexto[n.contexto].push(n.nota);});
+    document.getElementById('ge-nps-pontual').innerHTML=Object.entries(contLbl).map(([k,l])=>{
+      const arr=porContexto[k]||[];
+      const media=arr.length?(arr.reduce((s,n)=>s+n,0)/arr.length).toFixed(1):'—';
+      return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span>${l}</span><b>${media}</b></div>`;
+    }).join('');
+
+    // ---- Receita por grupo ----
+    const grupoLbl={planos_fitness:'Planos Fitness',piscina_infantil:'Planos Piscina Infantil',piscina_adulto:'Planos Piscina Adulto',personal_trainer:'Personal Trainer',agregadores:'Agregadores (Pass)',produtos:'Produtos',servicos_especiais:'Serviços Especiais'};
+    const porGrupo={};
+    ativos.forEach(a=>{const g=a.grupo_receita||'planos_fitness';porGrupo[g]=(porGrupo[g]||0)+Number(a.valor_plano||0);});
+    const maxGrupo=Math.max(1,...Object.values(porGrupo));
+    document.getElementById('ge-grupos').innerHTML=Object.entries(grupoLbl).map(([k,l])=>{
+      const v=porGrupo[k]||0;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px">
+        <div style="width:150px">${l}</div>
+        <div style="flex:1;background:var(--s2);border-radius:5px;height:12px"><div style="width:${v/maxGrupo*100}%;background:var(--or);height:100%;border-radius:5px"></div></div>
+        <div style="width:80px;text-align:right;font-weight:700">${fmtR$(v)}</div>
+      </div>`;
+    }).join('');
+
+  }catch(e){console.error('Erro ao carregar Visão Executiva:',e);}
+}
 
 // ══════════════════════════════════════
 // ALUNOS — roster real
