@@ -299,6 +299,8 @@ tbody tr:hover td{background:var(--s2)}
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab('geral')">Visão Executiva</div>
+    <div class="tab" onclick="switchTab('vendasmkt')">Vendas & Marketing</div>
+    <div class="tab" onclick="switchTab('retencao')">Retenção</div>
     <div class="tab" onclick="switchTab('painel')">Painel</div>
     <div class="tab" onclick="switchTab('alunos')">Alunos</div>
     <div class="tab" onclick="switchTab('planejamento')">Planejamento</div>
@@ -360,6 +362,70 @@ tbody tr:hover td{background:var(--s2)}
       <div class="chart-card">
         <h3>Total vendido por grupo de receita</h3>
         <div id="ge-grupos" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div id="pan-vendasmkt" class="panel">
+      <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
+        <div class="kpi"><div class="kpi-label">LEADS NO PERÍODO</div><div class="kpi-value" id="vm-leads">—</div></div>
+        <div class="kpi"><div class="kpi-label">CUSTO POR LEAD</div><div class="kpi-value" id="vm-cpl">—</div></div>
+        <div class="kpi"><div class="kpi-label">ROAS</div><div class="kpi-value" id="vm-roas">—</div></div>
+      </div>
+      <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
+        <div class="kpi"><div class="kpi-label">CONVERSÃO LEAD → MATRÍCULA</div><div class="kpi-value" id="vm-conv">—</div></div>
+        <div class="kpi"><div class="kpi-label">EXPERIÊNCIAS NO PERÍODO</div><div class="kpi-value" id="vm-exps">—</div></div>
+        <div class="kpi"><div class="kpi-label">ADESÃO MÉDIA À ROTINA</div><div class="kpi-value" id="vm-adesao">—</div></div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px">
+        <h3>Experiências: agendadas → compareceram → convertidas</h3>
+        <div id="vm-funil" style="margin-top:14px"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="chart-card">
+          <h3>Origem dos leads</h3>
+          <div style="position:relative;height:200px"><canvas id="ch-vm-origem"></canvas></div>
+          <div id="vm-origem-aviso" style="font-size:11px;color:var(--td);margin-top:8px"></div>
+        </div>
+        <div class="chart-card">
+          <h3>Ranking de consultores(as)</h3>
+          <div id="vm-ranking" style="margin-top:6px"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pan-retencao" class="panel">
+      <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px">
+        <div class="kpi"><div class="kpi-label">A VENCER · 30 DIAS</div><div class="kpi-value" id="rt-30">—</div></div>
+        <div class="kpi"><div class="kpi-label">A VENCER · 60 DIAS</div><div class="kpi-value" id="rt-60">—</div></div>
+        <div class="kpi"><div class="kpi-label">A VENCER · 90 DIAS</div><div class="kpi-value" id="rt-90">—</div></div>
+      </div>
+      <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
+        <div class="kpi"><div class="kpi-label">ÍNDICE DE ENCARTEIRAMENTO</div><div class="kpi-value" id="rt-enc">—</div><div style="font-size:11px;color:var(--td);margin-top:6px">meta 75–85%</div></div>
+        <div class="kpi"><div class="kpi-label">ALUNOS ATIVOS</div><div class="kpi-value" id="rt-ativos">—</div></div>
+        <div class="kpi"><div class="kpi-label">CONSULTORIAS REALIZADAS</div><div class="kpi-value" id="rt-consult">—</div></div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px">
+        <h3>Planos a renovar × renovados (do Planejamento do mês)</h3>
+        <div style="position:relative;height:150px"><canvas id="ch-rt-renov"></canvas></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="chart-card">
+          <h3>Carteira por treinador(a) · nº de alunos</h3>
+          <div id="rt-carteira" style="margin-top:10px"></div>
+        </div>
+        <div class="chart-card">
+          <h3>% da carteira em dia (renovação não vencida)</h3>
+          <div id="rt-emdia" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Experiências atendidas × convertidas, por treinador(a)</h3>
+        <div style="position:relative;height:200px"><canvas id="ch-rt-exp"></canvas></div>
       </div>
     </div>
 
@@ -3047,8 +3113,155 @@ function exportCSV(){
 }
 
 // TABS / MODAIS / TOAST
-const TABS=['geral','painel','alunos','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
-function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();if(t==='alunos')carregarAlunos();if(t==='geral')carregarGeral();}
+const TABS=['geral','vendasmkt','retencao','painel','alunos','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
+function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();if(t==='alunos')carregarAlunos();if(t==='geral')carregarGeral();if(t==='vendasmkt')carregarVendasMkt();if(t==='retencao')carregarRetencao();}
+
+// ══════════════════════════════════════
+// VENDAS & MARKETING
+// ══════════════════════════════════════
+let chVmOrigem=null, chRtRenov=null, chRtExp=null;
+async function carregarVendasMkt(){
+  if(!sessao.academia_id)return;
+  const mesAtual=new Date().toISOString().slice(0,7);
+  let cards=[],exps=[],campanhas=[],vendas=[];
+  try{
+    [cards,exps,campanhas,vendas]=await Promise.all([
+      sbGet('campanha_cards',`select=*,campanhas!inner(academia_id)&campanhas.academia_id=eq.${sessao.academia_id}`).catch(()=>[]),
+      sbGet('experiencias',`academia_id=eq.${sessao.academia_id}`),
+      sbGet('campanhas',`academia_id=eq.${sessao.academia_id}`),
+      sbGet('vendas',`academia_id=eq.${sessao.academia_id}`)
+    ]);
+  }catch(e){console.error(e);}
+
+  const leads=cards.length;
+  document.getElementById('vm-leads').textContent=leads||'—';
+  const investTotal=campanhas.reduce((s,c)=>s+Number(c.investimento_trafego||0),0);
+  document.getElementById('vm-cpl').textContent=leads?fmtR$(investTotal/leads):'—';
+  const vendidoTotal=vendas.reduce((s,v)=>s+Number(v.valor||0),0);
+  document.getElementById('vm-roas').textContent=investTotal?(vendidoTotal/investTotal).toFixed(1)+'x':'—';
+  const matriculados=cards.filter(c=>c.status==='matriculado'||c.etapa_atual==='matriculado').length;
+  document.getElementById('vm-conv').textContent=leads?((matriculados/leads)*100).toFixed(1)+'%':'—';
+
+  const expsMes=exps.filter(e=>String(e.data_agendada||e.criado_em||'').slice(0,7)===mesAtual);
+  document.getElementById('vm-exps').textContent=expsMes.length;
+
+  const [consultoras,registros]=await Promise.all([
+    sbGet('consultoras',`academia_id=eq.${sessao.academia_id}`),
+    sbGet('registros',`academia_id=eq.${sessao.academia_id}&data=gte.${mesAtual}-01`)
+  ]);
+  const diasDoMes=new Date().getDate();
+  const adesoes=consultoras.map(c=>{
+    const diasComRegistro=new Set(registros.filter(r=>r.consultora_id===c.id).map(r=>r.data)).size;
+    return diasDoMes?diasComRegistro/diasDoMes*100:0;
+  });
+  document.getElementById('vm-adesao').textContent=adesoes.length?(adesoes.reduce((s,v)=>s+v,0)/adesoes.length).toFixed(0)+'%':'—';
+
+  // Funil de experiências
+  const statusExp=['agendada','comparecida','convertida','nao_convertida'];
+  const statusLbl={agendada:'Agendadas',comparecida:'Compareceram',convertida:'Convertidas',nao_convertida:'Não convertidas'};
+  const statusCor={agendada:'#0A4FAA',comparecida:'#3b82f6',convertida:'#22c55e',nao_convertida:'#ef4444'};
+  const total=exps.length||1;
+  document.getElementById('vm-funil').innerHTML=statusExp.map(s=>{
+    const n=exps.filter(e=>e.status===s).length;
+    const pct=(n/total*100).toFixed(0);
+    return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:130px;font-size:12px;color:var(--tm)">${statusLbl[s]}</div>
+      <div style="flex:1;background:var(--s2);border-radius:6px;height:26px;position:relative">
+        <div style="width:${pct}%;background:${statusCor[s]};height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:700;color:#fff">${n}</div>
+      </div>
+      <div style="width:44px;text-align:right;font-size:12px;font-weight:700">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  // Origem dos leads
+  if(chVmOrigem)chVmOrigem.destroy();
+  const origemLbl={indicacao:'Indicação',instagram_organico:'Instagram/Orgânico',prospeccao_ativa:'Prospecção Ativa',trafego_pago:'Tráfego Pago',reativacao:'Reativação'};
+  const porOrigem={}; cards.forEach(c=>{const o=c.origem_lead||'outros';porOrigem[o]=(porOrigem[o]||0)+1;});
+  if(!leads){document.getElementById('vm-origem-aviso').textContent='Sem dados de Campanhas ainda — cadastre leads lá pra ver aqui.';}
+  chVmOrigem=new Chart(document.getElementById('ch-vm-origem'),{type:'doughnut',data:{
+    labels:Object.keys(porOrigem).map(k=>origemLbl[k]||k),
+    datasets:[{data:Object.values(porOrigem),backgroundColor:['#0A4FAA','#0A4FAA99','#3b82f6','#22c55e','#f59e0b'],borderWidth:0}]
+  },options:{cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#999',boxWidth:10,font:{size:10}}}}}});
+
+  // Ranking consultores
+  document.getElementById('vm-ranking').innerHTML=consultoras.map(c=>{
+    const leadsC=cards.filter(cd=>cd.consultora_id===c.id).length;
+    const matC=cards.filter(cd=>cd.consultora_id===c.id&&(cd.status==='matriculado'||cd.etapa_atual==='matriculado')).length;
+    const vendasC=vendas.filter(v=>v.consultora_id===c.id);
+    const ticket=vendasC.length?vendasC.reduce((s,v)=>s+Number(v.valor||0),0)/vendasC.length:0;
+    const diasComRegistro=new Set(registros.filter(r=>r.consultora_id===c.id).map(r=>r.data)).size;
+    const adesao=diasDoMes?(diasComRegistro/diasDoMes*100).toFixed(0):0;
+    return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12.5px">
+      <span>${c.nome}</span>
+      <span style="color:var(--td)">${leadsC} leads · ${leadsC?((matC/leadsC)*100).toFixed(0):0}% conv. · ${fmtR$(ticket)} · ${adesao}% rotina</span>
+    </div>`;
+  }).join('')||'<div style="color:var(--td);font-size:12px">Nenhum(a) consultor(a) cadastrado(a).</div>';
+}
+
+// ══════════════════════════════════════
+// RETENÇÃO
+// ══════════════════════════════════════
+async function carregarRetencao(){
+  if(!sessao.academia_id)return;
+  const mesAtual=new Date().toISOString().slice(0,7);
+  const hoje=new Date();
+  const [alunos,exps,treins,planRows]=await Promise.all([
+    sbGet('alunos',`academia_id=eq.${sessao.academia_id}`),
+    sbGet('experiencias',`academia_id=eq.${sessao.academia_id}`),
+    sbGet('treinadores',`academia_id=eq.${sessao.academia_id}`),
+    sbGet('planejamento_mensal',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mesAtual}-01`)
+  ]);
+  const plan=planRows[0];
+  const ativos=alunos.filter(a=>a.status==='ativo');
+
+  const diasAte=(iso)=>{if(!iso)return Infinity;return Math.ceil((new Date(iso+'T00:00:00')-hoje)/86400000);};
+  document.getElementById('rt-30').textContent=ativos.filter(a=>{const d=diasAte(a.data_renovacao);return d>=0&&d<=30;}).length;
+  document.getElementById('rt-60').textContent=ativos.filter(a=>{const d=diasAte(a.data_renovacao);return d>30&&d<=60;}).length;
+  document.getElementById('rt-90').textContent=ativos.filter(a=>{const d=diasAte(a.data_renovacao);return d>60&&d<=90;}).length;
+
+  const comTreinador=ativos.filter(a=>a.treinador_id).length;
+  document.getElementById('rt-enc').textContent=ativos.length?((comTreinador/ativos.length)*100).toFixed(0)+'%':'—';
+  document.getElementById('rt-ativos').textContent=ativos.length;
+  document.getElementById('rt-consult').textContent=exps.filter(e=>e.tipo==='consultoria').length;
+
+  // Planos a renovar x renovados (do Planejamento)
+  if(chRtRenov)chRtRenov.destroy();
+  chRtRenov=new Chart(document.getElementById('ch-rt-renov'),{type:'bar',data:{
+    labels:['Ciclo do mês ('+(plan?.ciclo_renovacao_dias||90)+' dias)'],
+    datasets:[
+      {label:'A renovar',data:[plan?.a_renovar||0],backgroundColor:'rgba(255,255,255,.12)'},
+      {label:'Renovados (encarteirados)',data:[plan?.renovados_encarteirados||0],backgroundColor:'#22c55e'},
+      {label:'Renovados (não encarteirados)',data:[plan?.renovados_nao_encarteirados||0],backgroundColor:'#f59e0b'}
+    ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#999',boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#666'},grid:{display:false}}}}});
+
+  // Carteira por treinador
+  document.getElementById('rt-carteira').innerHTML=treins.map(t=>{
+    const n=ativos.filter(a=>a.treinador_id===t.id).length;
+    const max=Math.max(1,...treins.map(tt=>ativos.filter(a=>a.treinador_id===tt.id).length));
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px">
+      <div style="width:120px">${t.nome}</div>
+      <div style="flex:1;background:var(--s2);border-radius:5px;height:12px"><div style="width:${n/max*100}%;background:var(--or);height:100%;border-radius:5px"></div></div>
+      <div style="width:24px;text-align:right;font-weight:700">${n}</div>
+    </div>`;
+  }).join('')||'<div style="color:var(--td);font-size:12px">Nenhum(a) treinador(a) cadastrado(a).</div>';
+
+  // % da carteira em dia
+  document.getElementById('rt-emdia').innerHTML=treins.map(t=>{
+    const carteira=ativos.filter(a=>a.treinador_id===t.id);
+    const emDia=carteira.filter(a=>diasAte(a.data_renovacao)>0||!a.data_renovacao).length;
+    const pct=carteira.length?(emDia/carteira.length*100).toFixed(0):'—';
+    return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12.5px"><span>${t.nome}</span><b>${pct}${carteira.length?'%':''}</b></div>`;
+  }).join('')||'<div style="color:var(--td);font-size:12px">Sem dados.</div>';
+
+  // Experiências atendidas x convertidas por treinador
+  if(chRtExp)chRtExp.destroy();
+  chRtExp=new Chart(document.getElementById('ch-rt-exp'),{type:'bar',data:{
+    labels:treins.map(t=>t.nome.split(' ')[0]),
+    datasets:[
+      {label:'Atendidas',data:treins.map(t=>exps.filter(e=>e.treinador_id===t.id).length),backgroundColor:'rgba(255,255,255,.12)'},
+      {label:'Convertidas',data:treins.map(t=>exps.filter(e=>e.treinador_id===t.id&&e.status==='convertida').length),backgroundColor:'#22c55e'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#999',boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{color:'#666'},grid:{display:false}},y:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}}});
+}
 
 // ══════════════════════════════════════
 // VISÃO EXECUTIVA — Painel Geral consolidado
