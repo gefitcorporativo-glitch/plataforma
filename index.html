@@ -291,6 +291,7 @@ tbody tr:hover td{background:var(--s2)}
       <button class="btn-gh btn-sm" id="btn-add-cons-top" onclick="openM('m-cons')" style="display:none">+ Consultor(a)</button>
       <button class="btn-or" id="btn-lancar-top" onclick="openM('m-lanc')" style="display:none">Lançar Dia</button>
       <button class="btn-gh btn-sm" onclick="abrirCentralScripts()" title="Abre em nova aba, já logado">📚 Central de Scripts</button>
+      <button class="btn-gh btn-sm" onclick="abrirCentralScriptsV2()" title="Versão nova, ainda em construção — só Objeções está completa" style="color:var(--am)">🚧 Scripts v2 (beta)</button>
       <button class="btn-gh btn-sm" onclick="abrirCampanhas()" title="Abre em nova aba, já logado">📢 Campanhas</button>
       <button class="btn-gh btn-sm" onclick="abrirExperiencias()" title="Abre em nova aba, já logado">🎯 Experiências</button>
       <button class="btn-gh btn-sm" onclick="abrirAgendaUnificada()" title="Abre em nova aba, já logado">📅 Agenda</button>
@@ -1387,6 +1388,10 @@ async function checkSessaoInicial(){
 // Navega na MESMA aba (em vez de abrir aba nova) — evita acumular abas no navegador.
 // IMPORTANTE: se o arquivo estiver em outra pasta/domínio, ajuste a URL abaixo.
 function abrirCentralScripts(){
+  if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
+  window.location.href=`central-scripts-aqui.html?uid=${encodeURIComponent(sessao.id)}`;
+}
+function abrirCentralScriptsV2(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
   window.location.href=`central-scripts-v2.html?uid=${encodeURIComponent(sessao.id)}`;
 }
