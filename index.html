@@ -303,6 +303,7 @@ tbody tr:hover td{background:var(--s2)}
     <div class="tab" onclick="switchTab('retencao')">Retenção</div>
     <div class="tab" onclick="switchTab('painel')">Painel</div>
     <div class="tab" onclick="switchTab('alunos')">Alunos</div>
+    <div class="tab" onclick="switchTab('briefing')">Briefing</div>
     <div class="tab" onclick="switchTab('planejamento')">Planejamento</div>
     <div class="tab" onclick="switchTab('diagnostico')">Diagnóstico</div>
     <div class="tab" onclick="switchTab('funis')">Funis & Indicadores</div>
@@ -462,6 +463,49 @@ tbody tr:hover td{background:var(--s2)}
       <div class="chart-card">
         <h3>Matrículas por dia do desafio</h3>
         <div style="position:relative;height:180px"><canvas id="ch-evol" role="img" aria-label="Evolução">Sem dados.</canvas></div>
+      </div>
+    </div>
+
+    <div id="pan-briefing" class="panel">
+      <div id="briefing-restrito" style="display:none;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:14px;padding:32px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:8px">🔒</div><strong>Acesso restrito ao Gestor(a)</strong>
+      </div>
+
+      <div id="briefing-conteudo">
+        <div class="lbl" style="margin-bottom:2px">Briefing do negócio</div>
+        <p style="font-size:12px;color:var(--td);margin-bottom:20px">Base de posicionamento e características da academia — usada como ponto de partida pra personalizar scripts, cadências e objeções específicas.</p>
+
+        <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-lbl">🏢 Perfil do negócio</div><div class="sec-div-line"></div></div>
+        <div class="form-row">
+          <div class="fg"><label class="fl">Espaço físico (m²)</label><input class="fi" type="number" id="bf-m2" placeholder="Ex: 800"></div>
+          <div class="fg"><label class="fl">Ticket médio atual (R$)</label><input class="fi" type="number" id="bf-ticket" placeholder="Ex: 180"></div>
+          <div class="fg"><label class="fl">Modalidade principal / carro-chefe</label><input class="fi" id="bf-modalidade-principal" placeholder="Ex: Natação infantil"></div>
+        </div>
+        <div class="fg"><label class="fl">Modelo de negócio</label><input class="fi" id="bf-modelo" placeholder="Ex: Mensalidade tradicional, franquia, misto com personal..."></div>
+
+        <div class="fg"><label class="fl">Modalidades oferecidas</label>
+          <div id="bf-modalidades-chk" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px"></div>
+        </div>
+
+        <div class="fg"><label class="fl">Diferenciais técnicos existentes</label>
+          <textarea class="fi" id="bf-diferenciais" rows="3" placeholder="Programas exclusivos, metodologia própria, tecnologia embarcada..."></textarea>
+        </div>
+        <div class="fg"><label class="fl">Público-alvo</label>
+          <textarea class="fi" id="bf-publico" rows="3" placeholder="Faixa etária, perfil socioeconômico, dores específicas..."></textarea>
+        </div>
+
+        <button class="btn-gh" onclick="salvarBriefing()">Salvar perfil do negócio</button>
+        <span id="bf-msg" style="margin-left:12px;font-size:12px;color:var(--gr)"></span>
+
+        <div class="sec-div" style="margin-top:28px"><div class="sec-div-line"></div><div class="sec-div-lbl">🎙️ Transcrições de reunião</div><div class="sec-div-line"></div></div>
+        <p style="font-size:11px;color:var(--td);margin-bottom:12px">Cole aqui a transcrição de reuniões com o cliente sobre posicionamento. Fica guardado como histórico.</p>
+        <div id="bf-transcricoes-lista" style="margin-bottom:16px"></div>
+        <div class="form-row" style="grid-template-columns:1fr 2fr">
+          <div class="fg"><label class="fl">Data</label><input class="fi" type="date" id="bf-t-data"></div>
+          <div class="fg"><label class="fl">Título / contexto</label><input class="fi" id="bf-t-titulo" placeholder="Ex: Reunião de posicionamento inicial"></div>
+        </div>
+        <div class="fg"><label class="fl">Transcrição / anotações</label><textarea class="fi" id="bf-t-conteudo" rows="6" placeholder="Cole o texto aqui..."></textarea></div>
+        <button class="btn-gh" onclick="addTranscricao()">Adicionar transcrição</button>
       </div>
     </div>
 
@@ -3113,8 +3157,87 @@ function exportCSV(){
 }
 
 // TABS / MODAIS / TOAST
-const TABS=['geral','vendasmkt','retencao','painel','alunos','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
-function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();if(t==='alunos')carregarAlunos();if(t==='geral')carregarGeral();if(t==='vendasmkt')carregarVendasMkt();if(t==='retencao')carregarRetencao();}
+const TABS=['geral','vendasmkt','retencao','painel','alunos','briefing','planejamento','diagnostico','funis','consultoras','relatorio','ranking','admin','ferramentas','ajuda'];
+function switchTab(t){TABS.forEach((x,i)=>{document.getElementById('pan-'+x).classList.toggle('active',x===t);document.querySelectorAll('.tab')[i].classList.toggle('active',x===t)});if(t==='ferramentas')renderFerramentas();if(t==='planejamento')initPlanejamento();if(t==='diagnostico')initDiagnostico();if(t==='alunos')carregarAlunos();if(t==='geral')carregarGeral();if(t==='vendasmkt')carregarVendasMkt();if(t==='retencao')carregarRetencao();if(t==='briefing')initBriefing();}
+
+// ══════════════════════════════════════
+// BRIEFING DO NEGÓCIO
+// ══════════════════════════════════════
+const MODALIDADES_OPCOES=['Musculação/Fitness','Aulas Coletivas','Piscina Infantil','Piscina Adulto','Artes Marciais','Personal Trainer','Avaliação Física'];
+function initBriefing(){
+  const restrito=sessao.role==='consultor'||sessao.role==='treinador';
+  document.getElementById('briefing-restrito').style.display=restrito?'block':'none';
+  document.getElementById('briefing-conteudo').style.display=restrito?'none':'block';
+  if(restrito)return;
+  renderModalidadesChk([]);
+  carregarBriefing();
+  carregarTranscricoes();
+}
+function renderModalidadesChk(selecionadas){
+  document.getElementById('bf-modalidades-chk').innerHTML=MODALIDADES_OPCOES.map(m=>`
+    <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;background:var(--s2);padding:6px 12px;border-radius:20px;cursor:pointer">
+      <input type="checkbox" value="${m}" ${selecionadas.includes(m)?'checked':''}> ${m}
+    </label>`).join('');
+}
+async function carregarBriefing(){
+  if(!sessao.academia_id)return;
+  try{
+    const rows=await sbGet('briefing_negocio',`academia_id=eq.${sessao.academia_id}`);
+    const b=rows&&rows[0];
+    if(b){
+      document.getElementById('bf-m2').value=b.espaco_m2??'';
+      document.getElementById('bf-ticket').value=b.ticket_atual??'';
+      document.getElementById('bf-modalidade-principal').value=b.modalidade_principal||'';
+      document.getElementById('bf-modelo').value=b.modelo_negocio||'';
+      document.getElementById('bf-diferenciais').value=b.diferenciais_tecnicos||'';
+      document.getElementById('bf-publico').value=b.publico_alvo||'';
+      renderModalidadesChk(b.modalidades||[]);
+    }
+  }catch(e){console.error('Erro ao carregar briefing:',e);}
+}
+async function salvarBriefing(){
+  const modalidades=[...document.querySelectorAll('#bf-modalidades-chk input:checked')].map(el=>el.value);
+  const payload={
+    academia_id:sessao.academia_id,
+    espaco_m2:parseFloat(document.getElementById('bf-m2').value)||null,
+    ticket_atual:parseFloat(document.getElementById('bf-ticket').value)||null,
+    modalidade_principal:document.getElementById('bf-modalidade-principal').value||null,
+    modelo_negocio:document.getElementById('bf-modelo').value||null,
+    diferenciais_tecnicos:document.getElementById('bf-diferenciais').value||null,
+    publico_alvo:document.getElementById('bf-publico').value||null,
+    modalidades, updated_at:Date.now()
+  };
+  try{
+    await sbUpsert('briefing_negocio',payload);
+    document.getElementById('bf-msg').textContent='✓ Salvo!';
+    setTimeout(()=>document.getElementById('bf-msg').textContent='',2500);
+  }catch(e){console.error(e);toast('Erro ao salvar briefing.',true);}
+}
+async function carregarTranscricoes(){
+  const el=document.getElementById('bf-transcricoes-lista');
+  try{
+    const rows=await sbGet('briefing_transcricoes',`academia_id=eq.${sessao.academia_id}&order=data.desc`);
+    if(!rows.length){el.innerHTML='<div style="color:var(--td);font-size:12px">Nenhuma transcrição registrada ainda.</div>';return;}
+    el.innerHTML=rows.map(r=>`<details style="background:var(--s2);border-radius:8px;padding:10px 14px;margin-bottom:8px">
+      <summary style="cursor:pointer;font-size:13px;font-weight:600">${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')} — ${r.titulo||'Sem título'}</summary>
+      <div style="font-size:12px;color:var(--tm);margin-top:8px;white-space:pre-wrap">${(r.conteudo||'').replace(/</g,'&lt;')}</div>
+    </details>`).join('');
+  }catch(e){console.error(e);el.innerHTML='<div style="color:var(--td);font-size:12px">Erro ao carregar.</div>';}
+}
+async function addTranscricao(){
+  const data=document.getElementById('bf-t-data').value;
+  const conteudo=document.getElementById('bf-t-conteudo').value.trim();
+  if(!data||!conteudo)return toast('Preencha data e conteúdo da transcrição.',true);
+  try{
+    await sbPost('briefing_transcricoes',{
+      academia_id:sessao.academia_id, data, titulo:document.getElementById('bf-t-titulo').value||null,
+      conteudo, criado_em:Date.now()
+    });
+    document.getElementById('bf-t-titulo').value=''; document.getElementById('bf-t-conteudo').value='';
+    carregarTranscricoes();
+    toast('Transcrição adicionada!');
+  }catch(e){console.error(e);toast('Erro ao salvar transcrição.',true);}
+}
 
 // ══════════════════════════════════════
 // VENDAS & MARKETING
