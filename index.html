@@ -252,7 +252,7 @@ tbody tr:hover td{background:var(--s2)}
       <input class="fi" type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="btn-or" style="width:100%;padding:11px" id="btn-login" onclick="doLogin()">Entrar</button>
-    <div class="auth-switch">Primeira vez? <a onclick="showScreen('screen-cadastro')">Criar conta</a></div>
+    <div class="auth-switch" style="display:none">Primeira vez? <a onclick="showScreen('screen-cadastro')">Criar conta</a></div>
   </div>
 </div>
 
@@ -288,14 +288,13 @@ tbody tr:hover td{background:var(--s2)}
         <select id="sel-ac" class="fi-sel" onchange="switchAc(this.value)"><option value="">— Selecione —</option></select>
       </div>
       <span id="user-chip" class="user-chip"></span>
-      <button class="btn-gh btn-sm" id="btn-add-cons-top" onclick="openM('m-cons')" style="display:none">+ Consultor(a)</button>
-      <button class="btn-or" id="btn-lancar-top" onclick="openM('m-lanc')" style="display:none">Lançar Dia</button>
+      <button class="btn-gh btn-sm" id="btn-add-cons-top" onclick="if(!ac()){toast('Selecione uma academia no seletor acima.',true);return}openM('m-cons')" style="display:none">+ Consultor(a)</button>
+      <button class="btn-or" id="btn-lancar-top" onclick="if(!ac()){toast('Selecione uma academia no seletor acima.',true);return}openM('m-lanc')" style="display:none">Lançar Dia</button>
       <button class="btn-gh btn-sm" onclick="abrirCentralScripts()" title="Abre em nova aba, já logado">📚 Central de Scripts</button>
       <button class="btn-gh btn-sm" onclick="abrirCentralScriptsV2()" title="Versão nova, ainda em construção — só Objeções está completa" style="color:var(--am)">🚧 Scripts v2 (beta)</button>
       <button class="btn-gh btn-sm" onclick="abrirCampanhas()" title="Abre em nova aba, já logado">📢 Campanhas</button>
       <button class="btn-gh btn-sm" onclick="abrirExperiencias()" title="Abre em nova aba, já logado">🎯 Experiências</button>
       <button class="btn-gh btn-sm" onclick="abrirAgendaUnificada()" title="Abre em nova aba, já logado">📅 Agenda</button>
-      <a href="mapa-ferramenta.html" target="_blank" class="btn-gh btn-sm" style="text-decoration:none;display:inline-flex;align-items:center;" title="Abre em nova aba, mapa e tutorial da ferramenta">🗺️ Mapa</a>
       <button class="btn-gh btn-sm" id="btn-tv" onclick="toggleTV()" title="Modo apresentação em tela cheia">📺 TV</button>
       <button class="btn-logout" onclick="doLogout()">Sair</button>
     </div>
@@ -779,15 +778,13 @@ tbody tr:hover td{background:var(--s2)}
 
     <!-- ADMIN -->
     <div id="pan-admin" class="panel">
-      <!-- TOGGLE SISTEMA -->
+      <!-- BARRA MESTRE -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--td)">Sistema:</div>
-        <div style="display:flex;gap:0;background:var(--s2);border-radius:8px;padding:3px;border:1px solid var(--bd)">
-          <button id="toggle-roi" onclick="switchAdminSys('roi')" style="padding:6px 16px;border-radius:6px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;background:var(--or);color:#000;transition:all .15s">🏆 ROI 21 Dias</button>
-          <button id="toggle-gav" onclick="switchAdminSys('gav')" style="padding:6px 16px;border-radius:6px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;background:transparent;color:var(--td);transition:all .15s">📊 Gestão à Vista</button>
-        </div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--td)">Todas as academias</div>
+        <button class="btn-or btn-sm" onclick="abrirNovaAcademia()">＋ Nova academia</button>
         <div id="ac-total-lbl" style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--td)"></div>
       </div>
+      <div id="ac-alertas"></div>
 
       <!-- ROI 21 DIAS -->
       <div id="admin-roi">
@@ -1232,6 +1229,35 @@ tbody tr:hover td{background:var(--s2)}
   </div>
 </div>
 
+<!-- MODAL NOVA ACADEMIA -->
+<div class="modal-ov" id="m-nova-ac">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-hd"><h3>＋ Nova academia</h3><button class="btn-x" onclick="closeM('m-nova-ac')">×</button></div>
+    <div style="font-size:12px;color:var(--td);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Academia</div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Nome da academia</label><input class="fi" id="na-nome"></div>
+      <div class="fg"><label class="fl">Cidade</label><input class="fi" id="na-cidade"></div>
+    </div>
+    <div style="font-size:12px;color:var(--td);margin:12px 0 8px;text-transform:uppercase;letter-spacing:1px">Gestor(a) responsável (obrigatório)</div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Nome</label><input class="fi" id="na-gnome"></div>
+      <div class="fg"><label class="fl">E-mail de acesso</label><input class="fi" id="na-gemail"></div>
+    </div>
+    <div class="fg"><label class="fl">Senha inicial</label><input class="fi" id="na-gsenha" placeholder="mínimo 6 caracteres"></div>
+    <div style="font-size:12px;color:var(--td);margin:12px 0 8px;text-transform:uppercase;letter-spacing:1px">Contratação</div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Status</label><select class="fi" id="na-status"><option value="teste">Teste</option><option value="ativa">Ativa</option></select></div>
+      <div class="fg"><label class="fl">Periodicidade</label><select class="fi" id="na-period"><option value="mensal">Mensal</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option><option value="anual">Anual</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Início</label><input class="fi" type="date" id="na-inicio"></div>
+      <div class="fg"><label class="fl">Vencimento</label><input class="fi" type="date" id="na-venc"></div>
+    </div>
+    <div class="fg"><label class="fl">Valor (R$)</label><input class="fi" type="number" id="na-valor"></div>
+    <button class="btn-or" style="width:100%;margin-top:12px" id="na-btn" onclick="criarNovaAcademia()">Criar academia e gestor(a)</button>
+  </div>
+</div>
+
 <div class="modal-ov" id="m-cons-detalhe">
   <div class="modal" style="max-width:640px">
     <div class="modal-hd"><h3 id="cd-nome">Consultor(a)</h3><button class="btn-x" onclick="closeM('m-cons-detalhe')">×</button></div>
@@ -1302,7 +1328,11 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function ac(){return acId&&db.acs[acId]?db.acs[acId]:null}
 function fInfo(fid){return FUNIS.find(f=>f.id===fid)}
 function initials(nm){return nm.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
-function isAdmin(){return sessao&&sessao.role==='admin'}
+// ══ MODO DA INSTALAÇÃO ══
+// true  = versão MESTRE da GeFit (painel Todas as Academias, criar academia, contratos).
+// false = versão WHITE LABEL de um cliente (uma academia só, sem painel mestre, sem criar/ver outras).
+const MODO_MESTRE=true;
+function isAdmin(){return MODO_MESTRE&&sessao&&sessao.role==='admin'}
 function setSS(s,t){document.getElementById('sync-dot').className='sync-dot '+s;document.getElementById('sync-txt').textContent=t}
 function showScreen(id){document.querySelectorAll('.auth-screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
 
@@ -1416,7 +1446,8 @@ function abrirAgendaUnificada(){
 async function iniciarApp(){
   const chip=document.getElementById('user-chip');
   if(isAdmin()){chip.className='admin-chip';chip.textContent='⚡ GeFit Admin';document.getElementById('tab-admin').classList.add('show');document.getElementById('admin-ac-row').classList.add('show');}
-  else{chip.className='user-chip';chip.textContent=sessao.nome||sessao.email.split('@')[0];document.getElementById('btn-add-cons-top').style.display='block';document.getElementById('btn-lancar-top').style.display='block';}
+  else{chip.className='user-chip';chip.textContent=sessao.nome||sessao.email.split('@')[0];}
+  document.getElementById('btn-add-cons-top').style.display='block';document.getElementById('btn-lancar-top').style.display='block';
   document.getElementById('loading-ov').classList.remove('hide');
   await loadAll();
   checkWelcome();
@@ -2569,6 +2600,7 @@ async function renderAdminPanel(){
     gs.forEach(g=>{if(g.academia_id)gestoresDB[g.academia_id]=g});
   }catch(e){console.error(e)}
 
+  renderAlertasContrato(entries);
   const el=document.getElementById('ac-grid');
   if(!entries.length){el.innerHTML='<div style="color:var(--td);font-size:13px">Nenhuma academia cadastrada ainda.</div>';return}
   el.innerHTML=entries.map(([id,a])=>{
@@ -2586,9 +2618,10 @@ async function renderAdminPanel(){
         <div class="ac-stats"><div class="ac-stat"><span class="ac-stat-num or">${mat}</span><span class="ac-stat-lbl">Matrículas</span></div><div class="ac-stat"><span class="ac-stat-num">${tCons2}</span><span class="ac-stat-lbl">Consultores</span></div><div class="ac-stat"><span class="ac-stat-num gr">R$${vend>=1000?Math.round(vend/1000)+'k':vend}</span><span class="ac-stat-lbl">Vendido</span></div></div>
         <div class="mini-bar-wrap"><div class="mini-bar" style="width:${pct}%"></div></div>
         <div class="pct-lbl">${pct}% meta (${mat}/${tMeta})</div>
+        <div style="margin-top:8px">${badgeContrato(a)}</div>
         <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
           <div style="font-size:11px;color:var(--td);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📧 ${emailStr}</div>
-          <button class="btn-gh btn-sm" style="flex-shrink:0;font-size:11px;padding:3px 10px" onclick="event.stopPropagation();openAcesso('${id}')">🔑 Acesso</button>
+          <button class="btn-gh btn-sm" style="flex-shrink:0;font-size:11px;padding:3px 10px" onclick="event.stopPropagation();openAcesso('${id}')">⚙️ Gerenciar</button>
         </div>
       </div>
     </div>`;
@@ -2599,8 +2632,102 @@ async function renderAdminPanel(){
   acsChart=new Chart(document.getElementById('ch-acs'),{type:'bar',data:{labels:sorted.map(x=>x.nome),datasets:[{label:'Matrículas',data:sorted.map(x=>x.mat),backgroundColor:sorted.map((_,i)=>i===0?'#0A4FAA':'rgba(10,79,170,0.4)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#666',precision:0},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
 }
 
+// ══ CONTRATO / ASSINATURA (controle manual, versão MVP) ══
+// Guardado em academias.contrato (jsonb): {tipo,status,periodicidade,inicio,vencimento,valor,url,obs,historico[]}
+const STATUS_CONTRATO={teste:['Teste','#f59e0b'],ativa:['Ativa','#22c55e'],atraso:['Em atraso','#ef4444'],suspensa:['Suspensa','#ef4444'],cancelada:['Cancelada','#888']};
+function hojeISO(){return new Date().toISOString().slice(0,10)}
+function diasAte(iso){if(!iso)return null;return Math.round((new Date(iso+'T00:00:00')-new Date(hojeISO()+'T00:00:00'))/86400000)}
+function statusEfetivo(a){
+  const c=a.contrato||{};let st=c.status||'ativa';
+  const d=diasAte(c.vencimento);
+  if((st==='ativa'||st==='teste')&&d!==null&&d<0)st='atraso';
+  return st;
+}
+function badgeContrato(a){
+  const c=a.contrato||{};const st=statusEfetivo(a);const [lbl,cor]=STATUS_CONTRATO[st]||STATUS_CONTRATO.ativa;
+  const d=diasAte(c.vencimento);
+  const venc=c.vencimento?` · vence ${c.vencimento.split('-').reverse().join('/')}${d!==null&&d>=0&&d<=15?' ('+d+'d)':''}`:'';
+  const tipo=c.tipo==='personalizada'?'Personalizada':'Compartilhada';
+  return `<span style="font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;background:${cor}26;color:${cor}">● ${lbl}</span><span style="font-size:10.5px;color:var(--td);margin-left:6px">${tipo}${venc}</span>`;
+}
+function renderAlertasContrato(entries){
+  const el=document.getElementById('ac-alertas');if(!el)return;
+  const itens=[];
+  entries.forEach(([id,a])=>{
+    const c=a.contrato||{};const st=statusEfetivo(a);const d=diasAte(c.vencimento);
+    if(st==='atraso')itens.push(`<b>${a.nome}</b>: em atraso${d!==null?' há '+Math.abs(d)+' dia(s)':''}`);
+    else if((st==='ativa'||st==='teste')&&d!==null&&d<=15)itens.push(`<b>${a.nome}</b>: vence em ${d} dia(s)`);
+  });
+  el.innerHTML=itens.length?`<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12.5px;line-height:1.7"><div style="font-weight:700;margin-bottom:4px">⚠️ Atenção nos contratos</div>${itens.join('<br>')}</div>`:'';
+}
+function abrirNovaAcademia(){
+  ['na-nome','na-cidade','na-gnome','na-gemail','na-gsenha','na-valor'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('na-inicio').value=hojeISO();
+  document.getElementById('na-venc').value='';
+  openM('m-nova-ac');
+}
+async function criarNovaAcademia(){
+  const g=i=>document.getElementById(i).value.trim();
+  const nome=g('na-nome'),cidade=g('na-cidade'),gn=g('na-gnome'),ge=g('na-gemail').toLowerCase(),gs=document.getElementById('na-gsenha').value;
+  if(!nome||!gn||!ge.includes('@')||gs.length<6){toast('Preencha academia, gestor(a), e-mail válido e senha com 6+ caracteres.',true);return}
+  const btn=document.getElementById('na-btn');btn.disabled=true;
+  try{
+    const ex=await sbGet('gestores',`email=eq.${encodeURIComponent(ge)}&select=id`);
+    if(ex&&ex.length){toast('Já existe um acesso com esse e-mail.',true);btn.disabled=false;return}
+    const id=uid();
+    const contrato={tipo:'compartilhada',status:document.getElementById('na-status').value,periodicidade:document.getElementById('na-period').value,inicio:g('na-inicio'),vencimento:g('na-venc'),valor:parseFloat(g('na-valor'))||0,url:'',obs:'',historico:[{data:hojeISO(),evento:'Academia criada'}]};
+    await sbPost('academias',{id,nome,cidade,contrato});
+    await sbPost('gestores',{id:uid(),nome:gn,email:ge,senha_hash:gs,academia_id:id,role:'gestor',ativo:true,modulos_ativos:MODULOS_QG90.map(m=>m.key)});
+    toast('Academia e gestor(a) criados!');
+    closeM('m-nova-ac');
+    await loadAll();
+  }catch(e){toast('Erro ao criar academia. Rode o SQL do contrato (schema-painel-mestre.sql).',true);console.error(e)}
+  btn.disabled=false;
+}
+async function salvarContrato(acId2){
+  const a=db.acs[acId2];const c0=a.contrato||{};const g=i=>document.getElementById(i).value;
+  const novo={...c0,tipo:g('ct-tipo'),status:g('ct-status'),periodicidade:g('ct-period'),inicio:g('ct-inicio'),vencimento:g('ct-venc'),valor:parseFloat(g('ct-valor'))||0,url:g('ct-url').trim(),obs:g('ct-obs').trim()};
+  const hist=[...(c0.historico||[])];
+  const mudou=[];
+  if(c0.status!==novo.status)mudou.push('status: '+(STATUS_CONTRATO[novo.status]||[novo.status])[0]);
+  if(c0.tipo!==novo.tipo)mudou.push('versão: '+novo.tipo);
+  if((c0.vencimento||'')!==(novo.vencimento||''))mudou.push('vencimento: '+(novo.vencimento||'-'));
+  if(mudou.length)hist.push({data:hojeISO(),evento:mudou.join(' | ')});
+  novo.historico=hist;
+  try{
+    await fetch(`${SB_URL}/rest/v1/academias?id=eq.${acId2}`,{method:'PATCH',headers:H,body:JSON.stringify({contrato:novo})});
+    toast('Contrato salvo!');
+    await loadAll();
+    openAcesso(acId2);
+  }catch(e){toast('Erro ao salvar contrato. Rode o SQL schema-painel-mestre.sql.',true);console.error(e)}
+}
+// Suspende/reativa TODOS os logins da academia (gestor, consultores, treinadores). Dados ficam preservados.
+async function toggleAtivoAcademiaToda(acId2,ativar){
+  if(!confirm(ativar?'Reativar o acesso de TODOS os usuários desta academia?':'Suspender o acesso de TODOS os usuários desta academia?\n(Os dados ficam preservados.)'))return;
+  try{
+    await fetch(`${SB_URL}/rest/v1/gestores?academia_id=eq.${acId2}&role=neq.admin`,{method:'PATCH',headers:H,body:JSON.stringify({ativo:ativar})});
+    toast(ativar?'Acessos reativados!':'Academia suspensa.');
+    await renderAdminPanel();openAcesso(acId2);
+  }catch(e){toast('Erro ao atualizar acessos',true);console.error(e)}
+}
+async function carregarUsuariosAcademia(acId2){
+  const el=document.getElementById('ac-usuarios');if(!el)return;
+  try{
+    const us=await sbGet('gestores',`academia_id=eq.${acId2}&role=neq.admin&select=id,nome,email,role,ativo&order=role.asc`);
+    const rot={gestor:'Gestor(a)',consultor:'Consultor(a)',treinador:'Treinador(a)'};
+    el.innerHTML=us.length?us.map(u=>`<div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px">
+      <div style="flex:1;min-width:0"><div style="font-weight:600">${u.nome||'-'} <span style="color:var(--td);font-weight:400">· ${rot[u.role]||u.role}</span></div><div style="color:var(--td);overflow:hidden;text-overflow:ellipsis">${u.email}</div></div>
+      <span style="font-size:10.5px;font-weight:700;color:${u.ativo?'#22c55e':'#ef4444'}">${u.ativo?'ATIVO':'SUSPENSO'}</span>
+      <button class="btn-gh btn-sm" style="font-size:11px;padding:3px 8px" onclick="toggleUsuarioAc('${u.id}',${u.ativo},'${acId2}')">${u.ativo?'Suspender':'Reativar'}</button></div>`).join(''):'<div style="color:var(--td);font-size:12.5px">Nenhum usuário.</div>';
+  }catch(e){el.innerHTML='<div style="color:var(--re);font-size:12.5px">Erro ao carregar usuários.</div>';console.error(e)}
+}
+async function toggleUsuarioAc(uidU,ativo,acId2){
+  try{await fetch(`${SB_URL}/rest/v1/gestores?id=eq.${uidU}`,{method:'PATCH',headers:H,body:JSON.stringify({ativo:!ativo})});carregarUsuariosAcademia(acId2)}catch(e){toast('Erro',true)}
+}
+
 function openAcesso(acId2){
   const a=db.acs[acId2];
+  document.querySelector('#m-acesso .modal-hd h3').textContent='⚙️ Gerenciar Academia';
   const g=gestoresDB[acId2];
   const el=document.getElementById('acesso-body');
   const ativo=g?g.ativo!==false:null; // true = ativo, false = suspenso
@@ -2620,6 +2747,35 @@ function openAcesso(acId2){
       <div class="fg"><label class="fl">Cidade</label><input class="fi" id="ac-edit-cidade" value="${a.cidade||''}"></div>
     </div>
     <button class="btn-gh btn-sm" onclick="salvarCadastroAcademia('${acId2}')">Salvar cadastro</button>
+
+    <div class="divider"></div>
+    ${(()=>{const c=a.contrato||{};const sel=(v,o)=>o.map(([k,l])=>`<option value="${k}" ${v===k?'selected':''}>${l}</option>`).join('');return `
+    <div style="font-size:12px;color:var(--td);margin-bottom:8px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:1px">Contratação ${badgeContrato(a)}</div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Versão</label><select class="fi" id="ct-tipo">${sel(c.tipo||'compartilhada',[['compartilhada','Compartilhada'],['personalizada','Personalizada (white label)']])}</select></div>
+      <div class="fg"><label class="fl">Status</label><select class="fi" id="ct-status">${sel(c.status||'ativa',[['teste','Teste'],['ativa','Ativa'],['atraso','Em atraso'],['suspensa','Suspensa'],['cancelada','Cancelada']])}</select></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Periodicidade</label><select class="fi" id="ct-period">${sel(c.periodicidade||'mensal',[['mensal','Mensal'],['trimestral','Trimestral'],['semestral','Semestral'],['anual','Anual']])}</select></div>
+      <div class="fg"><label class="fl">Valor (R$)</label><input class="fi" type="number" id="ct-valor" value="${c.valor||''}"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label class="fl">Início</label><input class="fi" type="date" id="ct-inicio" value="${c.inicio||''}"></div>
+      <div class="fg"><label class="fl">Vencimento</label><input class="fi" type="date" id="ct-venc" value="${c.vencimento||''}"></div>
+    </div>
+    <div class="fg"><label class="fl">Link da versão personalizada</label><input class="fi" id="ct-url" value="${c.url||''}" placeholder="https://..."></div>
+    <div class="fg"><label class="fl">Anotações de suporte</label><textarea class="fi" id="ct-obs" rows="2">${c.obs||''}</textarea></div>
+    <button class="btn-or btn-sm" onclick="salvarContrato('${acId2}')">Salvar contrato</button>
+    ${(c.historico||[]).length?`<div style="margin-top:10px;font-size:11.5px;color:var(--td);line-height:1.6"><b>Histórico</b><br>${[...c.historico].reverse().map(h=>h.data.split('-').reverse().join('/')+' · '+h.evento).join('<br>')}</div>`:''}`})()}
+
+    <div class="divider"></div>
+    <div style="font-size:12px;color:var(--td);margin-bottom:8px;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:1px">Usuários desta academia</div>
+    <div id="ac-usuarios" style="margin-bottom:8px"><div style="color:var(--td);font-size:12.5px">Carregando...</div></div>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <button class="btn-danger" style="flex:1" onclick="toggleAtivoAcademiaToda('${acId2}',false)">⛔ Suspender academia toda</button>
+      <button class="btn-or" style="flex:1" onclick="toggleAtivoAcademiaToda('${acId2}',true)">✅ Reativar academia toda</button>
+    </div>
+    <div style="font-size:11px;color:var(--td);margin-bottom:6px">Para criar acesso de consultor(a) ou treinador(a): selecione a academia no seletor do topo e use o botão 🔑 em Equipe.</div>
 
     <div class="divider"></div>
 
@@ -2654,6 +2810,7 @@ function openAcesso(acId2){
     <button class="btn-danger" style="width:100%" onclick="excluirAcademiaCompleta('${acId2}','${(a.nome||'').replace(/'/g,"\\'")}')">🗑 Excluir academia (permanente)</button>
   `;
   document.getElementById('m-acesso').classList.add('open');
+  carregarUsuariosAcademia(acId2);
 }
 
 async function salvarCadastroAcademia(acId2){
