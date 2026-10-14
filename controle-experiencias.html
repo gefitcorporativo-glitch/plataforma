@@ -336,7 +336,7 @@ main{padding:22px 24px 60px;max-width:1600px;margin:0 auto;}
   <div class="login-box">
     <div class="login-logo">GeFit</div>
     <div class="login-title">Controle de<br>Experiências</div>
-    <div class="login-sub">Acesso da equipe — vendas e técnico</div>
+    <div class="login-sub">Acesso da equipe, vendas e técnico</div>
     <div class="field">
       <label>E-mail</label>
       <input type="email" id="loginEmail" placeholder="seu@email.com">
@@ -354,7 +354,7 @@ main{padding:22px 24px 60px;max-width:1600px;margin:0 auto;}
 <div id="appShell">
   <header class="topbar">
     <div class="brand">
-      <a href="index.html" class="brand-mark" style="text-decoration:none;" title="Voltar ao Desafio ROI 21 Dias">QG</a>
+      <a href="index.html" class="brand-mark" style="text-decoration:none;" title="Voltar ao Desafio ROI 21 Dias">GF</a>
       <div class="brand-text">
         <div class="t1">GeFit · GeFit</div>
         <div class="t2">Controle de Experiências</div>
@@ -380,7 +380,7 @@ main{padding:22px 24px 60px;max-width:1600px;margin:0 auto;}
       <div class="board-header">
         <div>
           <div class="board-title">Jornada de Experiências</div>
-          <div class="board-sub">Do cadastro à conversão — vendas e treinador conectados em cada etapa</div>
+          <div class="board-sub">Do cadastro à conversão, vendas e treinador conectados em cada etapa</div>
         </div>
         <button class="btn" onclick="openNewModal()">+ Nova Experiência</button>
       </div>
@@ -403,7 +403,7 @@ main{padding:22px 24px 60px;max-width:1600px;margin:0 auto;}
     <div class="modal-head">
       <div>
         <h2>Nova Experiência</h2>
-        <div class="sub">Cadastro e qualificação — Vendas</div>
+        <div class="sub">Cadastro e qualificação, Vendas</div>
       </div>
       <button class="modal-close" onclick="closeModal('newModalOverlay')">✕</button>
     </div>
@@ -430,7 +430,7 @@ main{padding:22px 24px 60px;max-width:1600px;margin:0 auto;}
       </div>
       <div class="field">
         <label>Consultor(a) Responsável</label>
-        <select id="f_consultor_id"><option value="">— Selecione —</option></select>
+        <select id="f_consultor_id"><option value="">- Selecione -</option></select>
       </div>
       <div class="field">
         <label>Perfil do Lead</label>
@@ -439,7 +439,7 @@ main{padding:22px 24px 60px;max-width:1600px;margin:0 auto;}
           <div class="status-pill" data-perfil="5" onclick="selectPerfil('5')">5% · Autônomo / já treina</div>
           <div class="status-pill" data-perfil="sem_qualificacao" onclick="selectPerfil('sem_qualificacao')">Sem Qualificação</div>
         </div>
-        <div class="hint" id="perfilHint">Duração sugerida: 10–12 dias · acompanhamento ativo do treinador, sinais de confiança e vínculo são o principal fator de conversão.</div>
+        <div class="hint" id="perfilHint">Duração sugerida: 10-12 dias · acompanhamento ativo do treinador, sinais de confiança e vínculo são o principal fator de conversão.</div>
       </div>
       <div class="grid2">
         <div class="field">
@@ -473,8 +473,8 @@ main{padding:22px 24px 60px;max-width:1600px;margin:0 auto;}
   <div class="modal modal-wide">
     <div class="modal-head">
       <div>
-        <h2 id="d_nome">—</h2>
-        <div class="sub" id="d_sub">—</div>
+        <h2 id="d_nome">-</h2>
+        <div class="sub" id="d_sub">-</div>
       </div>
       <button class="modal-close" onclick="closeModal('detailModalOverlay')">✕</button>
     </div>
@@ -616,7 +616,7 @@ async function startApp(){
   await loadExperiencias();
   await loadAgendaTarefas();
   renderKanban();
-  if(DEMO_MODE) showToast("Modo demonstração — configure a ANON_KEY do Supabase para salvar dados de verdade.");
+  if(DEMO_MODE) showToast("Modo demonstração, configure a ANON_KEY do Supabase para salvar dados de verdade.");
 }
 
 async function loadEquipe(){
@@ -640,11 +640,11 @@ async function loadEquipe(){
   }
 }
 
-// (Gestão de acesso individual — Equipe — foi centralizada no Desafio ROI 21 Dias,
+// (Gestão de acesso individual, Equipe, foi centralizada no Desafio ROI 21 Dias,
 // pra não ter dois lugares diferentes criando login com regras diferentes.)
 
 // Login automático quando chega pelo painel principal (ROI 21 Dias / Campanhas),
-// via ?uid=<id do gestor> na URL — mesmo padrão de SSO usado nos outros módulos.
+// via ?uid=<id do gestor> na URL, mesmo padrão de SSO usado nos outros módulos.
 async function tentarLoginAutomatico(){
   const params = new URLSearchParams(window.location.search);
   const uid = params.get('uid');
@@ -760,12 +760,12 @@ async function loadExperiencias(){
       query = query.eq('academia_id', currentUser.academia_id);
     }else if(currentUser.role==='admin'){
       // SEGURANÇA: só a conta master de verdade (role==='admin' E academia_id vazio
-      // de propósito) vê experiências de todas as academias — nunca só por causa de
+      // de propósito) vê experiências de todas as academias, nunca só por causa de
       // academia_id estar vazio, o que poderia acontecer por engano em qualquer conta.
     }else{
       experiencias = [];
       showToast("Sua conta não está vinculada a nenhuma academia. Fale com o suporte GeFit.");
-      console.error('SEGURANÇA: usuário sem academia_id e sem role admin tentou carregar experiências — acesso bloqueado.', currentUser);
+      console.error('SEGURANÇA: usuário sem academia_id e sem role admin tentou carregar experiências, acesso bloqueado.', currentUser);
       return;
     }
     const {data, error} = await query;
@@ -773,7 +773,7 @@ async function loadExperiencias(){
     experiencias = data || [];
   }catch(e){
     console.error(e);
-    showToast("Erro ao carregar dados do Supabase — usando dados locais.");
+    showToast("Erro ao carregar dados do Supabase, usando dados locais.");
     seedDemoData();
   }
 }
@@ -856,7 +856,7 @@ function cardHtml(exp){
         <span class="tag tag-prog">${PROGRAMAS[exp.programa]||''}</span>
       </div>
       <div class="card-meta">
-        <span>${exp.consultor_responsavel||'—'}</span>
+        <span>${exp.consultor_responsavel||'-'}</span>
         <span>${freq.totalDias?freq.presentes+'/'+freq.totalDias+' dias':'sem registro'}</span>
       </div>
       ${freq.totalDias ? `<div class="progress-bar"><div class="progress-fill" style="width:${freq.pct}%"></div></div>` : ''}
@@ -871,7 +871,7 @@ function openNewModal(){
   document.getElementById('f_contato').value='';
   document.getElementById('f_data_inicio').value= today();
   const selCons = document.getElementById('f_consultor_id');
-  selCons.innerHTML = '<option value="">— Selecione —</option>' + equipeConsultoras.map(c=>`<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
+  selCons.innerHTML = '<option value="">- Selecione -</option>' + equipeConsultoras.map(c=>`<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
   document.getElementById('f_objetivo').value='';
   document.getElementById('f_programa').value='emagrecimento_saude';
   selectPerfil('95');
@@ -884,13 +884,13 @@ function selectPerfil(p){
   });
   if(p==='95'){
     document.getElementById('f_duracao').value = 12;
-    document.getElementById('perfilHint').textContent = "Duração sugerida: 10–12 dias · acompanhamento ativo do treinador, sinais de confiança e vínculo são o principal fator de conversão.";
+    document.getElementById('perfilHint').textContent = "Duração sugerida: 10-12 dias · acompanhamento ativo do treinador, sinais de confiança e vínculo são o principal fator de conversão.";
   } else if(p==='5'){
     document.getElementById('f_duracao').value = 4;
-    document.getElementById('perfilHint').textContent = "Duração sugerida: 3–5 dias · acompanhamento leve e pontual — evitar excesso de cobrança, foco em autonomia e diferenciais técnicos.";
+    document.getElementById('perfilHint').textContent = "Duração sugerida: 3-5 dias · acompanhamento leve e pontual, evitar excesso de cobrança, foco em autonomia e diferenciais técnicos.";
   } else {
     document.getElementById('f_duracao').value = 12;
-    document.getElementById('perfilHint').textContent = "Sem qualificação prévia — tratamos como 95% por padrão (mais seguro) até o treinador conseguir qualificar no Dia 1. Ajuste o perfil assim que possível.";
+    document.getElementById('perfilHint').textContent = "Sem qualificação prévia, tratamos como 95% por padrão (mais seguro) até o treinador conseguir qualificar no Dia 1. Ajuste o perfil assim que possível.";
   }
 }
 async function salvarNovaExperiencia(){
@@ -905,7 +905,7 @@ async function salvarNovaExperiencia(){
     contato:document.getElementById('f_contato').value.trim(),
     data_inicio:document.getElementById('f_data_inicio').value || today(),
     consultor_id: consultorId,
-    consultor_responsavel: consultorObj ? consultorObj.nome : '—',
+    consultor_responsavel: consultorObj ? consultorObj.nome : '-',
     perfil:novaPerfil,
     programa:document.getElementById('f_programa').value,
     duracao_dias:parseInt(document.getElementById('f_duracao').value)||(novaPerfil==='5'?4:12),
@@ -929,26 +929,26 @@ function openDetail(id){
 function getExp(){ return experiencias.find(e=>e.id===currentCardId); }
 
 function scriptFeedbackD1(exp){
-  return `"Oi ${exp.nome_lead.split(' ')[0]}! Sentimos sua falta na conversa de hoje 😊 Vi que você veio treinar — como foi a experiência com o professor? Quero muito saber suas impressões. Consigo te ligar rapidinho agora, ou prefere que eu ligue em outro horário — qual fica melhor pra você?"`;
+  return `"Oi ${exp.nome_lead.split(' ')[0]}! Sentimos sua falta na conversa de hoje 😊 Vi que você veio treinar, como foi a experiência com o professor? Quero muito saber suas impressões. Consigo te ligar rapidinho agora, ou prefere que eu ligue em outro horário, qual fica melhor pra você?"`;
 }
 function scriptSextaReconectar(exp){
-  return `"Oi ${exp.nome_lead.split(' ')[0]}! Passando pra saber como você está — percebi que essa semana ficou corrida pros treinos. Quero muito te ajudar a aproveitar os dias que ainda restam da sua experiência. Bora conversar rapidinho?"`;
+  return `"Oi ${exp.nome_lead.split(' ')[0]}! Passando pra saber como você está, percebi que essa semana ficou corrida pros treinos. Quero muito te ajudar a aproveitar os dias que ainda restam da sua experiência. Bora conversar rapidinho?"`;
 }
 function scriptSextaOportunidade(exp){
-  return `"Oi ${exp.nome_lead.split(' ')[0]}! Que semana incrível, você mandou muito bem nos treinos 👏 Quero muito agradecer sua confiança e bater um papo pessoalmente — tenho uma condição especial que preparei pensando em você, válida só hoje. Consigo te esperar aqui pra um café?"`;
+  return `"Oi ${exp.nome_lead.split(' ')[0]}! Que semana incrível, você mandou muito bem nos treinos 👏 Quero muito agradecer sua confiança e bater um papo pessoalmente, tenho uma condição especial que preparei pensando em você, válida só hoje. Consigo te esperar aqui pra um café?"`;
 }
 function scriptAudioCuidado(exp){
-  return `Áudio: "Oi ${exp.nome_lead.split(' ')[0]}, tudo bem? Passando aqui pra saber como você está depois do treino de ontem — sentiu algum incômodo muscular ou articular? Qualquer coisa me chama. Ótimo treino esses dias, conta comigo!"`;
+  return `Áudio: "Oi ${exp.nome_lead.split(' ')[0]}, tudo bem? Passando aqui pra saber como você está depois do treino de ontem, sentiu algum incômodo muscular ou articular? Qualquer coisa me chama. Ótimo treino esses dias, conta comigo!"`;
 }
 function scriptAudioConsultoria(exp){
-  return `Áudio: "Oi ${exp.nome_lead.split(' ')[0]}! Depois da nossa consultoria, ajustei seu treino no app — tivemos o cuidado de incluir/adaptar alguns exercícios por causa do que conversamos sobre [objetivo/observação]. Dá uma olhada lá e bora pro próximo treino!"`;
+  return `Áudio: "Oi ${exp.nome_lead.split(' ')[0]}! Depois da nossa consultoria, ajustei seu treino no app, tivemos o cuidado de incluir/adaptar alguns exercícios por causa do que conversamos sobre [objetivo/observação]. Dá uma olhada lá e bora pro próximo treino!"`;
 }
 
 function renderDetail(){
   const exp = getExp();
   if(!exp) return;
   document.getElementById('d_nome').textContent = exp.nome_lead;
-  document.getElementById('d_sub').textContent = `${PROGRAMAS[exp.programa]||'Programa não definido'} · Início ${fmtDate(exp.data_inicio)} · Consultor(a): ${exp.consultor_responsavel||'—'}`;
+  document.getElementById('d_sub').textContent = `${PROGRAMAS[exp.programa]||'Programa não definido'} · Início ${fmtDate(exp.data_inicio)} · Consultor(a): ${exp.consultor_responsavel||'-'}`;
 
   const freq = calcFrequencia(exp);
   const alerta = isAlerta(exp);
@@ -970,7 +970,7 @@ function renderDetail(){
 
     ${alerta ? `<div class="section-block" style="border-color:var(--red);background:rgba(230,71,62,.08);">
       <h3 style="color:var(--red);"><span class="dot" style="background:var(--red);"></span>Alerta de acompanhamento</h3>
-      <div style="font-size:13.5px;color:var(--grey);">Sem registro de toque há mais de ${exp.perfil==='5'?'3':'2'} dias. Essa experiência corre risco de esfriar no meio do caminho — priorize o contato hoje.</div>
+      <div style="font-size:13.5px;color:var(--grey);">Sem registro de toque há mais de ${exp.perfil==='5'?'3':'2'} dias. Essa experiência corre risco de esfriar no meio do caminho, priorize o contato hoje.</div>
     </div>` : ''}
 
     <div class="section-block">
@@ -978,7 +978,7 @@ function renderDetail(){
         <span class="tag ${perfilTagClass(exp.perfil)}" style="margin-left:auto;">${perfilLabel(exp.perfil)}</span>
         <button class="btn btn-sm btn-ghost" style="margin-left:8px;" onclick="toggleEdicaoQualificacao()">${editandoQualificacao?'✕':'✎'}</button>
       </h3>
-      ${exp.campanha_card_id ? `<div class="hint" style="margin-bottom:8px;">🔗 Vinculado ao card de origem no Campanhas — fechamentos aqui são sincronizados lá automaticamente.</div>` : ''}
+      ${exp.campanha_card_id ? `<div class="hint" style="margin-bottom:8px;">🔗 Vinculado ao card de origem no Campanhas, fechamentos aqui são sincronizados lá automaticamente.</div>` : ''}
       ${editandoQualificacao ? `
         <div class="field">
           <label>Perfil</label>
@@ -991,7 +991,7 @@ function renderDetail(){
         <div class="field">
           <label>Programa (pilar)</label>
           <select id="edit_programa">
-            <option value="">— Não definido —</option>
+            <option value="">- Não definido -</option>
             ${Object.entries(PROGRAMAS).map(([k,l])=>`<option value="${k}" ${exp.programa===k?'selected':''}>${l}</option>`).join('')}
           </select>
         </div>
@@ -1010,24 +1010,24 @@ function renderDetail(){
           <div><strong style="color:var(--white);">Duração:</strong> ${exp.duracao_dias} dias</div>
         </div>
         ${exp.numero_cadastro ? `<div style="margin-top:8px;font-size:13.5px;color:var(--grey);"><strong style="color:var(--white);">Nº Cadastro:</strong> ${escapeHtml(exp.numero_cadastro)}</div>` : ''}
-        <div style="margin-top:8px;font-size:13.5px;color:var(--grey);"><strong style="color:var(--white);">Objetivo:</strong> ${escapeHtml(exp.objetivo_especifico)||'—'}</div>
+        <div style="margin-top:8px;font-size:13.5px;color:var(--grey);"><strong style="color:var(--white);">Objetivo:</strong> ${escapeHtml(exp.objetivo_especifico)||'-'}</div>
       `}
     </div>
 
     <div class="section-block">
-      <h3><span class="dot"></span>Dia 1 — Treinador Responsável <span class="badge-locked">trava responsável</span></h3>
+      <h3><span class="dot"></span>Dia 1, Treinador Responsável <span class="badge-locked">trava responsável</span></h3>
       ${exp.treinador_responsavel ? `
         <div class="locked-value">👤 <strong style="color:var(--white);">${exp.treinador_responsavel}</strong> · atendeu em ${fmtDate(exp.data_dia1)}</div>
       ` : `
         <div class="field">
           <label>Registrar treinador do Dia 1</label>
           <select id="input_treinador_dia1">
-            <option value="">— Selecione —</option>
+            <option value="">- Selecione -</option>
             ${equipeTreinadores.map(t=>`<option value="${t.id}">${escapeHtml(t.nome)}</option>`).join('')}
           </select>
         </div>
         <button class="btn btn-sm" onclick="setTreinadorDia1()">Confirmar Dia 1</button>
-        <div class="hint">Esse campo trava após salvo — é o indicador de eficiência de conversão do treinador.</div>
+        <div class="hint">Esse campo trava após salvo, é o indicador de eficiência de conversão do treinador.</div>
       `}
       ${exp.treinador_responsavel ? checklistDia1Html(exp) : ''}
     </div>
@@ -1043,10 +1043,10 @@ function renderDetail(){
         <input type="checkbox" ${exp.consultoria_realizada?'checked':''} onchange="toggleConsultoria(this.checked)">
         <label>Consultoria realizada por um treinador</label>
       </div>
-      ${exp.consultoria_realizada ? `<div class="hint">Treinador: ${exp.consultoria_treinador||'—'}</div>` : `
+      ${exp.consultoria_realizada ? `<div class="hint">Treinador: ${exp.consultoria_treinador||'-'}</div>` : `
         <div class="field" style="margin-top:8px;">
           <select id="input_consultoria_treinador">
-            <option value="">— Selecione o treinador —</option>
+            <option value="">- Selecione o treinador -</option>
             ${equipeTreinadores.map(t=>`<option value="${t.id}">${escapeHtml(t.nome)}</option>`).join('')}
           </select>
         </div>`}
@@ -1058,7 +1058,7 @@ function renderDetail(){
         <div class="freq-bar-track"><div class="freq-bar-fill" style="width:${freq.pct}%"></div></div>
         <div class="freq-label">${freq.presentes}/${freq.totalDias||exp.duracao_dias} dias</div>
       </div>
-      <div class="hint" style="margin-top:4px;">O Dia 1 (${fmtDate(exp.data_dia1)}) já conta como a primeira presença automaticamente — registre aqui só os dias seguintes.</div>
+      <div class="hint" style="margin-top:4px;">O Dia 1 (${fmtDate(exp.data_dia1)}) já conta como a primeira presença automaticamente, registre aqui só os dias seguintes.</div>
       <div class="presence-list" style="margin-top:12px;">
         ${exp.presencas.map(p=>`
           <div class="presence-row">
@@ -1088,12 +1088,12 @@ function renderDetail(){
     </div>
 
     <div class="section-block">
-      <h3><span class="dot" style="background:var(--orange);"></span>Tarefas — Vendas</h3>
+      <h3><span class="dot" style="background:var(--orange);"></span>Tarefas, Vendas</h3>
       ${renderFilaTarefas(exp, 'vendas')}
     </div>
 
     <div class="section-block">
-      <h3><span class="dot" style="background:var(--green);"></span>Tarefas — Time Técnico</h3>
+      <h3><span class="dot" style="background:var(--green);"></span>Tarefas, Time Técnico</h3>
       ${renderFilaTarefas(exp, 'tecnico')}
     </div>
     ` : `<div class="hint" style="padding:8px 4px;">Registre o Dia 1 (treinador responsável) para liberar checklist, pontos críticos, presenças e tarefas.</div>`}
@@ -1116,7 +1116,7 @@ function checklistDia1Html(exp){
   </div>`;
 }
 
-// ══ FILA DE TAREFAS — mostra só a "tarefa da vez" com detalhe completo,
+// ══ FILA DE TAREFAS, mostra só a "tarefa da vez" com detalhe completo,
 // o resto vira lista compacta. Ao concluir, a próxima assume o destaque
 // sozinha (é só reordenar por: não feita primeiro, depois por data mais próxima).
 function proximaDataTarefa(exp, tipo){
@@ -1145,7 +1145,7 @@ function renderFilaTarefas(exp, role){
     if(d.especial==='sexta'){
       const dataProxima = proximaDataTarefa(exp, 'sexta');
       if(dataProxima) pendentes.push({...d, data: dataProxima});
-      // sexta concluída de vezes anteriores não vira item de lista — já fica no histórico do próprio bloco
+      // sexta concluída de vezes anteriores não vira item de lista, já fica no histórico do próprio bloco
       return;
     }
     const t = exp[d.field];
@@ -1209,7 +1209,7 @@ function sextaTaskBlock(exp){
   const freq = calcFrequencia(exp);
   const conectada = freq.pct >= 60;
   const roteiro = conectada ? scriptSextaOportunidade(exp) : scriptSextaReconectar(exp);
-  const label = conectada ? "c) Dia da Oportunidade — agendar cafezinho + oferta exclusiva" : "c) Dia da Oportunidade — reconexão";
+  const label = conectada ? "c) Dia da Oportunidade, agendar cafezinho + oferta exclusiva" : "c) Dia da Oportunidade, reconexão";
   return `
     <div class="task-item">
       <div class="task-head">
@@ -1227,7 +1227,7 @@ function tempEmoji(t){
   return t==='esquentando' ? '🔥' : t==='esfriando' ? '❄️' : '➖';
 }
 function fmtDate(d){
-  if(!d) return '—';
+  if(!d) return '-';
   const [y,m,day] = d.split('-');
   return `${day}/${m}`;
 }
@@ -1239,14 +1239,14 @@ async function setTreinadorDia1(){
   const treinadorObj = equipeTreinadores.find(t=>t.id===id);
   const exp = getExp();
   exp.treinador_id = id;
-  exp.treinador_responsavel = treinadorObj ? treinadorObj.nome : '—';
+  exp.treinador_responsavel = treinadorObj ? treinadorObj.nome : '-';
   exp.data_dia1 = today();
   exp.status = 'iniciada';
   await persist(exp);
   await sincronizarCampanhas(exp, 'iniciada');
   await gerarTarefasDaJornada(exp);
   renderDetail(); renderKanban();
-  showToast("Dia 1 registrado — responsável travado.");
+  showToast("Dia 1 registrado, responsável travado.");
 }
 async function toggleChecklist(key, val){
   const exp = getExp();
@@ -1282,10 +1282,10 @@ async function addPresenca(){
   const exp = getExp();
   const data = document.getElementById('pres_data').value || today();
   if(data === exp.data_dia1 || exp.presencas.some(p=>p.data===data)){
-    showToast("Esse dia já tem registro (o Dia 1 conta automaticamente) — escolha outra data.");
+    showToast("Esse dia já tem registro (o Dia 1 conta automaticamente), escolha outra data.");
     return;
   }
-  const treinador = document.getElementById('pres_treinador').value.trim() || '—';
+  const treinador = document.getElementById('pres_treinador').value.trim() || '-';
   const presente = document.getElementById('pres_presente').value === 'true';
   const temp = document.getElementById('pres_temp').value;
   const obs = document.getElementById('pres_obs').value.trim();
@@ -1310,11 +1310,11 @@ async function logSextaTask(tipo){
   await persist(exp);
   await syncAgendaFromCard(exp.id, 'sexta', tipo==='oportunidade'?'Ofereceu oportunidade exclusiva':'Fez reconexão');
   renderDetail();
-  showToast("Toque de sexta-feira registrado — Agenda atualizada.");
+  showToast("Toque de sexta-feira registrado, Agenda atualizada.");
 }
 
 // Encontra a tarefa correspondente (mesma experiência + mesmo tipo, ainda pendente,
-// a mais próxima) na Agenda compartilhada e marca como concluída — evita ter dois
+// a mais próxima) na Agenda compartilhada e marca como concluída, evita ter dois
 // lugares desencontrados (card x Agenda) registrando a mesma ação.
 async function syncAgendaFromCard(experienciaId, tipo, obs){
   const candidatas = agendaTarefas.filter(t=>t.experiencia_id===experienciaId && t.tipo===tipo && !t.feita);
@@ -1340,7 +1340,7 @@ async function setStatusManual(status){
 }
 
 // Fecha o ciclo com o Campanhas: quando a experiência converte ou não converte,
-// escreve de volta no card de origem lá — evita ter dois sistemas com informação divergente.
+// escreve de volta no card de origem lá, evita ter dois sistemas com informação divergente.
 async function sincronizarCampanhas(exp, status){
   if(!exp.campanha_card_id || DEMO_MODE || !supabaseClient) return;
   try{
@@ -1404,7 +1404,7 @@ function renderDashboard(){
     <div class="board-header">
       <div>
         <div class="board-title">Indicadores da Experiência</div>
-        <div class="board-sub">Visão consolidada — presença, pontos críticos e conversão</div>
+        <div class="board-sub">Visão consolidada, presença, pontos críticos e conversão</div>
       </div>
     </div>
 
@@ -1419,12 +1419,12 @@ function renderDashboard(){
     <div class="section-title">Frequência por perfil</div>
     <div class="section-sub">Comparativo de assiduidade entre os dois públicos</div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="label">Perfil 95%</div><div class="value">${freqMedia95}%</div><div class="sub">10–12 dias · acompanhamento ativo</div></div>
-      <div class="stat-card"><div class="label">Perfil 5%</div><div class="value">${freqMedia5}%</div><div class="sub">3–5 dias · autônomo</div></div>
+      <div class="stat-card"><div class="label">Perfil 95%</div><div class="value">${freqMedia95}%</div><div class="sub">10-12 dias · acompanhamento ativo</div></div>
+      <div class="stat-card"><div class="label">Perfil 5%</div><div class="value">${freqMedia5}%</div><div class="sub">3-5 dias · autônomo</div></div>
     </div>
 
     <div class="section-title">Conversão por treinador responsável (Dia 1)</div>
-    <div class="section-sub">Indicador de eficiência — quem atendeu o primeiro dia da experiência</div>
+    <div class="section-sub">Indicador de eficiência, quem atendeu o primeiro dia da experiência</div>
     <table class="rank-table">
       <thead><tr><th>Treinador</th><th>Experiências</th><th>Convertidas</th><th>Taxa</th></tr></thead>
       <tbody>
@@ -1438,8 +1438,8 @@ function renderDashboard(){
     <table class="rank-table">
       <thead><tr><th>Perfil</th><th>Experiências</th><th>Convertidas</th><th>Taxa</th></tr></thead>
       <tbody>
-        <tr><td>95% — Precisa de orientação</td><td>${porPerfil['95'].total}</td><td>${porPerfil['95'].conv}</td><td style="color:var(--orange);font-weight:700;">${porPerfil['95'].total?Math.round(porPerfil['95'].conv/porPerfil['95'].total*100):0}%</td></tr>
-        <tr><td>5% — Autônomo</td><td>${porPerfil['5'].total}</td><td>${porPerfil['5'].conv}</td><td style="color:var(--orange);font-weight:700;">${porPerfil['5'].total?Math.round(porPerfil['5'].conv/porPerfil['5'].total*100):0}%</td></tr>
+        <tr><td>95%, Precisa de orientação</td><td>${porPerfil['95'].total}</td><td>${porPerfil['95'].conv}</td><td style="color:var(--orange);font-weight:700;">${porPerfil['95'].total?Math.round(porPerfil['95'].conv/porPerfil['95'].total*100):0}%</td></tr>
+        <tr><td>5%, Autônomo</td><td>${porPerfil['5'].total}</td><td>${porPerfil['5'].conv}</td><td style="color:var(--orange);font-weight:700;">${porPerfil['5'].total?Math.round(porPerfil['5'].conv/porPerfil['5'].total*100):0}%</td></tr>
       </tbody>
     </table>
   `;
@@ -1463,7 +1463,7 @@ async function loadAgendaTarefas(){
     }else if(currentUser.role!=='admin'){
       // SEGURANÇA: sem academia_id e sem ser a conta master de verdade, não carrega nada.
       agendaTarefas = [];
-      console.error('SEGURANÇA: usuário sem academia_id e sem role admin tentou carregar a agenda — acesso bloqueado.', currentUser);
+      console.error('SEGURANÇA: usuário sem academia_id e sem role admin tentou carregar a agenda, acesso bloqueado.', currentUser);
       return;
     }
     const {data, error} = await query;
@@ -1480,8 +1480,8 @@ function experienciasParaAgendaDemo(){
   const out = [];
   experiencias.forEach(exp=>{
     if(!exp.data_dia1) return;
-    out.push({id:'ag-'+exp.id+'-fb', experiencia_id:exp.id, tipo:'feedback_d1', titulo:'Feedback do dia seguinte — '+exp.nome_lead, responsavel_nome:exp.consultor_responsavel, papel:'vendas', data_prevista:addDays(exp.data_dia1,1), feita:exp.tarefa_feedback_d1?.feita||false});
-    out.push({id:'ag-'+exp.id+'-ac', experiencia_id:exp.id, tipo:'audio_cuidado', titulo:'Áudio de cuidado — '+exp.nome_lead, responsavel_nome:exp.treinador_responsavel, papel:'tecnico', data_prevista:addDays(exp.data_dia1,1), feita:exp.tarefa_audio_cuidado?.feita||false});
+    out.push({id:'ag-'+exp.id+'-fb', experiencia_id:exp.id, tipo:'feedback_d1', titulo:'Feedback do dia seguinte, '+exp.nome_lead, responsavel_nome:exp.consultor_responsavel, papel:'vendas', data_prevista:addDays(exp.data_dia1,1), feita:exp.tarefa_feedback_d1?.feita||false});
+    out.push({id:'ag-'+exp.id+'-ac', experiencia_id:exp.id, tipo:'audio_cuidado', titulo:'Áudio de cuidado, '+exp.nome_lead, responsavel_nome:exp.treinador_responsavel, papel:'tecnico', data_prevista:addDays(exp.data_dia1,1), feita:exp.tarefa_audio_cuidado?.feita||false});
   });
   return out;
 }
@@ -1508,7 +1508,7 @@ async function criarTarefaAgenda(exp, tipo, titulo, responsavelId, responsavelNo
     id: 'ag_'+Date.now()+'_'+Math.random().toString(36).slice(2),
     academia_id: exp.academia_id||null,
     experiencia_id: exp.id,
-    tipo, titulo, responsavel_id: responsavelId||null, responsavel_nome: responsavelNome||'—', papel,
+    tipo, titulo, responsavel_id: responsavelId||null, responsavel_nome: responsavelNome||'-', papel,
     data_prevista: dataPrevista, feita:false
   };
   agendaTarefas.push(tarefa);
@@ -1518,17 +1518,17 @@ async function criarTarefaAgenda(exp, tipo, titulo, responsavelId, responsavelNo
   }
 }
 
-// Gera o conjunto de tarefas da jornada assim que o Dia 1 é confirmado —
+// Gera o conjunto de tarefas da jornada assim que o Dia 1 é confirmado
 // feedback D+1, agendamento final, e uma tarefa de sexta-feira pra cada sexta
 // dentro do período da experiência.
 async function gerarTarefasDaJornada(exp){
-  await criarTarefaAgenda(exp, 'feedback_d1', `Feedback do dia seguinte — ${exp.nome_lead}`, exp.consultor_id, exp.consultor_responsavel, 'vendas', addDays(exp.data_dia1,1));
-  await criarTarefaAgenda(exp, 'acompanhamento', `Acompanhamento — confirmar mapa de sintomas + consultoria — ${exp.nome_lead}`, exp.consultor_id, exp.consultor_responsavel, 'vendas', addDays(exp.data_dia1, Math.max(2,Math.floor(exp.duracao_dias/2))));
-  await criarTarefaAgenda(exp, 'audio_cuidado', `Áudio de cuidado — ${exp.nome_lead}`, exp.treinador_id, exp.treinador_responsavel, 'tecnico', addDays(exp.data_dia1,1));
-  await criarTarefaAgenda(exp, 'agendamento_final', `Agendamento final da experiência — ${exp.nome_lead}`, exp.consultor_id, exp.consultor_responsavel, 'vendas', addDays(exp.data_dia1, exp.duracao_dias));
+  await criarTarefaAgenda(exp, 'feedback_d1', `Feedback do dia seguinte, ${exp.nome_lead}`, exp.consultor_id, exp.consultor_responsavel, 'vendas', addDays(exp.data_dia1,1));
+  await criarTarefaAgenda(exp, 'acompanhamento', `Acompanhamento, confirmar mapa de sintomas + consultoria, ${exp.nome_lead}`, exp.consultor_id, exp.consultor_responsavel, 'vendas', addDays(exp.data_dia1, Math.max(2,Math.floor(exp.duracao_dias/2))));
+  await criarTarefaAgenda(exp, 'audio_cuidado', `Áudio de cuidado, ${exp.nome_lead}`, exp.treinador_id, exp.treinador_responsavel, 'tecnico', addDays(exp.data_dia1,1));
+  await criarTarefaAgenda(exp, 'agendamento_final', `Agendamento final da experiência, ${exp.nome_lead}`, exp.consultor_id, exp.consultor_responsavel, 'vendas', addDays(exp.data_dia1, exp.duracao_dias));
   const sextas = proximasSextas(exp.data_dia1, exp.duracao_dias);
   for(const s of sextas){
-    await criarTarefaAgenda(exp, 'sexta', `Dia da Oportunidade — ${exp.nome_lead}`, exp.consultor_id, exp.consultor_responsavel, 'vendas', s);
+    await criarTarefaAgenda(exp, 'sexta', `Dia da Oportunidade, ${exp.nome_lead}`, exp.consultor_id, exp.consultor_responsavel, 'vendas', s);
   }
 }
 
@@ -1536,7 +1536,7 @@ async function gerarTarefasDaJornada(exp){
 async function gerarTarefaAudioConsultoria(exp){
   const id = exp.consultoria_treinador_id || exp.treinador_id;
   const nome = exp.consultoria_treinador || exp.treinador_responsavel;
-  await criarTarefaAgenda(exp, 'audio_consultoria', `Áudio pós-consultoria — ${exp.nome_lead}`, id, nome, 'tecnico', today());
+  await criarTarefaAgenda(exp, 'audio_consultoria', `Áudio pós-consultoria, ${exp.nome_lead}`, id, nome, 'tecnico', today());
 }
 
 function podeMarcarTarefa(tarefa){
@@ -1555,7 +1555,7 @@ let agendaDiaSelecionado = null;
 function setAgendaFiltro(f){ agendaFiltro = f; renderAgendaTab(); }
 function setAgendaVisao(v){ agendaVisao = v; agendaDiaSelecionado = null; renderAgendaTab(); }
 
-// Abre o card certo, no módulo certo — a conclusão da tarefa acontece LÁ (com registro
+// Abre o card certo, no módulo certo, a conclusão da tarefa acontece LÁ (com registro
 // do que foi feito), nunca direto na Agenda. Isso evita ter dois lugares desencontrados.
 // Tarefa da jornada da Experiência → abre aqui mesmo, no Kanban do Experiências.
 // Tarefa vinda do Campanhas (cadência, agendamento) → manda pra lá, já no card certo.
@@ -1575,7 +1575,7 @@ function isMinhaTarefa(t){
   if(!currentUser) return false;
   if(currentUser.role==='consultor') return currentUser.consultora_id && currentUser.consultora_id===t.responsavel_id;
   if(currentUser.role==='treinador') return currentUser.treinador_id && currentUser.treinador_id===t.responsavel_id;
-  return false; // admin/gestor não têm "meus" individuais — usam Todos
+  return false; // admin/gestor não têm "meus" individuais, usam Todos
 }
 
 const CATEGORIA_LABEL_AGENDA={
@@ -1608,7 +1608,7 @@ function renderAgendaTab(){
     <div class="board-header">
       <div>
         <div class="board-title">Agenda da Equipe</div>
-        <div class="board-sub">Vendas e treinador, tarefas geradas automaticamente pela jornada — todos veem, cada um edita só o seu</div>
+        <div class="board-sub">Vendas e treinador, tarefas geradas automaticamente pela jornada, todos veem, cada um edita só o seu</div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <div class="tab-switch">
@@ -1642,7 +1642,7 @@ function agendaTaskCard(t){
         <span class="t-role role-${t.papel}">${t.papel==='vendas'?'Vendas':'Técnico'}</span>
       </div>
       <div class="hint" style="margin-bottom:2px;">${catLbl}</div>
-      <div class="hint" style="margin-bottom:6px;">${escapeHtml(t.titulo)} · responsável: <strong style="color:var(--white);">${escapeHtml(t.responsavel_nome)||'—'}</strong></div>
+      <div class="hint" style="margin-bottom:6px;">${escapeHtml(t.titulo)} · responsável: <strong style="color:var(--white);">${escapeHtml(t.responsavel_nome)||'-'}</strong></div>
       ${t.feita
         ? `<div class="hint" style="color:var(--green);">✓ Concluída${t.obs?' · '+escapeHtml(t.obs):''}</div>`
         : posso
@@ -1667,7 +1667,7 @@ function renderAgendaLista(){
         <h3><span class="dot"></span>${fmtDateLong(dia)}</h3>
         ${porDia[dia].map(agendaTaskCard).join('')}
       </div>
-    `).join('') : '<div class="hint" style="padding:20px;">Nenhuma tarefa agendada ainda — as tarefas aparecem aqui automaticamente quando o Dia 1 de uma experiência é registrado.</div>';
+    `).join('') : '<div class="hint" style="padding:20px;">Nenhuma tarefa agendada ainda, as tarefas aparecem aqui automaticamente quando o Dia 1 de uma experiência é registrado.</div>';
 }
 
 const CATEGORIA_COR = {
@@ -1738,7 +1738,7 @@ function renderAgendaCalendario(){
         <h3><span class="dot"></span>${fmtDateLong(agendaDiaSelecionado)}</h3>
         ${(porDia[agendaDiaSelecionado]||[]).map(agendaTaskCard).join('') || '<div class="hint">Nenhuma tarefa neste dia.</div>'}
       </div>
-    ` : '<div class="hint" style="padding:8px 4px;">Clique num dia com tarefas pra ver os detalhes — as cores mostram quantos compromissos de cada tipo tem naquele dia.</div>'}
+    ` : '<div class="hint" style="padding:8px 4px;">Clique num dia com tarefas pra ver os detalhes, as cores mostram quantos compromissos de cada tipo tem naquele dia.</div>'}
   `;
 }
 
