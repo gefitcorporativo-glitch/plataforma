@@ -232,6 +232,13 @@ tbody tr:hover td{background:var(--s2)}
 .tv-mode .kpi-value{font-size:34px}
 .tv-mode .kpi-label{font-size:13px}
 </style>
+<style id="modo-consultor-css">
+body.role-consultor .tab:not([data-tab="painel"]):not([data-tab="relatorio"]){display:none!important}
+body.role-consultor .nav-group-label{display:none!important}
+body.role-consultor #btn-add-cons-top,body.role-consultor #btn-tv,body.role-consultor #admin-ac-row,
+body.role-consultor #roi-dia-edit,body.role-consultor #btn-finalizar-desafio,body.role-consultor #sel-desafio,
+body.role-consultor #painel-prod-time,body.role-consultor #painel-cons-filter{display:none!important}
+</style>
 </head>
 <body>
 
@@ -484,6 +491,8 @@ tbody tr:hover td{background:var(--s2)}
       <div id="briefing-conteudo">
         <div class="lbl" style="margin-bottom:2px">Briefing do negócio</div>
         <p style="font-size:12px;color:var(--td);margin-bottom:20px">Base de posicionamento e características da academia, usada como ponto de partida pra personalizar scripts, cadências e objeções específicas.</p>
+        <div id="bg-resp" style="margin:6px 0 22px"></div>
+
 
         <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-lbl">🏢 Perfil do negócio</div><div class="sec-div-line"></div></div>
         <div class="form-row">
@@ -512,6 +521,26 @@ tbody tr:hover td{background:var(--s2)}
 
         <button class="btn-gh" onclick="salvarBriefing()">Salvar perfil do negócio</button>
         <span id="bf-msg" style="margin-left:12px;font-size:12px;color:var(--gr)"></span>
+
+        
+        <div class="sec-div" style="margin-top:28px"><div class="sec-div-line"></div><div class="sec-div-lbl">📥 Briefing completo (importação)</div><div class="sec-div-line"></div></div>
+        <p style="font-size:12px;color:var(--td);margin-bottom:12px">Reúna documentos, transcrições e briefings antigos no Claude com a skill de briefing, receba o arquivo pronto e importe aqui. Não precisa digitar campo a campo.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+          <button class="btn-or" onclick="document.getElementById('bc-file').click()">📥 Importar arquivo (.json)</button>
+          <button class="btn-gh" onclick="bcToggleColar()">📋 Colar JSON</button>
+          <button class="btn-gh" onclick="bcExportar()">⬇ Exportar</button>
+          <input type="file" id="bc-file" accept=".json,application/json" style="display:none" onchange="bcLerArquivo(this)">
+          <span id="bc-msg" style="font-size:12px;color:var(--gr)"></span>
+        </div>
+        <div id="bc-colar" style="display:none;margin-bottom:12px">
+          <textarea class="fi" id="bc-colar-txt" rows="6" placeholder="Cole aqui o JSON gerado pela skill de briefing..."></textarea>
+          <button class="btn-gh btn-sm" style="margin-top:6px" onclick="bcProcessar(document.getElementById('bc-colar-txt').value)">Ler briefing</button>
+        </div>
+        <div id="bc-preview" style="display:none;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px"></div>
+        <div id="bc-status" style="font-size:12px;color:var(--td);margin-bottom:10px"></div>
+        <div id="bc-blocos"></div>
+        <div id="bc-acoes" style="display:none;margin:12px 0 4px"><button class="btn-or" onclick="bcSalvar()">Salvar briefing completo</button></div>
+        <div id="bc-pers"></div>
 
         <div class="sec-div" style="margin-top:28px"><div class="sec-div-line"></div><div class="sec-div-lbl">🎙️ Transcrições de reunião</div><div class="sec-div-line"></div></div>
         <p style="font-size:11px;color:var(--td);margin-bottom:12px">Cole aqui a transcrição de reuniões com o cliente sobre posicionamento. Fica guardado como histórico.</p>
@@ -885,6 +914,46 @@ tbody tr:hover td{background:var(--s2)}
     </div>
   </div>
 
+  <!-- MODAL TREINADOR(A) -->
+  <div class="modal-ov" id="m-trein">
+    <div class="modal">
+      <div class="modal-hd"><h3>Adicionar Treinador(a)</h3><button class="btn-x" onclick="closeM('m-trein')">×</button></div>
+      <div class="form-row">
+        <div class="fg fi-full"><label class="fl">Nome completo</label><input class="fi" id="tr-nm" placeholder="Ex: Carlos Eduardo Lima"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Telefone / WhatsApp</label><input class="fi" id="tr-tel" placeholder="(00) 00000-0000"></div>
+      </div>
+      <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-lbl">Formação</div><div class="sec-div-line"></div></div>
+      <div class="meta-options" id="tr-grau-opts">
+        <div class="meta-opt" data-g="estagio_aprendiz" onclick="selTrGrau('estagio_aprendiz')"><div class="meta-opt-icon">🎓</div><div class="meta-opt-lbl">Estagiário(a)</div></div>
+        <div class="meta-opt" data-g="provisionado" onclick="selTrGrau('provisionado')"><div class="meta-opt-icon">📄</div><div class="meta-opt-lbl">Provisionado(a)</div></div>
+        <div class="meta-opt" data-g="formado" onclick="selTrGrau('formado')"><div class="meta-opt-icon">🏅</div><div class="meta-opt-lbl">Formado(a)</div></div>
+      </div>
+      <div id="tr-cref-wrap" style="display:none" class="form-row">
+        <div class="fg fi-full"><label class="fl">CREF</label><input class="fi" id="tr-cref" placeholder="Ex: 012345-G/SP"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg fi-full"><label class="fl">Nível de carreira</label>
+          <select class="fi" id="tr-nivel">
+            <option value="estagio_treinador">Estágio/Treinador(a)</option>
+            <option value="treinador_efetivo">Treinador(a) Efetivo</option>
+            <option value="treinador_avaliador">Treinador(a) Avaliador(a)</option>
+            <option value="treinador_lider">Treinador(a) Líder</option>
+            <option value="coordenador_equipe">Coordenador(a) de Equipe</option>
+          </select></div>
+      </div>
+      <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-lbl">Horário de trabalho</div><div class="sec-div-line"></div></div>
+      <div class="form-row">
+        <div class="fg"><label class="fl">Entrada</label><input class="fi" type="time" id="tr-hi" value="06:00"></div>
+        <div class="fg"><label class="fl">Saída</label><input class="fi" type="time" id="tr-hf" value="14:00"></div>
+      </div>
+      <div style="text-align:right;margin-top:12px">
+        <button class="btn-or" id="btn-add-trein" onclick="salvarTreinadorROI()">Adicionar Treinador(a)</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL CONSULTOR(A) -->
   <div class="modal-ov" id="m-cons">
     <div class="modal">
@@ -924,7 +993,7 @@ tbody tr:hover td{background:var(--s2)}
         <div class="fg"><label class="fl">Meta 3 (R$)</label><input class="fi" type="number" id="cons-meta3" placeholder="Ex: 12000" min="0"></div>
       </div>
 
-      <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-lbl">Funis priorizados (1 a 3)</div><div class="sec-div-line"></div></div>
+      <div class="sec-div"><div class="sec-div-line"></div><div class="sec-div-lbl">Funis priorizados (até 5)</div><div class="sec-div-line"></div></div>
       <div class="funil-checks" id="funil-checks-cons"></div>
 
       <div style="text-align:right;margin-top:12px">
@@ -1383,7 +1452,7 @@ async function doLogin(){
   if(!email||!senha){err.textContent='Preencha e-mail e senha.';err.classList.add('show');return}
   const btn=document.getElementById('btn-login');btn.disabled=true;btn.textContent='Verificando...';
   try{
-    const res=await sbGet('gestores',`email=eq.${encodeURIComponent(email)}&senha_hash=eq.${encodeURIComponent(senha)}&ativo=eq.true&select=id,nome,email,academia_id,role`);
+    const res=await sbGet('gestores',`email=eq.${encodeURIComponent(email)}&senha_hash=eq.${encodeURIComponent(senha)}&ativo=eq.true&select=id,nome,email,academia_id,role,consultora_id,modulos_ativos`);
     if(!res||!res.length){err.textContent='E-mail ou senha incorretos.';err.classList.add('show');btn.disabled=false;btn.textContent='Entrar';return}
     sessao=res[0];
     sessionStorage.setItem('qg90_sessao_roi',JSON.stringify(sessao));
@@ -1404,7 +1473,7 @@ async function checkSessaoInicial(){
   let s;
   try{s=JSON.parse(raw);}catch(e){sessionStorage.removeItem('qg90_sessao_roi');return;}
   try{
-    const res=await sbGet('gestores',`id=eq.${encodeURIComponent(s.id)}&ativo=eq.true&select=id,nome,email,academia_id,role`);
+    const res=await sbGet('gestores',`id=eq.${encodeURIComponent(s.id)}&ativo=eq.true&select=id,nome,email,academia_id,role,consultora_id,modulos_ativos`);
     if(!res||!res.length){sessionStorage.removeItem('qg90_sessao_roi');return;}
     sessao=res[0];
     sessionStorage.setItem('qg90_sessao_roi',JSON.stringify(sessao));
@@ -1443,12 +1512,38 @@ function abrirAgendaUnificada(){
 }
 
 // ══ INICIAR APP ══
+
+// ══ MODO CONSULTOR(A): vê só o próprio painel, lançamentos, relatório e os módulos liberados ══
+function isConsultor(){return !!(sessao&&sessao.role==='consultor')}
+function aplicarModoConsultor(){
+  if(!isConsultor())return;
+  document.body.classList.add('role-consultor');
+  const mods=sessao.modulos_ativos||[];
+  const mapa=[['abrirCentralScriptsV2','__nunca__'],['abrirCentralScripts','scripts'],['abrirCampanhas','campanhas'],['abrirExperiencias','experiencias'],['abrirAgendaUnificada','experiencias']];
+  document.querySelectorAll('.topbar-r button[onclick]').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    for(const [fn,mod] of mapa){
+      if(oc.indexOf(fn+'(')>=0){b.style.display=mods.includes(mod)?'':'none';break}
+    }
+  });
+  switchTab('painel');
+}
+function filtrarDadosConsultor(){
+  if(!isConsultor())return;
+  const meu=sessao.consultora_id||null;
+  Object.values(db.acs).forEach(a=>{
+    Object.keys(a.consultoras).forEach(id=>{if(id!==meu)delete a.consultoras[id]});
+    a.registros=(a.registros||[]).filter(r=>r.consultora_id===meu);
+  });
+}
+
 async function iniciarApp(){
   const chip=document.getElementById('user-chip');
   if(isAdmin()){chip.className='admin-chip';chip.textContent='⚡ GeFit Admin';document.getElementById('tab-admin').classList.add('show');document.getElementById('admin-ac-row').classList.add('show');}
   else{chip.className='user-chip';chip.textContent=sessao.nome||sessao.email.split('@')[0];}
   document.getElementById('btn-add-cons-top').style.display='block';document.getElementById('btn-lancar-top').style.display='block';
   document.getElementById('loading-ov').classList.remove('hide');
+  aplicarModoConsultor();
   await loadAll();
   checkWelcome();
 }
@@ -1478,8 +1573,15 @@ async function loadAll(){
       Object.keys(db.acs).forEach(id=>{ if(id!==sessao.academia_id) delete db.acs[id]; });
     }
     cons.forEach(c=>{if(db.acs[c.academia_id])db.acs[c.academia_id].consultoras[c.id]={nome:c.nome,meta:c.meta,meta_tipo:c.meta_tipo||'planos',horas:c.horas||0,funis:c.funis||[],metas:c.metas||null}});
-    treins.forEach(t=>{if(db.acs[t.academia_id])db.acs[t.academia_id].treinadores[t.id]={nome:t.nome}});
+    treins.forEach(t=>{if(db.acs[t.academia_id])db.acs[t.academia_id].treinadores[t.id]={nome:t.nome,grau:t.grau_academico||'',cref:t.cref||'',nivel:t.nivel_carreira||'',hi:t.horario_inicio||'',hf:t.horario_fim||'',tel:t.telefone||''}});
+    try{
+      const[alR,exR]=await Promise.all([sbGet('alunos','select=treinador_id,status').catch(()=>[]),sbGet('experiencias','select=treinador_id,status').catch(()=>[])]);
+      treinMet={};
+      alR.forEach(x=>{if(!x.treinador_id)return;const m=treinMet[x.treinador_id]=treinMet[x.treinador_id]||{al:0,ex:0,cv:0};if(x.status==='ativo')m.al++});
+      exR.forEach(x=>{if(!x.treinador_id)return;const m=treinMet[x.treinador_id]=treinMet[x.treinador_id]||{al:0,ex:0,cv:0};if(x.status!=='agendada')m.ex++;if(x.status==='convertida')m.cv++});
+    }catch(e){treinMet={}}
     regs.forEach(r=>{if(db.acs[r.academia_id])db.acs[r.academia_id].registros.push({id:r.id,dia:r.dia,data:r.data,consultora_id:r.consultora_id,obs:r.obs,funis:r.funis||{},ts:r.ts})});
+    filtrarDadosConsultor();
     if(!isAdmin()&&sessao.academia_id){acId=sessao.academia_id;}
     else if(isAdmin()){renderAcSelect();if(!acId){const k=Object.keys(db.acs);if(k.length){acId=k[0];document.getElementById('sel-ac').value=acId}}}
     setSS('ok','sincronizado');document.getElementById('loading-ov').classList.add('hide');renderAll();
@@ -1514,7 +1616,7 @@ function renderFunilChecks(){
 }
 function toggleFC(fid){
   if(selFunis.includes(fid)){selFunis=selFunis.filter(x=>x!==fid)}
-  else{if(selFunis.length>=4){toast('Máximo 4 funis',true);return}selFunis.push(fid)}
+  else{if(selFunis.length>=5){toast('Máximo 5 funis',true);return}selFunis.push(fid)}
   FUNIS.forEach(f=>{
     const sel=selFunis.includes(f.id);
     const item=document.getElementById('fci-'+f.id),dot=document.getElementById('fcd-'+f.id);
@@ -1602,7 +1704,7 @@ function renderEcxFunis(){
 }
 function toggleEcxFunil(fid){
   if(edFunisSel.includes(fid))edFunisSel=edFunisSel.filter(x=>x!==fid);
-  else{if(edFunisSel.length>=4){toast('Máximo 4 funis',true);return}edFunisSel.push(fid);}
+  else{if(edFunisSel.length>=5){toast('Máximo 5 funis',true);return}edFunisSel.push(fid);}
   renderEcxFunis();
 }
 async function salvarEdicaoConsultor(id){
@@ -1785,7 +1887,7 @@ async function renderLancFunis(){
     listaAtual[fid]=ultimoComLista?ultimoComLista.funis[fid].lista_total:0;
   });
 
-  // Um funil aparece pra esse(a) consultor(a) se: tem campanha ATIVA agora daquele perfil
+  // Um funil aparece pra esse(a) consultor(a) se: foi atribuído na ficha dele(a) (lançamento manual sempre liberado) OU tem campanha ATIVA agora daquele perfil
   // (não depende mais de atribuição manual, qualquer campanha nova já libera aqui sozinha),
   // OU, só pra funil sem equivalente no Campanhas ainda (ex: Feedback+Indicação), se foi
   // atribuído manualmente na ficha do(a) consultor(a).
@@ -1793,7 +1895,7 @@ async function renderLancFunis(){
   await Promise.all(FUNIS.map(async f=>{
     const fid=f.id;
     const perfil=FUNIL_PARA_PERFIL_CAMPANHA[fid];
-    disponibilidade[fid]=perfil?(await idsCampanhasAtivasPorPerfil(perfil)).length>0:(c.funis||[]).includes(fid);
+    disponibilidade[fid]=(c.funis||[]).includes(fid)||(perfil?(await idsCampanhasAtivasPorPerfil(perfil)).length>0:false);
   }));
   const funisDisponiveis=FUNIS.map(f=>f.id).filter(fid=>disponibilidade[fid]);
 
@@ -2387,32 +2489,68 @@ function renderConsGrid(a){
 }
 
 // ══ TREINADORES(AS) ══
+const GRAU_TR={estagio_aprendiz:'Estagiário(a)',estagio_remunerado:'Estagiário(a)',provisionado:'Provisionado(a)',formado:'Formado(a)'};
+const NIVEL_TR={estagio_treinador:'Estágio/Treinador(a)',treinador_efetivo:'Treinador(a) Efetivo',treinador_avaliador:'Avaliador(a)',treinador_lider:'Líder',coordenador_equipe:'Coordenador(a)'};
+let treinMet={};let trGrauSel='';
 function renderTreinadoresGrid(a){
   const el=document.getElementById('treinadores-grid');if(!el)return;
   const en=Object.entries(a.treinadores||{});
   if(!en.length){el.innerHTML='<div style="color:var(--td);font-size:13px;padding:20px 0">Nenhum(a) treinador(a) cadastrado(a).</div>';return}
-  el.innerHTML=en.map(([id,t])=>`
-    <div class="cons-card" style="cursor:default">
+  el.innerHTML=en.map(([id,t])=>{
+    const m=treinMet[id]||{al:0,ex:0,cv:0};
+    const taxa=m.ex>0?Math.round(m.cv/m.ex*100):0;
+    const corTx=m.ex===0?'var(--td)':taxa>=50?'var(--gr)':taxa>=30?'var(--am)':'var(--re)';
+    const grau=GRAU_TR[t.grau]||'';
+    const hor=(t.hi&&t.hf)?`${t.hi} às ${t.hf}`:'';
+    const pills=[grau?`<span class="fpill" style="background:var(--or-d);color:var(--or)">${grau}</span>`:'',t.cref?`<span class="fpill" style="background:rgba(26,26,26,.07);color:var(--tx)">CREF ${t.cref}</span>`:'',NIVEL_TR[t.nivel]?`<span class="fpill" style="background:rgba(26,26,26,.07);color:var(--tx)">${NIVEL_TR[t.nivel]}</span>`:''].join('');
+    const nm=t.nome.replace(/'/g,"\\'");
+    return `<div class="cons-card" style="cursor:default">
       <div class="cons-head">
         <div class="avatar">${initials(t.nome)}</div>
-        <div><div class="cons-nm">${t.nome}</div><div class="cons-sub">Time técnico · Experiências</div></div>
+        <div><div class="cons-nm">${t.nome}</div><div class="cons-sub">${hor?'🕒 '+hor:'Time técnico'}</div></div>
         <button class="btn-gh btn-sm" style="flex-shrink:0;font-size:11px;padding:3px 10px;margin-left:6px" onclick="window.location.href='perfil-treinador.html?uid=${sessao.id}&id=${id}'">👤 Perfil</button>
-        <button class="btn-gh btn-sm" style="flex-shrink:0;font-size:11px;padding:3px 10px;margin-left:6px" onclick="abrirAcessoPessoa('treinador','${id}','${t.nome.replace(/'/g,"\\'")}')">🔑 Acesso</button>
+        <button class="btn-gh btn-sm" style="flex-shrink:0;font-size:11px;padding:3px 10px;margin-left:6px" onclick="abrirAcessoPessoa('treinador','${id}','${nm}')">🔑 Acesso</button>
       </div>
-    </div>`).join('');
+      ${pills?`<div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px">${pills}</div>`:''}
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 14px 14px">
+        <div style="background:var(--s2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--tx)">${m.al}</div><div style="font-size:10px;color:var(--td)">Alunos na carteira</div></div>
+        <div style="background:var(--s2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--tx)">${m.ex}</div><div style="font-size:10px;color:var(--td)">Experiências realizadas</div></div>
+        <div style="background:var(--s2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:${corTx}">${m.cv}</div><div style="font-size:10px;color:var(--td)">Convertidas${m.ex>0?' · '+taxa+'%':''}</div></div>
+      </div>
+    </div>`}).join('');
+}
+function selTrGrau(g){
+  trGrauSel=g;
+  document.querySelectorAll('#tr-grau-opts .meta-opt').forEach(o=>o.classList.toggle('sel',o.dataset.g===g));
+  document.getElementById('tr-cref-wrap').style.display=(g==='formado'||g==='provisionado')?'flex':'none';
 }
 function abrirNovoTreinadorROI(){
-  const nome=prompt('Nome do(a) treinador(a):');
-  if(!nome||!nome.trim())return;
-  criarTreinadorROI(nome.trim());
+  if(!acId){toast('Selecione uma academia',true);return}
+  ['tr-nm','tr-tel','tr-cref'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('tr-nivel').value='estagio_treinador';
+  document.getElementById('tr-hi').value='06:00';document.getElementById('tr-hf').value='14:00';
+  selTrGrau('estagio_aprendiz');
+  openM('m-trein');
 }
-async function criarTreinadorROI(nome){
+async function salvarTreinadorROI(){
   if(!acId){toast('Academia não definida',true);return}
+  const nome=document.getElementById('tr-nm').value.trim();
+  if(!nome){toast('Informe o nome',true);return}
+  const comCref=trGrauSel==='formado'||trGrauSel==='provisionado';
+  const btn=document.getElementById('btn-add-trein');btn.disabled=true;
   try{
-    await fetch(`${SB_URL}/rest/v1/treinadores`,{method:'POST',headers:H,body:JSON.stringify({id:uid(),academia_id:acId,nome,ativo:true,created_at:Date.now()})});
+    await sbPost('treinadores',{id:uid(),academia_id:acId,nome,ativo:true,
+      telefone:document.getElementById('tr-tel').value.trim()||null,
+      grau_academico:trGrauSel||null,
+      cref:comCref?(document.getElementById('tr-cref').value.trim()||null):null,
+      nivel_carreira:document.getElementById('tr-nivel').value,
+      horario_inicio:document.getElementById('tr-hi').value||null,
+      horario_fim:document.getElementById('tr-hf').value||null});
+    closeM('m-trein');
     toast('Treinador(a) adicionado(a)!');
     await loadAll();
-  }catch(e){console.error(e);toast('Erro ao salvar',true);}
+  }catch(e){console.error(e);toast('Erro ao salvar: '+(e.message||'').slice(0,80),true);}
+  btn.disabled=false;
 }
 
 // ══ ACESSO UNIFICADO (consultor(a) e treinador(a)), cria login já escolhendo quais
@@ -2456,7 +2594,7 @@ async function abrirAcessoPessoa(tipo,pessoaId,pessoaNome){
       el.innerHTML=`<div style="color:var(--re);font-size:13.5px;padding:10px 0">⚠️ Limite de 5 ${tipo==='consultor'?'consultores(as)':'treinadores(as)'} com acesso já atingido nesta academia. Suspenda ou remova um acesso existente antes de criar outro.</div>`;
       return;
     }
-    const modulosDefault=tipo==='consultor'?['roi21','campanhas']:['roi21','experiencias'];
+    const modulosDefault=tipo==='consultor'?['roi21','campanhas']:['roi21','experiencias','campanhas'];
     el.innerHTML=`
       <div style="margin-bottom:14px"><div style="font-size:12px;color:var(--td);margin-bottom:4px">Criar acesso para</div><div style="font-weight:600;font-size:15px">${pessoaNome}</div></div>
       <p style="font-size:12.5px;color:var(--td);margin-bottom:14px">${todos.length}/5 acessos de ${tipo==='consultor'?'consultor(a)':'treinador(a)'} usados nesta academia.</p>
@@ -2482,13 +2620,13 @@ async function criarAcessoPessoa(tipo,pessoaId,pessoaNome){
     const existeEmail=await sbGet('gestores',`email=eq.${encodeURIComponent(email)}&select=id`);
     if(existeEmail.length){toast('Já existe um acesso com esse e-mail.',true);return}
     const campoId=tipo==='consultor'?'consultora_id':'treinador_id';
-    await fetch(`${SB_URL}/rest/v1/gestores`,{method:'POST',headers:H,body:JSON.stringify({
-      nome:pessoaNome,email,senha_hash:senha,academia_id:acId,
+    await sbPost('gestores',{
+      id:uid(),nome:pessoaNome,email,senha_hash:senha,academia_id:acId,
       role:tipo,ativo:true,[campoId]:pessoaId,modulos_ativos:modulos
-    })});
+    });
     toast(`Acesso criado! Já pode entrar em: ${modulos.map(m=>(MODULOS_QG90.find(x=>x.key===m)||{}).label).join(', ')}.`);
     closeM('m-acesso');
-  }catch(e){console.error(e);toast('Erro ao criar acesso',true);}
+  }catch(e){console.error(e);toast('Erro ao criar acesso: '+String(e.message||e).slice(0,140),true);}
 }
 function renderModulosCheckboxPessoa(loginId,ativos){
   return `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
@@ -2550,7 +2688,7 @@ function renderRelatorio(){
         <td style="color:var(--gr)">R$${(fd.vendido||0).toLocaleString('pt-BR')}</td>
         <td style="font-size:11px;color:var(--td)">${r.obs||'-'}</td>
         <td>${fi===0?`<button class="btn-gh btn-sm" style="font-size:11px" onclick="editarLancamento('${r.id}')">✏️</button>`:''}
-        ${fi===0&&!isAdmin()?`<button class="btn-danger" style="font-size:11px;padding:2px 6px" onclick="deletarLancamento('${r.id}')">🗑</button>`:''}
+        ${fi===0&&!isAdmin()&&!isConsultor()?`<button class="btn-danger" style="font-size:11px;padding:2px 6px" onclick="deletarLancamento('${r.id}')">🗑</button>`:''}
         </td>
       </tr>`);
     });
@@ -3342,6 +3480,81 @@ function switchTab(t){TABS.forEach(x=>{document.getElementById('pan-'+x).classLi
 // BRIEFING DO NEGÓCIO
 // ══════════════════════════════════════
 const MODALIDADES_OPCOES=['Musculação/Fitness','Aulas Coletivas','Piscina Infantil','Piscina Adulto','Artes Marciais','Personal Trainer','Avaliação Física'];
+
+// ══ BRIEFING RESPONDIDO PELO GESTOR (link para ele responder pelo celular) ══
+let bgRow=null;
+function bgLink(){
+  const base=location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/,'');
+  return base+'briefing-gestora.html?a='+encodeURIComponent(sessao.academia_id);
+}
+function bgCopiarLink(){
+  const l=bgLink();
+  if(navigator.clipboard)navigator.clipboard.writeText(l).then(()=>toast('Link copiado!')).catch(()=>prompt('Copie o link:',l));
+  else prompt('Copie o link:',l);
+}
+async function bgCarregar(){
+  const el=document.getElementById('bg-resp'); if(!el||!sessao.academia_id)return;
+  try{const rows=await sbGet('briefing_gestora',`academia_id=eq.${sessao.academia_id}`);bgRow=rows&&rows[0]||null}
+  catch(e){console.error('briefing gestora:',e);bgRow=null;el.innerHTML='<div style="font-size:12px;color:var(--td)">Para usar o briefing respondido pelo gestor, rode o SQL <code>schema-briefing-gestora.sql</code> no Supabase.</div>';return}
+  bgRender();
+}
+function bgRender(){
+  const el=document.getElementById('bg-resp'); if(!el)return;
+  const resp=(bgRow&&bgRow.respostas)||{};
+  const keys=Object.keys(resp);
+  const resp_n=keys.filter(k=>(resp[k].a||'').trim()).length, ns_n=keys.filter(k=>resp[k].ns&&!(resp[k].a||'').trim()).length;
+  const st=bgRow?(bgRow.status==='enviado'?'<span style="color:var(--gr);font-weight:700">Enviado pelo gestor</span>':'<span style="color:var(--am);font-weight:700">Rascunho (ainda respondendo)</span>'):'<span style="color:var(--td)">Ainda sem respostas</span>';
+  const quando=bgRow&&bgRow.updated_at?' · atualizado em '+new Date(Number(bgRow.updated_at)).toLocaleString('pt-BR'):'';
+  let corpo='';
+  if(keys.length){
+    corpo='<div style="margin-top:12px">'+BC_SCHEMA.map(bl=>{
+      const ks=bl.c.map(c=>bl.id+'.'+c[0]).filter(k=>resp[k]);
+      if(!ks.length)return '';
+      return '<details style="background:var(--s2);border-radius:10px;padding:10px 14px;margin-bottom:8px"><summary style="cursor:pointer;font-size:13.5px;font-weight:700">'+bl.t+' <span style="font-weight:500;color:var(--td);font-size:11.5px">· '+ks.filter(k=>(resp[k].a||'').trim()).length+'/'+ks.length+'</span></summary><div style="margin-top:10px">'+
+        ks.map(k=>'<div class="fg" style="margin-bottom:10px"><label class="fl" style="text-transform:none;letter-spacing:0;font-size:12.5px">'+bcEsc(resp[k].q||k)+(resp[k].ns&&!(resp[k].a||'').trim()?' <span style="color:var(--am)">· marcou "não sei agora"</span>':'')+'</label><textarea class="fi" id="bgr-'+k+'" rows="3">'+bcEsc(resp[k].a||'')+'</textarea></div>').join('')+'</div></details>';
+    }).join('')+'</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn-or btn-sm" onclick="bgSalvarEdicoes()">Salvar edições</button><button class="btn-gh btn-sm" onclick="bgAplicar()">Aplicar ao briefing completo</button></div>'+
+    '<p style="font-size:11.5px;color:var(--td);margin-top:8px">“Aplicar” copia as respostas para os campos do briefing completo que ainda estão vazios (nada é sobrescrito). Planos, personas, concorrentes e objeções ficam como texto aqui: me envie que eu organizo em lista.</p>';
+  }
+  el.innerHTML='<div style="background:var(--s1);border:1px solid var(--bdo);border-radius:12px;padding:16px">'+
+    '<div style="font-size:14px;font-weight:700;margin-bottom:4px">📲 Briefing respondido pelo gestor</div>'+
+    '<p style="font-size:12.5px;color:var(--td);margin-bottom:10px">Envie este link para o gestor responder pelo celular, digitando ou ditando. As respostas aparecem aqui e podem ser editadas, complementadas e depois aplicadas ao briefing completo.</p>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><input class="fi" readonly style="flex:1;min-width:220px" value="'+bcEsc(bgLink())+'" onclick="this.select()"><button class="btn-or btn-sm" onclick="bgCopiarLink()">Copiar link</button><a class="btn-gh btn-sm" style="text-decoration:none" target="_blank" href="https://wa.me/?text='+encodeURIComponent('Olá! Segue o link do briefing da academia. Pode responder digitando ou falando, no seu tempo: '+bgLink())+'">Enviar por WhatsApp</a></div>'+
+    '<div style="font-size:12px;color:var(--td)">'+st+quando+(keys.length?' · '+resp_n+' respondidas · '+ns_n+' marcadas “não sei”':'')+'</div>'+corpo+'</div>';
+}
+async function bgSalvarEdicoes(){
+  if(!bgRow)return;
+  const resp=bgRow.respostas||{};
+  Object.keys(resp).forEach(k=>{const t=document.getElementById('bgr-'+k);if(t)resp[k].a=t.value.trim()});
+  try{
+    await sbUpsert('briefing_gestora',{academia_id:sessao.academia_id,respostas:resp,status:bgRow.status||'rascunho',updated_at:Date.now()});
+    bgRow.respostas=resp;bgRow.updated_at=Date.now();toast('Respostas salvas!');bgRender();
+  }catch(e){console.error(e);toast('Erro ao salvar.',true)}
+}
+async function bgAplicar(){
+  if(!bgRow)return;
+  await bgSalvarEdicoes();
+  const resp=bgRow.respostas||{};
+  const b=JSON.parse(JSON.stringify(bcDados||{versao:1,blocos:{}}));
+  b.blocos=b.blocos||{};
+  let n=0,pulados=0;
+  BC_SCHEMA.forEach(bl=>bl.c.forEach(c=>{
+    const r=resp[bl.id+'.'+c[0]]; const txt=r&&(r.a||'').trim(); if(!txt)return;
+    if(c[2]==='tab'){pulados++;return}
+    b.blocos[bl.id]=b.blocos[bl.id]||{};
+    const atual=b.blocos[bl.id][c[0]];
+    if(atual!=null&&atual!==''&&!(Array.isArray(atual)&&!atual.length))return;
+    let t=txt; if(c[2]==='list'&&t.indexOf('\n')<0)t=t.split(/[;,]| e (?=[a-zà-ú])/i).join('\n');
+    const v=bcTxtToVal(c,t); if(v==null)return;
+    b.blocos[bl.id][c[0]]=v;n++;
+  }));
+  if(!b.fontes)b.fontes=[];
+  if(!b.fontes.some(f=>f.tipo==='Briefing do gestor'))b.fontes.push({tipo:'Briefing do gestor',titulo:'Formulário respondido pelo link',data:new Date().toLocaleDateString('pt-BR')});
+  bcDados=b;
+  await bcSalvar(true);
+  toast(n+' campo(s) aplicado(s)'+(pulados?'. '+pulados+' resposta(s) em lista/tabela ficam para eu organizar.':'.'));
+}
+
 function initBriefing(){
   const restrito=sessao.role==='consultor'||sessao.role==='treinador';
   document.getElementById('briefing-restrito').style.display=restrito?'block':'none';
@@ -3349,6 +3562,8 @@ function initBriefing(){
   if(restrito)return;
   renderModalidadesChk([]);
   carregarBriefing();
+  bcCarregar();
+  bgCarregar();
   carregarTranscricoes();
 }
 function renderModalidadesChk(selecionadas){
@@ -3357,6 +3572,168 @@ function renderModalidadesChk(selecionadas){
       <input type="checkbox" value="${m}" ${selecionadas.includes(m)?'checked':''}> ${m}
     </label>`).join('');
 }
+
+// ══ BRIEFING COMPLETO (importação via skill) ══
+const BC_SCHEMA=[
+ {id:'identidade',t:'🏢 Identidade e posicionamento',c:[['nome_fantasia','Nome fantasia'],['cidade_uf','Cidade / UF'],['unidades','Unidades','area'],['anos_mercado','Anos de mercado','num'],['responsavel','Proprietário(a) / gestor(a)'],['historia','História da academia','area'],['proposta_valor','Proposta de valor','area'],['posicionamento','Posicionamento','area'],['tom_de_voz','Tom de voz da marca','area'],['palavras_usar','Palavras que a marca usa (uma por linha)','list'],['palavras_evitar','Palavras a evitar (uma por linha)','list']]},
+ {id:'estrutura',t:'🏗️ Estrutura física e modalidades',c:[['espaco_m2','Espaço (m²)','num'],['capacidade','Capacidade / horários de pico'],['horario_funcionamento','Horário de funcionamento'],['ambientes','Ambientes (um por linha)','list'],['modalidades','Modalidades (uma por linha)','list'],['diferenciais_fisicos','Diferenciais físicos','area']]},
+ {id:'modelo',t:'🎯 Modelo de negócio e diferenciais',c:[['modalidade_principal','Modalidade principal / carro-chefe'],['modelo_negocio','Modelo de negócio'],['usa_bot','Usa bot de pré-qualificação?'],['diferenciais_tecnicos','Diferenciais técnicos','area'],['metodologia_propria','Metodologia própria','area']]},
+ {id:'planos',t:'💳 Planos e preços',c:[['planos','Planos (um por linha: plano | modalidade | periodicidade | valor | observação)','tab',['plano','modalidade','periodicidade','valor','observacao']],['ticket_medio','Ticket médio (R$)','num'],['taxa_matricula','Taxa de matrícula'],['formas_pagamento','Formas de pagamento (uma por linha)','list'],['promocoes_atuais','Promoções atuais','area']]},
+ {id:'publico',t:'👥 Público e personas',c:[['publico_alvo','Público-alvo','area'],['faixa_etaria','Faixa etária'],['perfil_socioeconomico','Perfil socioeconômico'],['personas','Personas (uma por linha: persona | perfil | dores | desejos)','tab',['persona','perfil','dores','desejos']]]},
+ {id:'numeros',t:'📊 Números atuais',c:[['alunos_ativos','Alunos ativos','num'],['faturamento_mensal','Faturamento mensal (R$)','num'],['leads_mes','Leads por mês','num'],['taxa_conversao','Taxa de conversão'],['churn_mensal','Cancelamento mensal'],['base_inativa','Base inativa (ex-alunos)','num'],['meta_90_dias','Meta dos próximos 90 dias','area']]},
+ {id:'equipe',t:'🧑‍💼 Equipe comercial',c:[['consultores','Nº de consultores(as)','num'],['estrutura_comercial','Estrutura comercial','area'],['horarios_atendimento','Horários de atendimento'],['ferramentas','Ferramentas usadas (uma por linha)','list'],['rotina_comercial','Rotina comercial atual','area'],['dificuldades','Maiores dificuldades da equipe','area']]},
+ {id:'funil',t:'🔻 Funil e canais',c:[['canais','Canais de aquisição (um por linha)','list'],['canal_principal','Canal principal'],['fluxo_atendimento','Fluxo de atendimento atual','area'],['experiencia_gratuita','Regras da experiência gratuita','area'],['tempo_resposta','Tempo médio de resposta ao lead'],['followup','Follow-up atual','area']]},
+ {id:'concorrencia',t:'⚔️ Concorrência',c:[['concorrentes','Concorrentes (um por linha: nome | preço | diferencial | ponto fraco)','tab',['nome','preco','diferencial','ponto_fraco']],['vantagem','Nossa vantagem competitiva','area']]},
+ {id:'dores',t:'🔥 Dores e oportunidades',c:[['dores','Dores principais (uma por linha)','list'],['oportunidades','Oportunidades (uma por linha)','list'],['prioridades_90_dias','Prioridades dos próximos 90 dias (uma por linha)','list']]},
+ {id:'regras',t:'📏 Regras comerciais',c:[['limite_desconto','Limite de desconto'],['quem_autoriza','Quem autoriza exceções'],['cancelamento','Política de cancelamento','area'],['congelamento','Política de congelamento'],['indicacao','Programa de indicação','area'],['regras_experiencia','Regras da experiência','area']]},
+ {id:'objecoes',t:'🛡️ Objeções reais e fechamento',c:[['objecoes','Objeções (uma por linha: objeção | frequência | como responde hoje)','tab',['objecao','frequencia','como_responde']],['gatilhos_fechamento','Gatilhos de fechamento (um por linha)','list']]}
+];
+let bcDados=null, bcPend=null;
+function bcEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function bcValToTxt(c,v){
+  if(v==null)return '';
+  if(c[2]==='list')return Array.isArray(v)?v.join('\n'):String(v);
+  if(c[2]==='tab')return Array.isArray(v)?v.map(o=>c[3].map(k=>(o&&o[k]!=null?o[k]:'')).join(' | ')).join('\n'):String(v);
+  return v;
+}
+function bcTxtToVal(c,txt){
+  txt=(txt||'').trim();
+  if(!txt)return null;
+  if(c[2]==='num'){const n=parseFloat(txt.replace(',','.'));return isNaN(n)?null:n}
+  if(c[2]==='list')return txt.split('\n').map(x=>x.trim()).filter(Boolean);
+  if(c[2]==='tab')return txt.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const p=l.split('|').map(x=>x.trim());const o={};c[3].forEach((k,i)=>o[k]=p[i]||'');return o});
+  return txt;
+}
+function bcContar(b){
+  let tot=0,ok=0;
+  BC_SCHEMA.forEach(bl=>bl.c.forEach(c=>{tot++;const v=b&&b.blocos&&b.blocos[bl.id]&&b.blocos[bl.id][c[0]];if(v!=null&&v!==''&&!(Array.isArray(v)&&!v.length))ok++}));
+  return {tot,ok};
+}
+function bcRender(){
+  const b=bcDados;
+  const box=document.getElementById('bc-blocos'); if(!box)return;
+  if(!b){
+    box.innerHTML='<div style="color:var(--td);font-size:12px;margin-bottom:6px">Nenhum briefing completo importado ainda.</div>';
+    document.getElementById('bc-acoes').style.display='none';
+    document.getElementById('bc-status').innerHTML='';document.getElementById('bc-pers').innerHTML='';return;
+  }
+  const n=bcContar(b);
+  const fontes=(b.fontes||[]).map(f=>bcEsc((f.tipo||'')+(f.titulo?': '+f.titulo:'')+(f.data?' ('+f.data+')':''))).join(' · ');
+  const lac=(b.lacunas||[]);
+  document.getElementById('bc-status').innerHTML='<strong>'+n.ok+' de '+n.tot+' campos preenchidos</strong>'+(b.gerado_em?' · gerado em '+bcEsc(b.gerado_em):'')+(fontes?'<br>Fontes: '+fontes:'')+(lac.length?'<div style="margin-top:8px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:10px 12px;color:var(--tm)"><strong>⚠️ Lacunas para confirmar com o cliente</strong><ul style="margin:6px 0 0 18px">'+lac.map(l=>'<li>'+bcEsc(l)+'</li>').join('')+'</ul></div>':'');
+  box.innerHTML=BC_SCHEMA.map(bl=>{
+    const dados=(b.blocos&&b.blocos[bl.id])||{};
+    const cheios=bl.c.filter(c=>{const v=dados[c[0]];return v!=null&&v!==''&&!(Array.isArray(v)&&!v.length)}).length;
+    return '<details style="background:var(--s2);border-radius:10px;padding:10px 14px;margin-bottom:8px"><summary style="cursor:pointer;font-size:13.5px;font-weight:700">'+bl.t+' <span style="font-weight:500;color:var(--td);font-size:11.5px">· '+cheios+'/'+bl.c.length+'</span></summary><div style="margin-top:12px">'+
+      bl.c.map(c=>{
+        const id='bc-'+bl.id+'-'+c[0], v=bcEsc(bcValToTxt(c,dados[c[0]]));
+        const multi=c[2]==='area'||c[2]==='list'||c[2]==='tab';
+        return '<div class="fg" style="margin-bottom:10px"><label class="fl">'+c[1]+'</label>'+(multi?'<textarea class="fi" id="'+id+'" rows="'+(c[2]==='tab'?5:3)+'">'+v+'</textarea>':'<input class="fi" id="'+id+'" '+(c[2]==='num'?'type="number" step="any" ':'')+'value="'+v+'">')+'</div>';
+      }).join('')+'</div></details>';
+  }).join('');
+  document.getElementById('bc-acoes').style.display='block';
+  bcRenderPers(b.personalizacao);
+}
+function bcCopy(i,g){
+  const p=(bcDados&&bcDados.personalizacao)||{};
+  const it=(p[g]||[])[i]; if(!it)return;
+  const t=it.texto||it.resposta||it.mensagem||'';
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('Texto copiado!')).catch(()=>toast('Não foi possível copiar.',true));
+}
+function bcRenderPers(p){
+  const el=document.getElementById('bc-pers'); if(!el)return;
+  p=p||{}; const sc=p.scripts||[], ob=p.objecoes||[], ca=p.campanhas||[];
+  if(!sc.length&&!ob.length&&!ca.length){el.innerHTML='';return}
+  const card=(tit,corpo,g,i)=>'<div style="background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-bottom:8px"><div style="font-size:12px;font-weight:700;margin-bottom:4px">'+tit+'</div><div style="font-size:12.5px;color:var(--tm);white-space:pre-wrap">'+corpo+'</div><button class="btn-gh btn-sm" style="margin-top:6px" onclick="bcCopy('+i+',\''+g+'\')">Copiar texto</button></div>';
+  el.innerHTML='<div class="sec-div" style="margin-top:24px"><div class="sec-div-line"></div><div class="sec-div-lbl">✨ Personalização sugerida a partir do briefing</div><div class="sec-div-line"></div></div>'+
+   '<p style="font-size:12px;color:var(--td);margin-bottom:10px">Sugestões geradas pela skill com base no perfil desta academia. Revise e copie para a Central de Scripts e para as Campanhas.</p>'+
+   (sc.length?'<div class="lbl" style="margin:10px 0 6px">Ajustes de scripts</div>'+sc.map((s,i)=>card(bcEsc(s.etapa||'Etapa')+(s.ajuste?'-'+bcEsc(s.ajuste):''),bcEsc(s.texto||''),'scripts',i)).join(''):'')+
+   (ob.length?'<div class="lbl" style="margin:14px 0 6px">Respostas a objeções</div>'+ob.map((s,i)=>card('“'+bcEsc(s.objecao||'')+'”',bcEsc(s.resposta||''),'objecoes',i)).join(''):'')+
+   (ca.length?'<div class="lbl" style="margin:14px 0 6px">Ideias de campanha</div>'+ca.map((s,i)=>card(bcEsc(s.perfil||'')+(s.ideia?'-'+bcEsc(s.ideia):''),bcEsc(s.mensagem||''),'campanhas',i)).join(''):'');
+}
+async function bcCarregar(){
+  if(!sessao.academia_id)return;
+  try{
+    const rows=await sbGet('briefing_negocio',`academia_id=eq.${sessao.academia_id}`);
+    const b=rows&&rows[0];
+    bcDados=(b&&b.dados&&b.dados.blocos)?b.dados:null;
+  }catch(e){console.error('briefing completo:',e);bcDados=null}
+  bcRender();
+}
+function bcToggleColar(){const e=document.getElementById('bc-colar');e.style.display=e.style.display==='none'?'block':'none'}
+function bcLerArquivo(inp){
+  const f=inp.files&&inp.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{bcProcessar(String(r.result||''));inp.value=''};
+  r.onerror=()=>toast('Não foi possível ler o arquivo.',true);
+  r.readAsText(f,'utf-8');
+}
+function bcProcessar(txt){
+  let o;
+  try{o=JSON.parse((txt||'').trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim())}catch(e){return toast('Arquivo inválido. Use o JSON gerado pela skill de briefing.',true)}
+  if(!o||typeof o!=='object'||!o.blocos||typeof o.blocos!=='object')return toast('Este arquivo não parece um briefing (falta o campo "blocos").',true);
+  bcPend=o;
+  const n=bcContar(o);
+  const lac=o.lacunas||[];
+  const pr=document.getElementById('bc-preview');
+  pr.style.display='block';
+  pr.innerHTML='<div style="font-weight:700;margin-bottom:6px">Conferir antes de salvar</div>'+
+    '<div style="font-size:12.5px;margin-bottom:8px">Academia no arquivo: <strong>'+bcEsc(o.academia||'não informada')+'</strong> · '+n.ok+' de '+n.tot+' campos preenchidos'+(bcDados?' · <span style="color:var(--rd)">substitui o briefing atual</span>':'')+'</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+BC_SCHEMA.map(bl=>{const d=o.blocos[bl.id]||{};const c=bl.c.filter(x=>{const v=d[x[0]];return v!=null&&v!==''&&!(Array.isArray(v)&&!v.length)}).length;return '<span style="font-size:11.5px;background:var(--s1);border:1px solid var(--bd);border-radius:20px;padding:3px 10px">'+bl.t.replace(/^\S+\s/,'')+': '+c+'/'+bl.c.length+'</span>'}).join('')+'</div>'+
+    (lac.length?'<div style="font-size:12px;color:var(--tm);margin-bottom:10px">⚠️ '+lac.length+' lacuna(s) apontada(s) para confirmar com o cliente.</div>':'')+
+    '<button class="btn-or btn-sm" onclick="bcConfirmar()">Confirmar e usar este briefing</button> <button class="btn-gh btn-sm" onclick="bcCancelar()">Cancelar</button>';
+}
+function bcCancelar(){bcPend=null;document.getElementById('bc-preview').style.display='none'}
+async function bcConfirmar(){
+  if(!bcPend)return;
+  bcDados=bcPend; bcPend=null;
+  document.getElementById('bc-preview').style.display='none';
+  bcRender();
+  await bcSalvar(true);
+}
+function bcColetar(){
+  const b=JSON.parse(JSON.stringify(bcDados||{versao:1,blocos:{}}));
+  b.blocos=b.blocos||{};
+  BC_SCHEMA.forEach(bl=>{
+    b.blocos[bl.id]=b.blocos[bl.id]||{};
+    bl.c.forEach(c=>{
+      const el=document.getElementById('bc-'+bl.id+'-'+c[0]);
+      if(el){const v=bcTxtToVal(c,el.value);if(v==null)delete b.blocos[bl.id][c[0]];else b.blocos[bl.id][c[0]]=v}
+    });
+  });
+  return b;
+}
+async function bcSalvar(veioDoImport){
+  if(!sessao.academia_id)return toast('Selecione uma academia.',true);
+  const b=veioDoImport===true?bcDados:bcColetar();
+  const bl=b.blocos||{}; const g=(i,k)=>(bl[i]||{})[k];
+  const payload={academia_id:sessao.academia_id,dados:b,updated_at:Date.now()};
+  // espelha os campos do perfil rápido
+  const n=v=>(v==null||v==='')?null:(parseFloat(v)||null);
+  if(g('estrutura','espaco_m2')!=null)payload.espaco_m2=n(g('estrutura','espaco_m2'));
+  if(g('planos','ticket_medio')!=null)payload.ticket_atual=n(g('planos','ticket_medio'));
+  if(g('modelo','modalidade_principal'))payload.modalidade_principal=g('modelo','modalidade_principal');
+  if(g('modelo','modelo_negocio'))payload.modelo_negocio=g('modelo','modelo_negocio');
+  if(g('modelo','diferenciais_tecnicos'))payload.diferenciais_tecnicos=g('modelo','diferenciais_tecnicos');
+  if(g('publico','publico_alvo'))payload.publico_alvo=g('publico','publico_alvo');
+  if(Array.isArray(g('estrutura','modalidades')))payload.modalidades=g('estrutura','modalidades');
+  try{
+    await sbUpsert('briefing_negocio',payload);
+    bcDados=b;
+    document.getElementById('bc-msg').textContent='✓ Briefing salvo!';
+    setTimeout(()=>document.getElementById('bc-msg').textContent='',3000);
+    if(veioDoImport===true)carregarBriefing();
+    bcRender();
+    toast('Briefing salvo!');
+  }catch(e){console.error(e);toast('Erro ao salvar. Confirme se o SQL do briefing completo foi executado.',true)}
+}
+function bcExportar(){
+  const b=bcDados?bcColetar():null;
+  if(!b)return toast('Nada para exportar ainda.',true);
+  const blob=new Blob([JSON.stringify(b,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='briefing-'+((b.academia||'academia').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'.json';a.click();
+}
+
 async function carregarBriefing(){
   if(!sessao.academia_id)return;
   try{
@@ -4487,6 +4864,11 @@ function closeWelcome(){
 }
 function checkWelcome(){
   if(!sessao||isAdmin())return;
+  if(isConsultor()){
+    const box=document.querySelector('#m-welcome .modal > div:nth-child(2)');
+    const passos=[['Acompanhe seu painel','Veja suas metas, seus funis e seus resultados no desafio.'],['Lance seus indicadores todo dia','Clique em "LANÇAR DIA" e preencha tentativas, efetivos, agendamentos e matrículas.'],['Trabalhe suas campanhas','Use o botão Campanhas para acompanhar seus leads e cadências.']];
+    if(box)box.innerHTML=passos.map((p,i)=>'<div style="background:var(--s2);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px"><div style="background:var(--or);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">'+(i+1)+'</div><div><div style="font-weight:600;font-size:14px">'+p[0]+'</div><div style="font-size:12px;color:var(--td);margin-top:1px">'+p[1]+'</div></div></div>').join('')+'<div style="background:var(--or-d);border:1px solid var(--bdo);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px"><div style="font-size:20px;flex-shrink:0">❓</div><div><div style="font-weight:600;font-size:14px">Ficou com dúvida?</div><div style="font-size:12px;color:var(--td);margin-top:1px">Fale com o gestor da sua academia.</div></div></div>';
+  }
   const visto=localStorage.getItem('qg90_welcomed_'+sessao.id);
   if(!visto)document.getElementById('m-welcome').classList.add('open');
 }
