@@ -1,0 +1,15 @@
+/* ===== Identidade GeFit — verde-limão #B3F400 · azul #002E82 · branco ===== */
+:root{
+  --gf-lime:#B3F400; --gf-lime-2:#D4FF4D; --gf-blue:#002E82; --gf-blue-2:#2F6BFF; --gf-white:#FFFFFF;
+  --orange:#B3F400; --orange2:#D4FF4D; --or:#B3F400;
+  --blue:#6F9BFF;
+}
+/* logo oficial (azul + verde-limão) sempre sobre placa branca para ter contraste no tema escuro */
+img.gf-logo{background:#fff;border-radius:10px;padding:5px 10px;object-fit:contain;display:inline-block;vertical-align:middle;width:auto;box-sizing:content-box}
+img.gf-logo.gf-grande{height:44px}
+
+/* ===== Dentro do Hub: o menu lateral, o logo e o "Sair" já são do Hub ===== */
+html.gf-embed img.gf-logo,
+html.gf-embed [onclick*="ogout"],
+html.gf-embed [onclick*="Logout"],
+html.gf-embed .btn-sair{display:none !important}
