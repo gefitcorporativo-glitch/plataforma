@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeFit · Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme-gefit.css">
+<style>
+:root{--bg:#060A16;--side:#0B1222;--card:#101A2E;--card2:#16223A;--line:#1D2A45;--tx:#fff;--tm:rgba(255,255,255,.7);--td:rgba(255,255,255,.42);--lime:#B3F400;--side-w:264px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--tx)}
+button{font-family:inherit}
+svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ===== LOGIN dividido ===== */
+#login{position:fixed;inset:0;display:flex;z-index:50;background:var(--bg)}
+.l-left{flex:1.1;background:linear-gradient(155deg,#0B1530 0%,#060A16 70%);padding:48px 56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.l-left:before{content:'';position:absolute;right:-140px;top:-140px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(179,244,0,.16),transparent 65%)}
+.l-left img.gf-logo{height:46px;align-self:flex-start;position:relative}
+.l-mid{position:relative}
+.l-mid h1{font-family:'Barlow Condensed';font-weight:800;font-size:54px;line-height:1.02;letter-spacing:.005em}
+.l-mid h1 em{font-style:normal;color:var(--lime)}
+.l-mid p{margin-top:16px;color:var(--tm);font-size:17px;max-width:460px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.chips span{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--tm);font-size:13px;font-weight:600;padding:6px 13px;border-radius:30px}
+.l-foot{font-size:12px;color:var(--td);position:relative}
+.l-right{flex:.9;background:#fff;color:#0B1222;display:flex;align-items:center;justify-content:center;padding:32px}
+.l-box{width:100%;max-width:360px}
+.l-box h2{font-family:'Barlow Condensed';font-weight:800;font-size:32px}
+.l-box .sub{color:#5B6578;font-size:14.5px;margin:4px 0 24px}
+.l-box label{display:block;font-size:12.5px;font-weight:700;color:#3A455C;margin:14px 0 6px;letter-spacing:.02em}
+.l-box input{width:100%;border:1.5px solid #D5DBE8;border-radius:10px;padding:12px 14px;font:inherit;font-size:15px;color:#0B1222;outline:none;background:#fff}
+.l-box input:focus{border-color:#002E82;box-shadow:0 0 0 3px rgba(0,46,130,.12)}
+.pw{position:relative}
+.pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:#5B6578;font-size:12.5px;font-weight:700;cursor:pointer;padding:8px}
+#lerr{display:none;background:#FDECEC;color:#B42318;border-radius:8px;font-size:13.5px;padding:10px 12px;margin-top:14px}
+#lerr.show{display:block}
+#lbtn{width:100%;margin-top:20px;background:#002E82;color:#fff;border:0;border-radius:10px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;transition:filter .15s}
+#lbtn:hover{filter:brightness(1.15)}
+#lbtn:disabled{opacity:.6;cursor:wait}
+.l-help{margin-top:18px;font-size:12.5px;color:#7A8499;text-align:center;line-height:1.5}
+.l-right img.gf-logo.mob{display:none}
+
+/* ===== APP ===== */
+#app{display:none;height:100%}
+#app.on{display:flex}
+aside{width:var(--side-w);background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;height:100vh;z-index:30;transition:transform .2s}
+.brand{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.brand img.gf-logo{height:36px}
+.brand small{display:block;margin-top:9px;font-family:'Barlow Condensed';font-weight:600;letter-spacing:.14em;font-size:11.5px;color:var(--td);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav{flex:1;overflow-y:auto;padding:8px 10px 16px}
+.grp{font-family:'Barlow Condensed';font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--td);padding:16px 10px 6px}
+.item{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;color:var(--tm);font-size:14.5px;font-weight:500;text-align:left;padding:9px 10px;border-radius:9px;cursor:pointer}
+.item:hover{background:rgba(255,255,255,.05);color:#fff}
+.item.on{background:rgba(179,244,0,.12);color:var(--lime);font-weight:600}
+.side-foot{padding:12px 16px;border-top:1px solid var(--line);font-size:11.5px;color:var(--td)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;height:100vh}
+header{height:56px;background:var(--side);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 20px;flex-shrink:0}
+#burger{display:none;background:none;border:0;color:#fff;cursor:pointer}
+header h1{font-family:'Barlow Condensed';font-weight:700;font-size:22px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--tm)}
+.tag{background:rgba(179,244,0,.14);color:var(--lime);font-family:'Barlow Condensed';font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px}
+.out{background:none;border:1px solid var(--line);color:var(--tm);font-size:13px;padding:6px 12px;border-radius:8px;cursor:pointer}
+.out:hover{border-color:var(--lime);color:var(--lime)}
+.stage{flex:1;position:relative;overflow:hidden}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--bg);display:none}
+iframe.show{display:block}
+#home{position:absolute;inset:0;overflow:auto;padding:34px 32px 60px}
+.hwrap{max-width:1120px}
+#home h2{font-family:'Barlow Condensed';font-weight:800;font-size:36px;line-height:1.1}
+#home .sub{color:var(--tm);margin:6px 0 20px}
+.search{position:relative;max-width:460px;margin-bottom:6px}
+.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--td);width:18px;height:18px}
+.search input{width:100%;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 14px 12px 40px;color:#fff;font:inherit;font-size:15px;outline:none}
+.search input:focus{border-color:var(--lime)}
+.gname{font-family:'Barlow Condensed';font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px;color:var(--td);margin:28px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;cursor:pointer;text-align:left;color:#fff;transition:border-color .15s,transform .15s;position:relative}
+.card:hover{border-color:var(--lime);transform:translateY(-2px)}
+.card .ic{width:40px;height:40px;border-radius:10px;background:rgba(179,244,0,.12);color:var(--lime);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.card h3{font-family:'Barlow Condensed';font-size:20px;font-weight:700;margin-bottom:4px}
+.card p{font-size:13px;color:var(--tm);line-height:1.45}
+.badge{position:absolute;top:14px;right:14px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--td);border:1px solid var(--line);border-radius:20px;padding:2px 8px}
+.rec .card{background:var(--card2)}
+.vazio{color:var(--td);margin-top:30px}
+@media (max-width:860px){
+  #login{flex-direction:column}
+  .l-left{display:none}
+  .l-right{flex:1;align-items:flex-start;padding-top:56px}
+  .l-right img.gf-logo.mob{display:inline-block;height:40px;margin-bottom:26px}
+  aside{position:fixed;left:0;top:0;transform:translateX(-100%)}
+  body.open aside{transform:none;box-shadow:0 0 40px rgba(0,0,0,.6)}
+  #burger{display:block}
+  .who .nm{display:none}
+  #home{padding:24px 16px 50px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="l-left">
+    <img class="gf-logo" src="logo-gefit.png" alt="GeFit">
+    <div class="l-mid">
+      <h1>Uma plataforma.<br><em>Tudo conectado.</em></h1>
+      <p>Comercial, experiências, scripts, retenção e equipe no mesmo lugar, com a metodologia GeFit por trás de cada tela.</p>
+      <div class="chips"><span>Desafio ROI 21</span><span>Campanhas</span><span>Experiências</span><span>Scripts AQÚI</span><span>Retenção</span></div>
+    </div>
+    <div class="l-foot">GeFit · Fitness Intelligence</div>
+  </div>
+  <div class="l-right">
+    <form class="l-box" id="lform" autocomplete="on">
+      <img class="gf-logo mob" src="logo-gefit.png" alt="GeFit">
+      <h2>Acesse sua conta</h2>
+      <div class="sub">Entre com o e-mail e a senha da sua academia.</div>
+      <label for="le">E-mail</label>
+      <input id="le" type="email" autocomplete="username" placeholder="voce@academia.com.br" required>
+      <label for="ls">Senha</label>
+      <div class="pw"><input id="ls" type="password" autocomplete="current-password" placeholder="Sua senha" required><button type="button" id="ver">Mostrar</button></div>
+      <div id="lerr"></div>
+      <button id="lbtn" type="submit">Entrar na plataforma →</button>
+      <div class="l-help">Esqueceu a senha? Fale com o responsável pela plataforma na sua academia.</div>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside>
+    <div class="brand"><img class="gf-logo" src="logo-gefit.png" alt="GeFit"><small id="acadNome">Plataforma</small></div>
+    <nav id="nav"></nav>
+    <div class="side-foot">GeFit · Fitness Intelligence</div>
+  </aside>
+  <div class="main">
+    <header>
+      <button id="burger" aria-label="Menu"><svg class="i" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <h1 id="titulo">Início</h1>
+      <div class="who"><span class="nm" id="uNome"></span><span class="tag" id="uRole"></span><button class="out" id="sair">Sair</button></div>
+    </header>
+    <div class="stage"><div id="home"></div><iframe id="frame" title="Módulo"></iframe></div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://irwvagffrguiljaxrzmd.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyd3ZhZ2Zmcmd1aWxqYXhyem1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNDk5ODUsImV4cCI6MjEwNDkyNTk4NX0.YAApyaH6iIHEua_89fgCUpMzgXRIcWb_vNRkBQAoq5A';
+const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+const $=id=>document.getElementById(id);
+
+/* ===== Ícones ===== */
+const IC={
+ home:'<path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',
+ roi:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+ registro:'<path d="M9 5H5a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-4"/><path d="M17 3l4 4-9 9H8v-4z"/>',
+ campanhas:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>',
+ exper:'<path d="M12 2l3 7h7l-5.5 4.2L18.5 21 12 16.8 5.5 21l2-7.8L2 9h7z"/>',
+ scripts:'<path d="M4 4h16v14H7l-3 3z"/>',
+ briefing:'<path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+ perfil:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>',
+ planner:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14h4"/>',
+ diario:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>',
+ revisao:'<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2h9"/>',
+ gestao:'<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>',
+ carteira:'<path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>',
+ vendas:'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+ mapa:'<circle cx="12" cy="12" r="9"/><path d="M15 9l-2 6-4 0 2-6z"/>',
+ busca:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'
+};
+const svg=k=>`<svg class="i" viewBox="0 0 24 24">${IC[k]||IC.home}</svg>`;
+
+/* ===== Módulos =====
+   roles: quem vê. key: módulo exigido em modulos_ativos (só consultor/treinador; gestor e admin veem tudo).
+   Para um módulo novo: 1 linha aqui. */
+const MODULOS=[
+ {grupo:'Comercial',itens:[
+  {id:'roi',nome:'Desafio ROI 21 Dias',icon:'roi',url:'index.html',key:'roi21',roles:['gestor','admin','consultor'],desc:'Painel geral, vendas, marketing e planejamento.'},
+  {id:'registro',nome:'Registro Diário',icon:'registro',url:'registro-diario.html',key:'roi21',roles:['gestor','admin','consultor'],desc:'Lançamento diário de vendas.'},
+  {id:'camp',nome:'Campanhas',icon:'campanhas',url:'campanhas.html',key:'campanhas',roles:['gestor','admin','consultor'],desc:'CRM em kanban: leads, carteira e distribuição.'},
+  {id:'exper',nome:'Controle de Experiências',icon:'exper',url:'controle-experiencias.html',key:'experiencias',roles:['gestor','admin','consultor','treinador'],desc:'Do agendamento da experiência à conversão.'},
+  {id:'scripts',nome:'Central de Scripts AQÚI',icon:'scripts',url:'central-scripts-aqui.html',key:'scripts',roles:['gestor','admin','consultor','treinador'],desc:'Biblioteca de metodologia e scripts.'}
+ ]},
+ {grupo:'Retenção',itens:[
+  {id:'planner',nome:'Planner do Treinador',icon:'planner',url:'retencao/sistema_integrado_v3.html',roles:['treinador'],ret:1,desc:'Home, agenda, carteira e consultoria técnica.'},
+  {id:'diario',nome:'Diário do Treinador',icon:'diario',url:'retencao/diario_treinador.html',roles:['treinador'],ret:1,desc:'Relatório diário de atividades e resultados.'},
+  {id:'revisao',nome:'Revisão de Treino',icon:'revisao',url:'retencao/revisao_treino.html',roles:['treinador'],ret:1,desc:'Checklist guiado da revisão de treino.'},
+  {id:'gestao',nome:'Gestão da Retenção',icon:'gestao',url:'retencao/dashboard_gestor_v3.html',roles:['gestor','admin'],ret:1,desc:'Indicadores, equipe, renovações e carteiras.'},
+  {id:'carteira',nome:'Atualizar Carteira',icon:'carteira',url:'retencao/importar_carteira.html',roles:['gestor','admin'],ret:1,desc:'Suba a planilha de alunos e distribua a carteira.'},
+  {id:'vendas',nome:'Painel de Vendas',icon:'vendas',url:'retencao/painel_vendas.html',roles:['gestor','admin','consultor'],ret:1,desc:'Funil de experiências e follow-ups.'},
+  {id:'mapa',nome:'Mapa do Sistema',icon:'mapa',url:'retencao/mapa_retencao.html',roles:['gestor','admin','consultor','treinador'],ret:1,desc:'Como cada tela funciona, passo a passo.'}
+ ]},
+ {grupo:'Gestão e equipe',itens:[
+  {id:'briefing',nome:'Briefing da Gestora',icon:'briefing',url:'briefing-gestora.html',dyn:'a',roles:['gestor','admin'],desc:'Dados da academia que alimentam scripts e campanhas.'},
+  {id:'pcons',nome:'Perfil do Consultor',icon:'perfil',url:'perfil-consultor.html',roles:['consultor'],desc:'Seu perfil profissional e metas.'},
+  {id:'ptrein',nome:'Perfil do Treinador',icon:'perfil',url:'perfil-treinador.html',roles:['treinador'],desc:'Seu perfil profissional e carreira.'}
+ ]}
+];
+const ROLE_LABEL={admin:'Administrador',gestor:'Gestão',consultor:'Consultor(a)',treinador:'Treinador(a)'};
+const ENTRADA={admin:'home',gestor:'home',consultor:'home',treinador:'planner'};
+
+let sessao=null,grupos=[],todos=[];
+function podeVer(m){
+  if(!m.roles.includes(sessao.role))return false;
+  if(sessao.role==='admin'||sessao.role==='gestor'||!m.key)return true;
+  return (sessao.modulos_ativos||[]).includes(m.key);
+}
+function urlDe(m){
+  let u=m.url;
+  const q=[];
+  if(!m.ret)q.push('uid='+encodeURIComponent(sessao.id));
+  if(m.dyn==='a'&&sessao.academia_id)q.push('a='+encodeURIComponent(sessao.academia_id));
+  return q.length?u+'?'+q.join('&'):u;
+}
+
+/* ===== Login ===== */
+async function sbGet(t,p){const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{headers:H});if(!r.ok)throw new Error(await r.text());return r.json()}
+const SEL='id,nome,email,academia_id,role,consultora_id,treinador_id,modulos_ativos';
+function guardar(s){
+  const j=JSON.stringify(s);
+  try{sessionStorage.setItem('qg90_sessao_roi',j);sessionStorage.setItem('qg90_sessao',j)}catch(e){}
+}
+$('ver').onclick=()=>{const s=$('ls');const m=s.type==='password';s.type=m?'text':'password';$('ver').textContent=m?'Ocultar':'Mostrar'};
+$('lform').onsubmit=async ev=>{
+  ev.preventDefault();
+  const email=$('le').value.trim().toLowerCase(),senha=$('ls').value;
+  const err=$('lerr');err.classList.remove('show');
+  const b=$('lbtn');b.disabled=true;b.textContent='Verificando...';
+  try{
+    const r=await sbGet('gestores',`email=eq.${encodeURIComponent(email)}&senha_hash=eq.${encodeURIComponent(senha)}&ativo=eq.true&select=${SEL}`);
+    if(!r.length){err.textContent='E-mail ou senha incorretos.';err.classList.add('show');return}
+    guardar(r[0]);entrar(r[0]);
+  }catch(e){err.textContent='Não foi possível conectar. Tente novamente em instantes.';err.classList.add('show');console.error(e)}
+  finally{b.disabled=false;b.textContent='Entrar na plataforma →'}
+};
+async function retomar(){
+  let raw=null;try{raw=sessionStorage.getItem('qg90_sessao_roi')}catch(e){}
+  if(!raw)return;
+  let s;try{s=JSON.parse(raw)}catch(e){return}
+  try{
+    const r=await sbGet('gestores',`id=eq.${encodeURIComponent(s.id)}&ativo=eq.true&select=${SEL}`);
+    if(r.length){guardar(r[0]);entrar(r[0])}
+  }catch(e){ if(s&&s.id&&s.role)entrar(s) }
+}
+
+/* ===== App ===== */
+function entrar(s){
+  sessao=s;
+  grupos=MODULOS.map(g=>({grupo:g.grupo,itens:g.itens.filter(podeVer)})).filter(g=>g.itens.length);
+  todos=grupos.flatMap(g=>g.itens);
+  $('login').style.display='none';$('app').classList.add('on');
+  $('uNome').textContent=s.nome||'';$('uRole').textContent=ROLE_LABEL[s.role]||s.role;
+  montarMenu();montarHome('');
+  const h=(location.hash||'').replace('#','');
+  abrir(todos.some(m=>m.id===h)?h:ENTRADA[s.role]||'home',false);
+  carregarAcademia();
+}
+async function carregarAcademia(){
+  if(!sessao.academia_id){$('acadNome').textContent=sessao.role==='admin'?'Painel mestre':'Plataforma';return}
+  try{const r=await sbGet('academias',`id=eq.${encodeURIComponent(sessao.academia_id)}&select=nome`);if(r[0])$('acadNome').textContent=r[0].nome}catch(e){}
+}
+function montarMenu(){
+  let h=`<button class="item" data-id="home">${svg('home')}<span>Início</span></button>`;
+  grupos.forEach(g=>{h+=`<div class="grp">${g.grupo}</div>`+g.itens.map(m=>`<button class="item" data-id="${m.id}">${svg(m.icon)}<span>${m.nome}</span></button>`).join('')});
+  $('nav').innerHTML=h;
+  $('nav').querySelectorAll('.item').forEach(b=>b.onclick=()=>abrir(b.dataset.id));
+}
+function recentes(){try{return JSON.parse(localStorage.getItem('gf_hub_rec_'+sessao.id)||'[]').filter(i=>todos.some(m=>m.id===i))}catch(e){return[]}}
+function marcarRecente(id){try{const r=[id,...recentes().filter(x=>x!==id)].slice(0,4);localStorage.setItem('gf_hub_rec_'+sessao.id,JSON.stringify(r))}catch(e){}}
+function card(m){return `<button class="card" data-id="${m.id}">${m.ret?'<span class="badge">login próprio</span>':''}<div class="ic">${svg(m.icon)}</div><h3>${m.nome}</h3><p>${m.desc}</p></button>`}
+function montarHome(q){
+  const p=(sessao.nome||'').split(' ')[0];
+  const term=q.trim().toLowerCase();
+  let h=`<div class="hwrap"><h2>Olá${p?', '+p:''}</h2><div class="sub">Escolha uma ferramenta para continuar.</div>
+  <div class="search"><svg class="i" viewBox="0 0 24 24">${IC.busca}</svg><input id="busca" type="search" placeholder="Buscar ferramenta" value="${q.replace(/"/g,'&quot;')}"></div>`;
+  let achou=0;
+  if(!term){const rc=recentes().map(id=>todos.find(m=>m.id===id)).filter(Boolean);
+    if(rc.length)h+=`<div class="gname">Usados recentemente</div><div class="grid rec">${rc.map(card).join('')}</div>`}
+  grupos.forEach(g=>{
+    const it=term?g.itens.filter(m=>(m.nome+' '+m.desc).toLowerCase().includes(term)):g.itens;
+    if(!it.length)return;achou+=it.length;
+    h+=`<div class="gname">${g.grupo}</div><div class="grid">${it.map(card).join('')}</div>`});
+  if(term&&!achou)h+=`<div class="vazio">Nenhuma ferramenta encontrada para "${q.replace(/</g,'&lt;')}".</div>`;
+  h+='</div>';
+  $('home').innerHTML=h;
+  $('home').querySelectorAll('.card').forEach(b=>b.onclick=()=>abrir(b.dataset.id));
+  const bi=$('busca');bi.oninput=()=>{montarHome(bi.value);const n=$('busca');n.focus();n.setSelectionRange(n.value.length,n.value.length)};
+}
+function abrir(id,push=true){
+  const m=todos.find(x=>x.id===id);
+  document.body.classList.remove('open');
+  document.querySelectorAll('.item').forEach(b=>b.classList.toggle('on',b.dataset.id===(m?id:'home')));
+  const f=$('frame');
+  if(!m){$('home').style.display='block';f.classList.remove('show');f.removeAttribute('src');delete f.dataset.id;$('titulo').textContent='Início';if(push)location.hash='';montarHome('');return}
+  $('home').style.display='none';$('titulo').textContent=m.nome;f.classList.add('show');
+  if(f.dataset.id!==id){f.src=urlDe(m);f.dataset.id=id}
+  marcarRecente(id);
+  if(push)location.hash=id;
+}
+$('burger').onclick=()=>document.body.classList.toggle('open');
+function sair(){
+  ['qg90_sessao_roi','qg90_sessao','qg90_admin'].forEach(k=>{try{sessionStorage.removeItem(k)}catch(e){}});
+  sessao=null;$('frame').removeAttribute('src');$('app').classList.remove('on');$('login').style.display='flex';
+  $('ls').value='';location.hash='';
+}
+$('sair').onclick=sair;
+retomar();
+</script>
+</body>
+</html>
