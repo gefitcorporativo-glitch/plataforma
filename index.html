@@ -4888,13 +4888,6 @@ setInterval(()=>{
   }
 },30000);
 
-async function initAdmin(){
-  try{
-    const ex=await sbGet('gestores','email=eq.admin%40qg90.com&select=id');
-    if(!ex||!ex.length)await sbPost('gestores',{id:'gest_qg90_admin',nome:'GeFit Admin',email:'admin@qg90.com',senha_hash:'qg90admin2025',academia_id:null,role:'admin'});
-  }catch(e){console.log('Admin init:',e)}
-}
-initAdmin();
 checkSessaoInicial();
 </script>
 </body>
