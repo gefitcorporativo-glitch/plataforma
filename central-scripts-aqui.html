@@ -8,10 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --fundo:#0E0E0E;
-  --fundo2:#161616;
-  --fundo3:#1E1E1E;
-  --laranja:#0A4FAA;
+  --fundo:#060A16;
+  --fundo2:#0B1222;
+  --fundo3:#101A2E;
+  --laranja:#B3F400;
   --texto:#E8E4DC;
   --texto2:#9A9488;
   --verde:#3DBA7A;
@@ -55,7 +55,7 @@ header.top{
   cursor:pointer;transition:.15s;
 }
 .hnav-btn:hover{color:var(--texto);background:var(--fundo3);}
-.hnav-btn.active{color:var(--laranja);background:rgba(10,79,170,.1);}
+.hnav-btn.active{color:var(--laranja);background:rgba(179,244,0,.1);}
 .badge{
   margin-left:auto;
   background:var(--fundo3);border:1px solid var(--borda);
@@ -104,7 +104,7 @@ main{padding:28px 34px 80px;max-width:980px;}
 .corner.tl{top:14px;left:14px;border-right:none;border-bottom:none;}
 .corner.br{bottom:14px;right:14px;border-left:none;border-top:none;}
 .hero-tag{
-  display:inline-block;background:rgba(10,79,170,.12);color:var(--laranja);
+  display:inline-block;background:rgba(179,244,0,.12);color:var(--laranja);
   font-size:12.5px;font-weight:700;padding:4px 12px;border-radius:20px;
   text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;
 }
@@ -171,7 +171,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
   display:flex;align-items:center;gap:8px;background:var(--fundo);border:1px solid var(--borda);
   border-radius:10px;padding:9px 13px;cursor:pointer;transition:.15s;font-size:13.5px;font-weight:600;
 }
-.mapa-step:hover{border-color:var(--laranja);background:rgba(10,79,170,.08);}
+.mapa-step:hover{border-color:var(--laranja);background:rgba(179,244,0,.08);}
 .mapa-step .num{
   width:20px;height:20px;border-radius:50%;background:var(--laranja);color:#0E0E0E;
   font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:12px;
@@ -179,7 +179,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 }
 .mapa-step .arw{color:var(--texto2);font-size:12px;margin-left:2px;}
 .mapa-table-row{cursor:pointer;transition:.15s;}
-.mapa-table-row:hover td{background:rgba(10,79,170,.08);}
+.mapa-table-row:hover td{background:rgba(179,244,0,.08);}
 .mapa-table-row .goicon{color:var(--laranja);font-weight:700;font-size:12.5px;}
 
 .mapa-card{
@@ -217,7 +217,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 .obj-line{font-size:14px;margin-bottom:6px;}
 .obj-line b{color:var(--laranja);}
 .tag-synth{
-  display:inline-block;background:rgba(10,79,170,.15);color:var(--laranja);
+  display:inline-block;background:rgba(179,244,0,.15);color:var(--laranja);
   font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:5px;margin-left:6px;
   vertical-align:middle;
 }
@@ -323,9 +323,9 @@ footer.pagefoot{text-align:center;color:var(--texto2);font-size:12.5px;padding:3
 .btn-logout:hover{border-color:var(--vermelho);color:var(--vermelho);}
 
 @keyframes deeplinkPulse{
-  0%{box-shadow:0 0 0 0 rgba(10,79,170,.55);}
-  70%{box-shadow:0 0 0 14px rgba(10,79,170,0);}
-  100%{box-shadow:0 0 0 0 rgba(10,79,170,0);}
+  0%{box-shadow:0 0 0 0 rgba(179,244,0,.55);}
+  70%{box-shadow:0 0 0 14px rgba(179,244,0,0);}
+  100%{box-shadow:0 0 0 0 rgba(179,244,0,0);}
 }
 .deeplink-highlight{
   outline:2px solid var(--laranja) !important;
@@ -342,6 +342,8 @@ footer.pagefoot{text-align:center;color:var(--texto2);font-size:12.5px;padding:3
 .auth-logo-img{display:block;margin:0 auto 2px;height:38px;width:auto}
 .topbar-logo-img{height:20px;width:auto;display:inline-block;vertical-align:middle}
 </style>
+<script src="gf-embed.js"></script>
+<link rel="stylesheet" href="theme-gefit.css">
 </head>
 <body>
 

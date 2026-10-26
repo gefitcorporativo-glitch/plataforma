@@ -13,3 +13,6 @@ html.gf-embed img.gf-logo,
 html.gf-embed [onclick*="ogout"],
 html.gf-embed [onclick*="Logout"],
 html.gf-embed .btn-sair{display:none !important}
+
+/* logo nas telas de login e topo dos modulos: placa branca para contraste no tema escuro */
+.topbar-logo-img,.auth-logo-img{background:#fff;border-radius:8px;padding:3px 8px;box-sizing:content-box}

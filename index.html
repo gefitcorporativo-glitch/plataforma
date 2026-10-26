@@ -8,9 +8,9 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap');
 :root{
-  --or:#0A4FAA;--or-d:rgba(10,79,170,0.13);--or-m:rgba(10,79,170,0.32);
-  --bg:#0a0a0a;--s1:#141414;--s2:#1c1c1c;--s3:#252525;
-  --bd:rgba(255,255,255,0.07);--bdo:rgba(10,79,170,0.28);
+  --or:#B3F400;--or-d:rgba(179,244,0,0.13);--or-m:rgba(179,244,0,0.32);
+  --bg:#060A16;--s1:#0B1222;--s2:#101A2E;--s3:#16223A;
+  --bd:rgba(255,255,255,0.07);--bdo:rgba(179,244,0,0.28);
   --tx:#fff;--tm:rgba(255,255,255,0.68);--td:rgba(255,255,255,0.38);
   --gr:#22c55e;--gr-d:rgba(34,197,94,0.12);
   --re:#ef4444;--re-d:rgba(239,68,68,0.12);
@@ -202,7 +202,7 @@ tbody tr:hover td{background:var(--s2)}
 .lanc-funil-title:hover{opacity:.85}
 .lanc-funil-body{padding-top:2px;}
 .modo-lanc-btn{background:var(--s1);border:1px solid var(--bd);color:var(--td);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;cursor:pointer;text-transform:none;letter-spacing:0;font-family:'Barlow',sans-serif;}
-.modo-lanc-btn.active{background:var(--or);color:#0a0a0a;border-color:var(--or);}
+.modo-lanc-btn.active{background:var(--or);color:#060A16;border-color:var(--or);}
 .lanc-funil-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .planos-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(75px,1fr));gap:5px;margin-top:7px}
 /* INFO BOX */
@@ -239,6 +239,8 @@ body.role-consultor #btn-add-cons-top,body.role-consultor #btn-tv,body.role-cons
 body.role-consultor #roi-dia-edit,body.role-consultor #btn-finalizar-desafio,body.role-consultor #sel-desafio,
 body.role-consultor #painel-prod-time,body.role-consultor #painel-cons-filter{display:none!important}
 </style>
+<script src="gf-embed.js"></script>
+<link rel="stylesheet" href="theme-gefit.css">
 </head>
 <body>
 
@@ -2167,7 +2169,7 @@ function renderPainel(a){
   if(evolChart)evolChart.destroy();
   const byDia={};for(let d=1;d<=21;d++)byDia[d]=0;
   regs.forEach(r=>{if(!r.funis)return;const m=Object.values(r.funis).reduce((s,fd)=>s+(fd.convertidos||0),0);byDia[r.dia]=(byDia[r.dia]||0)+m});
-  evolChart=new Chart(document.getElementById('ch-evol'),{type:'bar',data:{labels:Array.from({length:21},(_,i)=>`D${i+1}`),datasets:[{label:'Matrículas',data:Array.from({length:21},(_,i)=>byDia[i+1]),backgroundColor:'rgba(10,79,170,0.55)',borderColor:'#0A4FAA',borderWidth:1,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#666',precision:0},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
+  evolChart=new Chart(document.getElementById('ch-evol'),{type:'bar',data:{labels:Array.from({length:21},(_,i)=>`D${i+1}`),datasets:[{label:'Matrículas',data:Array.from({length:21},(_,i)=>byDia[i+1]),backgroundColor:'rgba(179,244,0,0.55)',borderColor:'#B3F400',borderWidth:1,borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#666',precision:0},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
   renderPainelFunis();
 }
 
@@ -2713,7 +2715,7 @@ function renderRanking(){
   el.innerHTML=all.map((c,i)=>`<div class="rank-item"><div class="rank-pos ${pc[i]||'rest'}">${i+1}</div><div><div class="rank-nm">${c.nome}</div>${isAdmin()?`<div class="rank-ac">${c.academia}</div>`:''}</div><div class="rank-bw"><div class="rank-bar" style="width:${Math.round(c.mat/maxMat*100)}%"></div></div><div style="font-size:10px;color:var(--td);min-width:44px;text-align:right">${c.mat}${c.meta_tipo!=='treino'?'/'+c.meta:''}</div><div class="rank-val">${c.mat}</div></div>`).join('');
   if(rankChart)rankChart.destroy();
   const wrap=document.getElementById('ch-rank-wrap');wrap.style.height=Math.max(180,all.length*44+60)+'px';
-  rankChart=new Chart(document.getElementById('ch-rank'),{type:'bar',data:{labels:all.map(c=>c.nome.split(' ')[0]),datasets:[{label:'Matrículas',data:all.map(c=>c.mat),backgroundColor:all.map((_,i)=>i===0?'#0A4FAA':'rgba(10,79,170,0.38)'),borderRadius:4},{label:'Meta',data:all.map(c=>c.meta_tipo==='treino'?0:c.meta),backgroundColor:'rgba(255,255,255,0.07)',borderColor:'rgba(255,255,255,0.18)',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#666',precision:0},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
+  rankChart=new Chart(document.getElementById('ch-rank'),{type:'bar',data:{labels:all.map(c=>c.nome.split(' ')[0]),datasets:[{label:'Matrículas',data:all.map(c=>c.mat),backgroundColor:all.map((_,i)=>i===0?'#B3F400':'rgba(179,244,0,0.38)'),borderRadius:4},{label:'Meta',data:all.map(c=>c.meta_tipo==='treino'?0:c.meta),backgroundColor:'rgba(255,255,255,0.07)',borderColor:'rgba(255,255,255,0.18)',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#666',precision:0},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
 }
 
 // ══ ADMIN PANEL ══
@@ -2767,7 +2769,7 @@ async function renderAdminPanel(){
   if(acsChart)acsChart.destroy();
   const sorted=entries.map(([,a])=>({nome:a.nome.split(' ')[0],mat:acMat(a)})).sort((x,y)=>y.mat-x.mat);
   const wrap=document.getElementById('ch-acs-wrap');wrap.style.height=Math.max(180,sorted.length*44+60)+'px';
-  acsChart=new Chart(document.getElementById('ch-acs'),{type:'bar',data:{labels:sorted.map(x=>x.nome),datasets:[{label:'Matrículas',data:sorted.map(x=>x.mat),backgroundColor:sorted.map((_,i)=>i===0?'#0A4FAA':'rgba(10,79,170,0.4)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#666',precision:0},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
+  acsChart=new Chart(document.getElementById('ch-acs'),{type:'bar',data:{labels:sorted.map(x=>x.nome),datasets:[{label:'Matrículas',data:sorted.map(x=>x.mat),backgroundColor:sorted.map((_,i)=>i===0?'#B3F400':'rgba(179,244,0,0.4)'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#666',precision:0},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
 }
 
 // ══ CONTRATO / ASSINATURA (controle manual, versão MVP) ══
@@ -3839,7 +3841,7 @@ async function carregarVendasMkt(){
   // Funil de experiências
   const statusExp=['agendada','comparecida','convertida','nao_convertida'];
   const statusLbl={agendada:'Agendadas',comparecida:'Compareceram',convertida:'Convertidas',nao_convertida:'Não convertidas'};
-  const statusCor={agendada:'#0A4FAA',comparecida:'#3b82f6',convertida:'#22c55e',nao_convertida:'#ef4444'};
+  const statusCor={agendada:'#B3F400',comparecida:'#3b82f6',convertida:'#22c55e',nao_convertida:'#ef4444'};
   const total=exps.length||1;
   document.getElementById('vm-funil').innerHTML=statusExp.map(s=>{
     const n=exps.filter(e=>e.status===s).length;
@@ -3860,7 +3862,7 @@ async function carregarVendasMkt(){
   if(!leads){document.getElementById('vm-origem-aviso').textContent='Sem dados de Campanhas ainda, cadastre leads lá pra ver aqui.';}
   chVmOrigem=new Chart(document.getElementById('ch-vm-origem'),{type:'doughnut',data:{
     labels:Object.keys(porOrigem).map(k=>origemLbl[k]||k),
-    datasets:[{data:Object.values(porOrigem),backgroundColor:['#0A4FAA','#0A4FAA99','#3b82f6','#22c55e','#f59e0b'],borderWidth:0}]
+    datasets:[{data:Object.values(porOrigem),backgroundColor:['#B3F400','#B3F40099','#3b82f6','#22c55e','#f59e0b'],borderWidth:0}]
   },options:{cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#999',boxWidth:10,font:{size:10}}}}}});
 
   // Ranking consultores
@@ -4004,7 +4006,7 @@ async function carregarGeral(){
     const mesesLbl=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].slice(0,idxMesAtual+1);
     const dadosMes=vendidoPorMes.slice(0,idxMesAtual+1);
     if(chGeFat)chGeFat.destroy();
-    chGeFat=new Chart(document.getElementById('ch-ge-fat'),{type:'line',data:{labels:mesesLbl,datasets:[{label:'Vendido',data:dadosMes,borderColor:'#0A4FAA',backgroundColor:'rgba(10,79,170,.15)',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}}});
+    chGeFat=new Chart(document.getElementById('ch-ge-fat'),{type:'line',data:{labels:mesesLbl,datasets:[{label:'Vendido',data:dadosMes,borderColor:'#B3F400',backgroundColor:'rgba(179,244,0,.15)',fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}}});
 
     // ---- Planos vendidos (contagem por tipo, todos ativos) ----
     const tipoLbl={anual:'Anual',semestral:'Semestral',trimestral:'Trimestral',mensal:'Mensal',recorrencia:'Recorrência',especial:'Especial',outros:'Outros'};
@@ -4025,7 +4027,7 @@ async function carregarGeral(){
     const catsD=(despesas||[]).map(d=>d.categoria);
     chGeDespesas=new Chart(document.getElementById('ch-ge-despesas'),{type:'bar',data:{labels:catsD.length?catsD:['Sem dados'],datasets:[
       {label:'Meta',data:(despesas||[]).map(d=>d.meta_mensal||0),backgroundColor:'rgba(255,255,255,.12)'},
-      {label:'Realizado',data:(despesas||[]).map(d=>d.realizado_mensal||0),backgroundColor:'#0A4FAA'}
+      {label:'Realizado',data:(despesas||[]).map(d=>d.realizado_mensal||0),backgroundColor:'#B3F400'}
     ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#999',boxWidth:10,font:{size:10}}}},scales:{x:{ticks:{color:'#666',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#666'},grid:{color:'rgba(255,255,255,.04)'},beginAtZero:true}}}});
 
     // ---- NPS ----
@@ -4465,7 +4467,7 @@ const BOAS_VINDAS=[
    wpp:'Que bom te ver por aqui, [Nome]! Seja bem-vindo(a) à Academia Modelo. Cuidar da saúde com segurança e acompanhamento de perto é exatamente como a gente trabalha aqui, nada de treino genérico. Eu sou o [Seu Nome], vou te ajudar nisso.',
    audio:'Fala, [Nome]! Aqui é o [Seu Nome] da Academia Modelo. Parabéns pela decisão de cuidar da sua saúde. Nossa metodologia é toda adaptada e acompanhada de perto, com a sua segurança em primeiro lugar. Quero te explicar como isso funciona no seu caso. Consigo ligar agora, ou prefere que eu ligue em outro horário, qual fica melhor pra você?',
    op:'Enviar texto + áudio. Registrar no sistema. Agendar ligação. Sempre garantir próximo passo definido.'},
-  {perfil:'5%, Direto',icon:'🎯',ctx:'Quer começar já',tag:'Ser objetivo, assumir controle e conduzir sem enrolação',cor:'#0A4FAA',
+  {perfil:'5%, Direto',icon:'🎯',ctx:'Quer começar já',tag:'Ser objetivo, assumir controle e conduzir sem enrolação',cor:'#B3F400',
    wpp:'Que bom te ver por aqui, [Nome]! Seja bem-vindo(a) à Academia Modelo. Já vi que você quer começar logo, e isso é ótimo. Eu sou o [Seu Nome], vou te direcionar rápido pro caminho certo.',
    audio:'Fala, [Nome]! Aqui é o [Seu Nome] da Academia Modelo. Já que você quer começar logo, vou direto ao ponto: nossa metodologia é personalizada pro seu objetivo, sem enrolação. Quero te mostrar o caminho certo agora mesmo. Consigo ligar agora, ou prefere que eu ligue em outro horário, qual fica melhor pra você?',
    op:'NÃO enviar preço. Registrar no sistema. Agendar ligação. Lead quente também segue processo.'},
@@ -4477,7 +4479,7 @@ const BOAS_VINDAS=[
    wpp:'Que bom te ver por aqui, [Nome]! Seja bem-vindo(a) à Academia Modelo. Vi que você já treina, então não está começando do zero, aqui a gente trabalha com um nível mais avançado de acompanhamento técnico. Eu sou o [Seu Nome], vou te ajudar nisso.',
    audio:'Fala, [Nome]! Aqui é o [Seu Nome] da Academia Modelo. Já que você já treina, vou ser direto: aqui não é academia comum, trabalhamos evolução e acompanhamento técnico de verdade. Quero te mostrar até onde dá pra subir o nível do seu treino. Consigo ligar agora, ou prefere que eu ligue em outro horário, qual fica melhor pra você?',
    op:'Registrar no sistema. Agendar ligação. Usar postura de autoridade técnica.'},
-  {perfil:'5%, Urgência',icon:'⚡',ctx:'Quer começar rápido',tag:'Acelerar sem travar. Conduzir para início imediato',cor:'#0A4FAA',
+  {perfil:'5%, Urgência',icon:'⚡',ctx:'Quer começar rápido',tag:'Acelerar sem travar. Conduzir para início imediato',cor:'#B3F400',
    wpp:'Que bom te ver por aqui, [Nome]! Seja bem-vindo(a) à Academia Modelo. Vi que você quer começar o quanto antes, a gente consegue organizar isso rápido. Eu sou o [Seu Nome], vou te ajudar nisso.',
    audio:'Fala, [Nome]! Aqui é o [Seu Nome] da Academia Modelo. Já que você quer começar rápido, vamos direto ao ponto, dá pra organizar seu início ainda essa semana. Quero te explicar rapidinho como funciona. Consigo ligar agora, ou prefere que eu ligue em outro horário, qual fica melhor pra você?',
    op:'Velocidade máxima. Registrar no sistema. Agendar ligação imediata. Lead quente não pode esfriar.'}
@@ -4651,7 +4653,7 @@ const OBJECOES=[
    unica:'Vamos avançar nesse projeto agora! Tenho um espaço na agenda hoje para te receber pessoalmente na academia ou falarmos ao telefone para eu te explicar o POR QUE somos tão diferentes, e tenho um presente para você hoje!',
    incentivo:'Conte comigo, entendi seus objetivos e seu projeto é muito bacana. Vamos ao próximo passo.',
    args:['Personalizamos nossos programas para atender às necessidades específicas de cada aluno.','Nossos treinadores realizam avaliação física detalhada para assegurar resultados concretos e seguros.','Temos muitos casos de sucesso mostrando que nossos programas são flexíveis e eficazes.']},
-  {titulo:'E se eu não conseguir acompanhar?',icon:'💪',cor:'#0A4FAA',
+  {titulo:'E se eu não conseguir acompanhar?',icon:'💪',cor:'#B3F400',
    acolhimento:'Essa é uma preocupação válida, especialmente com novos programas de treino.',
    qualificacao:'Nossos treinos são desenvolvidos pensando na facilidade de acompanhamento, independentemente do seu nível de condicionamento.',
    unica:'Posso te garantir uma coisa, a mais importante: nossa maior preocupação e cuidado é garantir que seu início seja eficiente e seguro.',
