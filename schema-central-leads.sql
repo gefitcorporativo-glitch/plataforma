@@ -49,6 +49,30 @@ create index if not exists leads_camp_idx on leads (campanha_id);
 create index if not exists leads_wpp_idx on leads (whatsapp_norm);
 
 -- Mesmo padrão das demais tabelas da plataforma (segurança por usuário ainda pendente: ver ROADMAP).
+
+-- ---------- Indicação digital (v2, 30/10/2026) ----------
+alter table leads add column if not exists codigo text;               -- código do lead para convidar amigos: NOME[SIGLA]1234
+alter table leads add column if not exists indicado_por_codigo text;  -- código de quem indicou
+alter table leads add column if not exists indicado_por_lead uuid;    -- lead de quem indicou
+alter table leads add column if not exists indicado_por_nome text;
+create unique index if not exists leads_codigo_uidx on leads (codigo) where codigo is not null;
+create index if not exists leads_indicador_idx on leads (indicado_por_codigo);
+
+alter table lead_campanhas add column if not exists indicacao boolean default false;      -- liga o "convide até 5 amigos"
+alter table lead_campanhas add column if not exists codigo_sigla text;                    -- vai entre colchetes no código
+alter table lead_campanhas add column if not exists indicacao_limite timestamptz;         -- até quando a indicação vale chance extra no sorteio
+alter table lead_campanhas add column if not exists presentes jsonb;                      -- lista de presentes para o convidado
+alter table lead_campanhas add column if not exists convite_img text;                     -- arte usada no compartilhar
+alter table lead_campanhas add column if not exists evento_titulo text;
+alter table lead_campanhas add column if not exists evento_texto text;
+alter table lead_campanhas add column if not exists evento_mapa text;
+alter table lead_campanhas add column if not exists evento_fim timestamptz;               -- depois disso some a faixa "acontecendo agora"
+alter table lead_campanhas add column if not exists oferta_ativa boolean default false;
+alter table lead_campanhas add column if not exists oferta_titulo text;
+alter table lead_campanhas add column if not exists oferta_texto text;
+alter table lead_campanhas add column if not exists oferta_mensagem text;                 -- mensagem pronta do WhatsApp ({evento} vira o nome)
+alter table lead_campanhas add column if not exists whatsapp_academia text;
+
 alter table lead_campanhas disable row level security;
 alter table leads disable row level security;
 
