@@ -459,6 +459,7 @@ table.vd-table th{color:var(--laranja);font-size:11px;text-transform:uppercase;}
       <button class="btn-primary" onclick="abrirNovoCardManual()">+ Adicionar Card</button>
       <button class="btn-gh" onclick="abrirGerenciarTreinadores()">👥 Treinadores(as)</button>
       <button class="btn-gh" id="btnJornadaSucesso" style="display:none;" onclick="abrirEditorJornada(kbPerfilAtivo)">🎯 Jornada</button>
+      <button class="btn-gh" id="btnTagsGefit" style="display:none;" onclick="abrirConfigTags()">🏷 Tags</button>
       <button class="btn-gh" id="btnAtribuirCarteira" style="display:none;" onclick="abrirAtribuirCarteira()">📋 Atribuir Carteira</button>
       <button class="btn-gh" onclick="abrirMeuDesempenho()">📊 Desempenho</button>
     </div>
@@ -1866,6 +1867,7 @@ async function salvarNovoCardManual(){
 
 async function abrirKanban(camp){
   kbCampanha=camp;
+  try{await carregarTagsConfig()}catch(e){}
   document.getElementById('viewLista').style.display='none';
   document.getElementById('viewKanban').style.display='block';
   document.getElementById('kbCampNome').textContent=camp.nome;
@@ -1912,6 +1914,7 @@ function trocarPerfilKanban(perfil){
   const tabEl=document.getElementById('kbtab-'+perfil);
   if(tabEl)tabEl.classList.add('active');
   document.getElementById('btnJornadaSucesso').style.display='inline-flex';
+  {const bt=document.getElementById('btnTagsGefit');if(bt)bt.style.display=ehEspacoGefit()?'inline-flex':'none';}
   document.getElementById('btnAtribuirCarteira').style.display=ehRestrito()?'none':'inline-flex';
   renderKanbanBoard();
   renderKbSummary();
@@ -2046,7 +2049,7 @@ function renderKbCard(c){
     prox=c.cadencia_atual>0?`Tentativa ${c.cadencia_atual} de ${c.cadencia_total}`:'Aguardando 1º contato';
   }
   const badgeCadencia=ETAPAS_COMPROMISSO.includes(c.etapa_atual)?'📅':`${c.cadencia_atual}/${c.cadencia_total}`;
-  const perfilBadge=c.perfil_qualificacao?`<span class="kperfil kperfil-${c.perfil_qualificacao}">${c.perfil_qualificacao}%</span>`:'';
+  const perfilBadge=(ehEspacoGefit()&&tagsConfig)?((c.tags&&c.tags.modelo&&tagLabel('modelo',c.tags.modelo))?`<span class="kperfil" style="font-size:10px">${tagLabel('modelo',c.tags.modelo)}</span>`:''):(c.perfil_qualificacao?`<span class="kperfil kperfil-${c.perfil_qualificacao}">${c.perfil_qualificacao}%</span>`:'');
   return `
     <div class="kb-card ${PTAG_CLASS[c.perfil]}-b" draggable="true" data-id="${c.id}"
          ondragstart="onDragStartCard(event,'${c.id}')" ondragend="onDragEndCard(event)"
@@ -2271,6 +2274,79 @@ function aplicarRotulosGefit(){
   s('lbl-intro','Planeje campanhas por perfil (Leads Novos, Leads Antigos, Renovação de Contrato, Sucesso do Cliente)');
   const pr=document.getElementById('row-s-prog');if(pr)pr.style.display='none';
 }
+// ── Tags do espaço GeFit | Painel Gestão (modelo de negócio, desafio principal, marcações) ──
+// Configuração por academia em academias.tags_config; valores do card em campanha_cards.tags.
+const TAGS_GEFIT_PADRAO={
+  modelo:{nome:'Modelo de negócio',multi:false,itens:[
+    {k:'convencional',l:'Academia convencional'},{k:'rede',l:'Academia de rede ou franquia'},{k:'cidade_pequena',l:'Academia em cidade pequena'},
+    {k:'studio',l:'Estúdio high ticket / personal'},{k:'box',l:'Box (CrossFit, funcional, Hyrox)'},{k:'lutas',l:'Escola de lutas'},{k:'familiar',l:'Academia familiar com natação'}]},
+  desafio:{nome:'Desafio principal',multi:false,itens:[
+    {k:'atrair',l:'Atrair leads'},{k:'converter',l:'Converter em matrícula'},{k:'reter',l:'Reter alunos'},{k:'equipe',l:'Equipe e gestão'},{k:'financeiro',l:'Financeiro e precificação'}]},
+  extras:{nome:'Marcações',multi:true,itens:[
+    {k:'decisor',l:'Fala com o decisor'},{k:'socio',l:'Tem sócio'},{k:'acima_corte',l:'Acima do corte (caminho A)'},{k:'retorno_depois',l:'Pediu retorno depois'}]}
+};
+let tagsConfig=null;
+async function carregarTagsConfig(){
+  tagsConfig=null;
+  if(!ehEspacoGefit())return;
+  try{const r=await sbGet('academias',`id=eq.${GEFIT_GESTAO_ID}&select=tags_config`);tagsConfig=(r&&r[0]&&r[0].tags_config)||null;}catch(e){console.warn('tags_config ainda não existe no banco',e);}
+  if(!tagsConfig||!Object.keys(tagsConfig).length)tagsConfig=JSON.parse(JSON.stringify(TAGS_GEFIT_PADRAO));
+}
+function tagLabel(g,k){const G=tagsConfig&&tagsConfig[g];const it=G&&G.itens.find(x=>x.k===k);return it?it.l:'';}
+function blocoTagsGefit(c){
+  if(!tagsConfig)return '';
+  const tg=c.tags||{};
+  return Object.entries(tagsConfig).map(([g,G])=>{
+    const sel=G.multi?(Array.isArray(tg[g])?tg[g]:[]):[tg[g]];
+    return `<div class="at-perfil-box"><span class="at-perfil-lbl">${G.nome}:</span>${G.itens.map(it=>`<button class="at-perfil-btn ${sel.includes(it.k)?'ativo p95':''}" onclick="salvarTagCard('${g}','${it.k}')">${it.l}</button>`).join('')}</div>`;
+  }).join('');
+}
+async function salvarTagCard(g,k){
+  const G=tagsConfig&&tagsConfig[g];if(!G||!cardAberto)return;
+  const tags={...(cardAberto.tags||{})};
+  if(G.multi){const a=new Set(Array.isArray(tags[g])?tags[g]:[]);a.has(k)?a.delete(k):a.add(k);tags[g]=[...a];}
+  else tags[g]=tags[g]===k?null:k;
+  try{
+    await sbPatch('campanha_cards',cardAberto.id,{tags,updated_at:Date.now()});
+    cardAberto.tags=tags;const i=kbCards.findIndex(x=>x.id===cardAberto.id);if(i>=0)kbCards[i].tags=tags;
+    renderCardModalBody();renderKanbanBoard();
+  }catch(e){console.error(e);toast('Não foi possível salvar a tag. Rode o SQL das tags no Supabase.',true);}
+}
+function abrirConfigTags(){
+  if(!tagsConfig)return;
+  let ov=document.getElementById('m-tags');
+  if(!ov){ov=document.createElement('div');ov.className='modal-ov';ov.id='m-tags';ov.innerHTML='<div class="modal" style="max-width:620px" id="m-tags-body"></div>';ov.addEventListener('click',e=>{if(e.target===ov)closeM('m-tags')});document.body.appendChild(ov);}
+  window.__tagsEdit=JSON.parse(JSON.stringify(tagsConfig));renderConfigTags();openM('m-tags');
+}
+function renderConfigTags(){
+  const T=window.__tagsEdit,el=document.getElementById('m-tags-body');
+  const e=s=>String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  el.innerHTML=`<h3 style="margin-bottom:4px">🏷 Tags do espaço GeFit</h3>
+    <div style="font-size:12.5px;color:var(--texto2);margin-bottom:14px">Renomeie, remova ou crie opções. Elas aparecem em todos os cards das campanhas deste espaço.</div>
+    ${Object.entries(T).map(([g,G])=>`<div style="border:1px solid var(--borda);border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input class="fi" value="${e(G.nome)}" oninput="__tagsEdit['${g}'].nome=this.value" style="font-weight:700">
+        <label style="font-size:12px;white-space:nowrap;display:flex;gap:4px;align-items:center"><input type="checkbox" ${G.multi?'checked':''} onchange="__tagsEdit['${g}'].multi=this.checked"> várias</label>
+        <button class="btn-gh" style="padding:4px 9px;border-color:var(--vermelho);color:var(--vermelho)" title="Remover grupo" onclick="if(confirm('Remover o grupo inteiro?')){delete __tagsEdit['${g}'];renderConfigTags()}">✕</button>
+      </div>
+      ${G.itens.map((it,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px"><input class="fi" value="${e(it.l)}" oninput="__tagsEdit['${g}'].itens[${i}].l=this.value"><button class="btn-gh" style="padding:4px 9px" title="Remover" onclick="__tagsEdit['${g}'].itens.splice(${i},1);renderConfigTags()">✕</button></div>`).join('')}
+      <div style="display:flex;gap:6px;margin-top:6px"><input class="fi" id="nova-tag-${g}" placeholder="Nova opção"><button class="btn-gh" onclick="addTagItem('${g}')">+ Adicionar</button></div>
+    </div>`).join('')}
+    <div style="display:flex;gap:6px;margin-bottom:16px"><input class="fi" id="novo-grupo-tag" placeholder="Novo grupo de tags (ex.: Origem do contato)"><button class="btn-gh" onclick="addTagGrupo()">+ Grupo</button></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn-gh" onclick="closeM('m-tags')">Cancelar</button><button class="btn-primary" onclick="salvarConfigTags()">Salvar tags</button></div>`;
+}
+function slugTag(s){return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,30)||('t'+Date.now().toString(36));}
+function addTagItem(g){const i=document.getElementById('nova-tag-'+g);const v=(i.value||'').trim();if(!v)return;let k=slugTag(v);const G=__tagsEdit[g];while(G.itens.some(x=>x.k===k))k+='_2';G.itens.push({k,l:v});renderConfigTags();}
+function addTagGrupo(){const i=document.getElementById('novo-grupo-tag');const v=(i.value||'').trim();if(!v)return;let k=slugTag(v);while(__tagsEdit[k])k+='_2';__tagsEdit[k]={nome:v,multi:true,itens:[]};renderConfigTags();}
+async function salvarConfigTags(){
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/academias?id=eq.${GEFIT_GESTAO_ID}`,{method:'PATCH',headers:{...H,'Prefer':'return=minimal'},body:JSON.stringify({tags_config:__tagsEdit})});
+    if(!r.ok)throw new Error(await r.text());
+    tagsConfig=JSON.parse(JSON.stringify(__tagsEdit));closeM('m-tags');toast('Tags salvas!');
+    if(cardAberto)renderCardModalBody();renderKanbanBoard();
+  }catch(e){console.error(e);toast('Não foi possível salvar. Rode o SQL das tags no Supabase.',true);}
+}
+
 function ehEspacoGefit(){return ((typeof kbCampanha!=='undefined'&&kbCampanha&&kbCampanha.academia_id)||(sessao&&sessao.academia_id))===GEFIT_GESTAO_ID;}
 function scriptsDoPerfil(p){return ehEspacoGefit()?(SCRIPT_CADENCIA_GEFIT[p]||[]):(SCRIPT_CADENCIA[p]||[]);}
 function textoScript(txt,nome){const n=(nome||'').trim();return txt.replaceAll('{NOME}',n).replaceAll('{PNOME}',n.split(/\s+/)[0]||n);}
@@ -2464,10 +2540,11 @@ function renderCardModalBody(){
   ` : '';
 
 
+  const tagsGefitHtml=ehEspacoGefit()?blocoTagsGefit(c):'';
   const blocoQualificacao=`
     <div class="at-qual-box">
       <div class="at-qual-tipo">📋 Qualificação, informações pra rapport e conexão</div>
-      <textarea class="fi" id="qualificacaoTexto" rows="3" placeholder="Ex: 54 anos; sem exercícios regulares há mais de 5 anos; dores na região lombar; trabalha sentado o dia todo; diabetes tipo 2...">${c.qualificacao||''}</textarea>
+      <textarea class="fi" id="qualificacaoTexto" rows="3" placeholder="${ehEspacoGefit()?'Ex: dono há 6 anos; 2 unidades; recepção com 2 pessoas; lead some no WhatsApp à noite; já fez mentoria e não implementou...':'Ex: 54 anos; sem exercícios regulares há mais de 5 anos; dores na região lombar; trabalha sentado o dia todo; diabetes tipo 2...'}">${c.qualificacao||''}</textarea>
       ${c.qualificacao_por?`<div class="at-qual-meta">Qualificado por: <b>${c.qualificacao_por}</b>${c.qualificacao_em?' em '+new Date(c.qualificacao_em).toLocaleDateString('pt-BR'):''}</div>`:''}
       <button class="btn-gh" style="width:100%;margin-top:8px;font-size:13px" onclick="salvarQualificacao()">💾 Salvar Qualificação</button>
     </div>
@@ -2550,8 +2627,7 @@ function renderCardModalBody(){
   }
 
   document.getElementById('cardModalBody').innerHTML=`
-    ${blocoPerfil}
-    ${blocoPrograma}
+    ${ehEspacoGefit()?tagsGefitHtml:blocoPerfil+blocoPrograma}
     ${blocoOrigemData}
     ${blocoObservacoes}
     ${blocoCompareceu}
