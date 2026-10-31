@@ -97,6 +97,9 @@ alter table leads add column if not exists demo boolean default false;        --
 alter table lead_campanhas add column if not exists publico text default 'aluno';      -- aluno | gestor
 alter table lead_campanhas add column if not exists campos_extra jsonb default '[]'::jsonb; -- perguntas extras do formulário
 
+-- ---------- Ocultar leads (v5, 31/10/2026): testes e repetidos saem da lista e do sorteio, sem apagar ----------
+alter table leads add column if not exists oculto boolean default false;
+
 alter table lead_campanhas disable row level security;
 alter table leads disable row level security;
 
