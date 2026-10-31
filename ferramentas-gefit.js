@@ -64,15 +64,15 @@ const S=[
  texto:'Que bom, [Nome], ter alguém dedicado ao atendimento já é meio caminho andado. E como ela costuma conduzir quando alguém pergunta o valor dos planos?\nAproveitando: hoje, qual é o maior desafio da academia? Trazer mais gente, fazer quem chega virar matrícula ou segurar os alunos por mais tempo?',
  aqui:{a:'Valorizar a estrutura que ele já tem.',q:'Como a equipe conduz e qual o desafio.',u:'Contar como funciona hoje.',i:'Meio caminho andado.'},
  op:'Se ele contar que a equipe manda tabela de preço logo de cara, anote: é um ótimo gancho para o diagnóstico.'},
-{f:'entrada',e:'qualif',dia:'Conversa 2',canal:'wpp',obj:'Faixa de faturamento, de forma natural',
- texto:'Perfeito, [Nome], obrigado por me contar. Faz muito sentido. Pra eu conseguir te indicar o que faz mais sentido pro momento da academia, me conta mais uma coisa: hoje o faturamento mensal fica mais ou menos em qual faixa? Até uns 20 mil, entre 20 e 35, entre 35 e 50, ou já passa disso?',
- aqui:{a:'Espelhar a resposta anterior.',q:'Faixa de faturamento.',u:'Responder a faixa.',i:'Material escolhido para o momento dele.'},
- op:'Sempre por faixa, nunca número exato. Academia a partir de R$35 mil e estúdio/box a partir de R$20 mil vão para o Diagnóstico (caminho A). Abaixo disso, Presente (caminho B).'},
-
 {f:'entrada',e:'qualif',dia:'Conversa 1',canal:'wpp',obj:'Quem respondeu é recepção, consultora ou professor',
  texto:'Que legal, [Nome]! Então você está bem na linha de frente. Separei uma ferramenta pensada justamente pra quem atende: o que responder quando perguntam preço, como chamar pra experimental e o que fazer quando o lead some.\nAntes de te mandar, me ajuda com uma coisa: quem é o dono ou gestor aí? Tenho um material específico pra ele também.',
  aqui:{a:'Valorizar quem está no atendimento.',q:'Quem é o dono ou gestor.',u:'Passar o contato do dono.',i:'Ferramenta feita para quem atende.'},
  op:'Entregar o presente mesmo se não passar o contato do dono. Registrar o nome do dono no card.'},
+
+{f:'entrada',e:'qualif',dia:'Conversa 2',canal:'wpp',obj:'Faixa de faturamento, de forma natural',
+ texto:'Perfeito, [Nome], obrigado por me contar. Faz muito sentido. Pra eu conseguir te indicar o que faz mais sentido pro momento da academia, me conta mais uma coisa: hoje o faturamento mensal fica mais ou menos em qual faixa? Até uns 20 mil, entre 20 e 35, entre 35 e 50, ou já passa disso?',
+ aqui:{a:'Espelhar a resposta anterior.',q:'Faixa de faturamento.',u:'Responder a faixa.',i:'Material escolhido para o momento dele.'},
+ op:'Sempre por faixa, nunca número exato. Academia a partir de R$35 mil e estúdio/box a partir de R$20 mil vão para o Diagnóstico (caminho A). Abaixo disso, Presente (caminho B).'},
 
 {f:'entrada',e:'qualif',dia:'Conversa 3',canal:'wpp',obj:'Acima do corte (caminho A): convite para o diagnóstico',
  texto:'Obrigado pela confiança em me contar, [Nome]. Pelo que você me falou, faz sentido uma conversa com o Nelson.\nEle abre poucos horários por semana pra um diagnóstico de 30 minutos da parte comercial: olha como o lead chega, como é respondido e onde a matrícula se perde. Você sai com um plano de ação.\nTenho [dia, hora] ou [dia, hora]. Qual fica melhor pra você?',
