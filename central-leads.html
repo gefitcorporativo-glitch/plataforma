@@ -353,6 +353,7 @@ async function iniciar(){
     try{const ac=await sbGet(P+'academias','select=id,nome&order=nome');
       const s=$('sel-acad');s.classList.remove('hidden');s.innerHTML=ac.map(a=>`<option value="${a.id}">${esc(a.nome)}</option>`).join('');
       if(!acad&&ac.length)acad=ac[0].id;s.value=acad;s.onchange=()=>{acad=s.value;carregarTudo()};
+      if(GF_AC){const a=ac.find(x=>x.id===GF_AC);s.classList.add('hidden');const tag=document.createElement('span');tag.textContent=a?a.nome:'Espaço selecionado no hub';tag.style.cssText='font-weight:700;padding:6px 12px;border:1px solid rgba(255,255,255,.25);border-radius:8px;white-space:nowrap';tag.title='Para trocar de espaço, use o seletor no topo do hub';s.insertAdjacentElement('afterend',tag);}
     }catch(e){console.error(e)}
   }
   $('app').hidden=false;
