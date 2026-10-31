@@ -83,7 +83,7 @@
   const H={apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`,'Content-Type':'application/json'};
   async function sbGet(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{headers:H});if(!r.ok)throw new Error(await r.text());return r.json()}
 
-const GF_AC=(()=>{const p=new URLSearchParams(location.search).get('ac');if(p){try{sessionStorage.setItem('gefit_admin_ac',p)}catch(e){}return p}try{return sessionStorage.getItem('gefit_admin_ac')}catch(e){return null}})(); // espaço ativo do admin, vindo do hub
+const GF_AC=(()=>{const p=new URLSearchParams(location.search).get('ac');if(p)return p;try{const k=localStorage.getItem('gefit_espaco');const m={modelo:'1e4293f8-78f8-488d-bd9e-dc5658b3909e',gestao:'9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90'};if(m[k])return m[k]}catch(e){}return null})(); // espaço ativo do admin, vindo do hub
   const params=new URLSearchParams(location.search);
   const uid=params.get('uid');
   let academiaId=null;
