@@ -79,7 +79,7 @@ const S=[
  aqui:{a:'Gratidão pela confiança.',q:'(implícita) qual horário.',u:'Escolher um dos dois horários.',i:'Sair com plano de ação.'},
  op:'Academia a partir de R$35 mil/mês, estúdio e box a partir de R$20 mil/mês. Antes de fechar, perguntar se tem sócio (funil Diagnóstico).'},
 {f:'entrada',e:'qualif',dia:'Conversa 3',canal:'wpp',obj:'Abaixo do corte (caminho B): entregar o segundo presente',
- texto:'Obrigado pela confiança em me contar, [Nome]. Pelo momento da academia, separei um presente que vai te ajudar bastante: [NOME DO PRESENTE], [o que ele faz em uma linha]. É só abrir: [LINK]\nDepois me conta o que achou?',
+ texto:'Obrigado pela confiança em me contar, [Nome]. Como prometido, liberei pra você a versão completa do *Recepção que Vende*: uma ferramenta online com as 18 objeções mais comuns já respondidas, scripts de WhatsApp, áudio e ligação e o passo a passo do primeiro oi até a matrícula. São 4 perguntas rápidas e abre na hora: https://gefitcorporativo-glitch.github.io/recepcao-que-vende/completo.html\nDepois me conta o que achou?',
  aqui:{a:'Gratidão pela confiança.',q:'O que achou do presente.',u:'Abrir o presente.',i:'Material escolhido para o momento dela.'},
  op:'Use o presente do caminho B (funil Presente). Se depois ele mostrar perfil A, ofereça o diagnóstico.'},
 {f:'entrada',e:'qualif',dia:'Quando houver abertura',canal:'lig',obj:'Ligação de pré-qualificação (5 a 10 min)',
@@ -104,7 +104,7 @@ const S=[
  aqui:{a:'Recado pessoal do Nelson.',q:'Qual a maior dúvida para aplicar.',u:'Responder o áudio.',i:'Autoridade do Nelson, uma vez só.'}},
 
 {f:'entrada',e:'nutricao',dia:'D5',canal:'wpp',obj:'Presente + faixa de faturamento (quem ainda não respondeu)',
- texto:'[Nome], separei um presente pra você: [NOME DA FERRAMENTA], [o que ela faz em uma linha]. Abre no celular, é só usar: [LINK]\nE pra eu conseguir te indicar o que faz mais sentido pro momento da academia, me conta: hoje o faturamento mensal fica mais ou menos em qual faixa? Até uns 20 mil, entre 20 e 35, entre 35 e 50, ou já passa disso?',
+ texto:'[Nome], liberei pra você a versão completa do *Recepção que Vende*: uma ferramenta online com as 18 objeções mais comuns já respondidas e os scripts por situação. Abre no celular, são 4 perguntas rápidas e libera na hora: https://gefitcorporativo-glitch.github.io/recepcao-que-vende/completo.html\nDepois me conta qual objeção mais aparece aí na academia?',
  aqui:{a:'Presente entregue antes de pedir algo.',q:'Faixa de faturamento.',u:'Abrir a ferramenta.',i:'Material escolhido para o momento dele.'}},
 
 {f:'entrada',e:'nutricao',dia:'D7',canal:'video',obj:'Prova: caso real',
@@ -147,7 +147,7 @@ const S=[
  texto:'Show, [Nome]! Tenho uma ferramenta pensada pra quem está no atendimento. Me passa seu WhatsApp que eu te mando por lá?',
  aqui:{a:'Valorizar quem atende.',q:'(implícita) WhatsApp.',u:'Passar o número.',i:'Ferramenta para o dia a dia dele.'}},
 {f:'social',e:'whats',dia:'D0 no WhatsApp',canal:'wpp',obj:'Primeira mensagem no WhatsApp, vindo da DM',
- texto:'Oi, [Nome]! Aqui é o Oliver, do time do Nelson Rabelo, a gente se falou no Instagram. Como prometido, aqui está o seu presente: [LINK]\nE pra eu te mandar os próximos materiais certos: hoje quem responde quem chama no WhatsApp da academia? É você mesmo, a recepção ou uma consultora?',
+ texto:'Oi, [Nome]! Aqui é o Oliver, do time do Nelson Rabelo, a gente se falou no Instagram. Como prometido, aqui está o seu presente, a versão completa do *Recepção que Vende*, com scripts e as 18 objeções respondidas: https://gefitcorporativo-glitch.github.io/recepcao-que-vende/completo.html\nE pra eu te mandar os próximos materiais certos: hoje quem responde quem chama no WhatsApp da academia? É você mesmo, a recepção ou uma consultora?',
  aqui:{a:'Lembrar da conversa no Instagram.',q:'Quem atende os leads.',u:'Abrir o presente.',i:'Promessa cumprida.'},
  op:'Cadastrar o lead na Central de Leads com a origem do perfil (Instagram Nelson ou Instagram GeFit) e seguir a cadência de Leads de entrada a partir daqui.'},
 
