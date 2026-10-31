@@ -332,7 +332,7 @@ table.vd-table th{color:var(--laranja);font-size:11px;text-transform:uppercase;}
   <div id="viewLista">
   <div class="hero">
     <h1>Campanhas</h1>
-    <p>Planeje campanhas mensais por perfil (Leads Novos, Rematrícula, Ciclo Renovação), suba a lista e organize a divisão em ciclos semanais.</p>
+    <p><span id="lbl-intro">Planeje campanhas mensais por perfil (Leads Novos, Rematrícula, Ciclo Renovação)</span>, suba a lista e organize a divisão em ciclos semanais.</p>
   </div>
 
   <div class="itabs">
@@ -385,8 +385,8 @@ table.vd-table th{color:var(--laranja);font-size:11px;text-transform:uppercase;}
 
           <label style="display:block;font-size:12.5px;color:var(--texto2);font-weight:600;margin-bottom:4px;">Perfis desta campanha</label>
           <label class="chk-row"><input type="checkbox" id="w-perfil-leads" onchange="toggleRenovSub()"> Leads Novos</label>
-          <label class="chk-row"><input type="checkbox" id="w-perfil-rematricula" onchange="toggleRenovSub()"> Rematrícula (Ex-Alunos)</label>
-          <label class="chk-row"><input type="checkbox" id="w-perfil-renovacao" onchange="toggleRenovSub()"> Ciclo Renovação</label>
+          <label class="chk-row"><input type="checkbox" id="w-perfil-rematricula" onchange="toggleRenovSub()"> <span id="lbl-p-rematricula">Rematrícula (Ex-Alunos)</span></label>
+          <label class="chk-row"><input type="checkbox" id="w-perfil-renovacao" onchange="toggleRenovSub()"> <span id="lbl-p-renovacao">Ciclo Renovação</span></label>
           <div class="chk-sub" id="renov-sub">
             <label class="chk-row"><input type="checkbox" checked disabled> Mês vigente (sempre incluso)</label>
             <label class="chk-row"><input type="checkbox" id="w-renov-anterior"> + Mês anterior (não renovados)</label>
@@ -394,10 +394,10 @@ table.vd-table th{color:var(--laranja);font-size:11px;text-transform:uppercase;}
           </div>
           <label class="chk-row"><input type="checkbox" id="w-perfil-sucesso_cliente" onchange="toggleSucessoSub()"> Sucesso do Cliente</label>
           <div class="chk-sub" id="sucesso-sub">
-            <label class="chk-row"><input type="checkbox" id="w-sucesso-onboarding"> Onboarding Cliente Novo</label>
-            <label class="chk-row"><input type="checkbox" id="w-sucesso-programas"> Programas Exclusivos (8, 10, 12 semanas ou 100 dias)</label>
-            <label class="chk-row"><input type="checkbox" id="w-sucesso-desconectados"> Clientes Desconectados/Ausentes</label>
-            <label class="chk-row"><input type="checkbox" id="w-sucesso-upgrade"> Up-Grade de Agregadores (ex: TotalPass, etc.)</label>
+            <label class="chk-row"><input type="checkbox" id="w-sucesso-onboarding"> <span id="lbl-s-onb">Onboarding Cliente Novo</span></label>
+            <label class="chk-row" id="row-s-prog"><input type="checkbox" id="w-sucesso-programas"> Programas Exclusivos (8, 10, 12 semanas ou 100 dias)</label>
+            <label class="chk-row"><input type="checkbox" id="w-sucesso-desconectados"> <span id="lbl-s-desc">Clientes Desconectados/Ausentes</span></label>
+            <label class="chk-row"><input type="checkbox" id="w-sucesso-upgrade"> <span id="lbl-s-up">Up-Grade de Agregadores (ex: TotalPass, etc.)</span></label>
           </div>
         </div>
         <button class="btn-primary" onclick="salvarCampanhaBase()">Continuar →</button>
@@ -717,6 +717,7 @@ let gestoresAcademia=[];
 async function iniciarApp(s){
   s=gfEspaco(s);
   sessao=s;
+  try{aplicarRotulosGefit()}catch(e){console.warn(e)}
   sessionStorage.setItem('qg90_sessao',JSON.stringify(s));
   document.getElementById('userNome').textContent=s.nome||s.email;
   document.getElementById('userAcademia').textContent=s.role==='admin'?'GeFit · Master':(s.role==='consultor'?'Consultor(a)':(s.role==='treinador'?'Treinador(a)':'Gestor(a)'));
@@ -2229,8 +2230,49 @@ const SCRIPT_CADENCIA_GEFIT={
      aqui:{a:'Gratidão pela confiança.',q:'(sem pergunta: encerramento)',u:'Saber que pode chamar a qualquer momento.',i:'Votos de sucesso, porta aberta.'}}
   ]
 };
+SCRIPT_CADENCIA_GEFIT.rematricula=[
+  {tipo:'Texto · Retomada',texto:'Oi, {PNOME}! Aqui é o Oliver, do time do Nelson Rabelo. A gente conversou um tempo atrás sobre a parte comercial da sua academia e a conversa acabou ficando pela metade. Resolvi aparecer de novo: como estão as coisas por aí? A recepção está conseguindo transformar os contatos em matrícula?',
+   aqui:{a:'Retomar sem cobrança, assumindo a pausa.',q:'Como está a conversão da recepção hoje.',u:'Responder como estão as coisas.',i:'Mostrar que ele foi lembrado.'}},
+  {tipo:'Texto · Novidade com valor',texto:'{PNOME}, desde a nossa última conversa o Nelson organizou um material novo pra donos de academia: [MATERIAL/FERRAMENTA]. Lembrei de você na hora: [LINK]\nDepois me conta se faz sentido pro momento da academia?',
+   aqui:{a:'Lembrei de você.',q:'Se faz sentido para o momento.',u:'Abrir o material.',i:'Novidade feita para donos.'}},
+  {tipo:'Vídeo + Texto · Caso real',texto:'{PNOME}, numa rede de 4 unidades que o Nelson ajudou a estruturar, todo dia começava com o print dos agendamentos no grupo. Se o dia abria com um agendamento só, todo mundo sabia que algo não tinha rodado. Ele conta aqui: [vídeo]\nAí na academia, vocês começam o dia sabendo quantos agendamentos têm?',
+   aqui:{a:'História real de outro dono.',q:'Se começam o dia sabendo os agendamentos.',u:'Assistir o caso.',i:'Rotina simples que funciona.'}},
+  {tipo:'Texto · Convite para o diagnóstico',texto:'{PNOME}, o Nelson abre poucos horários por semana pra um diagnóstico de 30 minutos da parte comercial: ele olha como o lead chega, como é respondido e onde a matrícula se perde, e você sai com um plano de ação. Faz sentido retomarmos agora? Se fizer, te passo os horários livres.',
+   aqui:{a:'Convite pessoal, vagas reais.',q:'Se faz sentido retomar agora.',u:'Ver os horários livres.',i:'Sair com um plano de ação.'}}
+];
+SCRIPT_CADENCIA_GEFIT.renovacao=[
+  {tipo:'D-15 · Texto · Olhar os resultados',texto:'Oi, {PNOME}! Aqui é o Oliver, do time do Nelson Rabelo. O seu ciclo com a GeFit completa em [DATA] e eu queria olhar com você o que mudou na academia desde o começo. Quais resultados você mais sentiu até aqui?',
+   aqui:{a:'Reconhecer a caminhada juntos.',q:'Quais resultados ele mais sentiu.',u:'Responder com os resultados.',i:'Valorizar o que já mudou.'}},
+  {tipo:'D-10 · Texto · Resumo e próximo foco',texto:'{PNOME}, separei um resumo do que a academia evoluiu nesse período: [INDICADORES]. Pro próximo ciclo, o Nelson sugere focar em [FOCO]. Faz sentido pra você?',
+   aqui:{a:'Resumo feito para ele.',q:'Se o próximo foco faz sentido.',u:'Concordar com o foco.',i:'Próximo ciclo com direção clara.'}},
+  {tipo:'D-5 · Texto · Conversa de planejamento',texto:'{PNOME}, que tal uma conversa rápida com o Nelson pra planejar o próximo ciclo da academia? Tenho [DIA, HORA] ou [DIA, HORA]. Qual fica melhor?',
+   aqui:{a:'Planejar juntos.',q:'(implícita) qual horário.',u:'Escolher um horário.',i:'Ciclo planejado com o Nelson.'}},
+  {tipo:'D0 · Texto · Confirmação',texto:'{PNOME}, hoje fecha o ciclo atual. Pra academia não ficar sem acompanhamento, posso confirmar a sua renovação? Se tiver qualquer dúvida, me fala que eu resolvo com o Nelson. Obrigado pela confiança até aqui!',
+   aqui:{a:'Cuidado com a continuidade.',q:'Se pode confirmar a renovação.',u:'Confirmar a renovação.',i:'Gratidão pela confiança.'}}
+];
+SCRIPT_CADENCIA_GEFIT.sucesso_cliente=[
+  {tipo:'Texto · Check-in de uso',texto:'Oi, {PNOME}! Aqui é o Oliver, do time da GeFit. Queria saber como está o uso da plataforma aí na academia: a equipe está conseguindo usar no dia a dia? Tem alguma coisa travando que eu possa ajudar?',
+   aqui:{a:'Interesse real no dia a dia dele.',q:'Como está o uso pela equipe.',u:'Contar o que trava.',i:'Ajuda rápida do time.'}},
+  {tipo:'Texto · Resultado + indicação',texto:'Que bom ouvir isso, {PNOME}! Você conhece outro dono de academia que está passando pelo que vocês passavam no começo? Se quiser, o Nelson faz um diagnóstico de cortesia com ele.',
+   aqui:{a:'Celebrar o resultado.',q:'Se conhece outro dono.',u:'Indicar um contato.',i:'Presente para quem ele indicar.'}},
+  {tipo:'Texto · Fechamento do ciclo',texto:'Obrigado pela confiança, {PNOME}! Qualquer coisa que a academia precisar, é só me chamar por aqui.',
+   aqui:{a:'Gratidão.',q:'(sem pergunta)',u:'Saber que pode chamar.',i:'Porta aberta.'}}
+];
+function aplicarRotulosGefit(){
+  if(!(sessao&&sessao.academia_id===GEFIT_GESTAO_ID))return;
+  PERFIL_LABEL.rematricula='Leads Antigos';PERFIL_LABEL.renovacao='Renovação de Contrato';
+  CATALOGO_FUNIS.forEach(f=>{if(f.p==='rematricula')f.label='Leads Antigos';if(f.p==='renovacao')f.label='Renovação de Contrato';if(f.p==='planonovo')f.ativo=false;});
+  const s=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  s('lbl-p-rematricula','Leads Antigos (não convertidos, cadência etc.)');
+  s('lbl-p-renovacao','Ciclo de Renovação de Contrato');
+  s('lbl-s-onb','Onboarding de cliente novo da GeFit');
+  s('lbl-s-desc','Clientes com pouco uso da plataforma');
+  s('lbl-s-up','Up-grade de módulo ou pacote');
+  s('lbl-intro','Planeje campanhas por perfil (Leads Novos, Leads Antigos, Renovação de Contrato, Sucesso do Cliente)');
+  const pr=document.getElementById('row-s-prog');if(pr)pr.style.display='none';
+}
 function ehEspacoGefit(){return ((typeof kbCampanha!=='undefined'&&kbCampanha&&kbCampanha.academia_id)||(sessao&&sessao.academia_id))===GEFIT_GESTAO_ID;}
-function scriptsDoPerfil(p){return (ehEspacoGefit()&&SCRIPT_CADENCIA_GEFIT[p])||SCRIPT_CADENCIA[p]||[];}
+function scriptsDoPerfil(p){return ehEspacoGefit()?(SCRIPT_CADENCIA_GEFIT[p]||[]):(SCRIPT_CADENCIA[p]||[]);}
 function textoScript(txt,nome){const n=(nome||'').trim();return txt.replaceAll('{NOME}',n).replaceAll('{PNOME}',n.split(/\s+/)[0]||n);}
 function blocoAqui(s){
   if(!s||!s.aqui)return '';
