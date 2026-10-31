@@ -47,6 +47,10 @@ const S=[
  aqui:{a:'Parabéns pela decisão de melhorar a recepção.',q:'Quem responde os leads hoje.',u:'Responder para receber o segundo presente.',i:'Estar à frente da maioria das academias.'},
  op:'Mandar no mesmo dia do cadastro. Se o papel no formulário for recepção ou professor, usar a variação "recepção" da etapa Qualificação.'},
 
+{f:'entrada',e:'contato',dia:'D0 atrasado',canal:'wpp',obj:'Boas-vindas para quem baixou há alguns dias (relembra quem fala)',
+ texto:'Oi, [Nome]! Tudo bem? Aqui é o Oliver, do time do Nelson Rabelo, mentor de donos de academia. Há alguns dias você baixou o nosso material *Recepção que Vende*, com os scripts para a recepção da academia. Parabéns pela iniciativa, isso já te coloca à frente da maioria das academias do Brasil.\nA gente separou um segundo presente pra te ajudar ainda mais na parte comercial. Antes de te enviar, me conta uma coisa: hoje quem responde as pessoas que chamam no WhatsApp da academia? É você mesmo, a sua recepção, ou você já tem uma consultora ou vendedora treinada pra isso?',
+ aqui:{a:'Relembrar quem fala e o material que ele baixou.',q:'Quem responde os leads hoje.',u:'Responder para receber o segundo presente.',i:'Estar à frente da maioria das academias.'},
+ op:'Use quando o lead esperou mais de 1 dia pelo primeiro contato. *Recepção que Vende* entre asteriscos aparece em negrito no WhatsApp.'},
 {f:'entrada',e:'contato',dia:'D0',canal:'audio',obj:'Reforço em áudio se não responder em 2 horas',
  texto:'Fala, [Nome], tudo bem? Aqui é o Oliver, do time do Nelson Rabelo. Te mandei uma mensagem agora há pouco: você pegou o Recepção que Vende e eu separei um segundo presente pra você, focado na parte comercial da academia. Pra eu te mandar o certo, só preciso saber quem responde o WhatsApp aí hoje. Me responde quando puder, tá? Um abraço!',
  aqui:{a:'Tom pessoal, voz de gente.',q:'Quem responde o WhatsApp.',u:'Responder a mensagem.',i:'Presente já separado.'},
