@@ -2193,27 +2193,43 @@ function closeM(id){document.getElementById(id).classList.remove('open');}
 // B.13/B.14 (rematrícula) e B.17 (renovação) já validados na Central de Scripts.
 // ── Cadência do Oliver (SDR da GeFit): vale só para campanhas do GeFit | Painel Gestão ──
 // Donos e gestores de academia. Academias clientes continuam com SCRIPT_CADENCIA.
+// texto = o que se copia e cola no WhatsApp. aqui = como a mensagem aplica o AQÚI (só para consulta da equipe).
 const GEFIT_GESTAO_ID='9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90';
 const SCRIPT_CADENCIA_GEFIT={
   leads:[
-    {tipo:'D0 · Texto · Boas-vindas + 1 pergunta',texto:'Oi, {PNOME}! Aqui é o Oliver, do time do Nelson Rabelo. Obrigado por pegar o Recepção que Vende, seja bem-vindo(a)!\nTemos um segundo presente especial pra melhorar ainda mais a gestão comercial da sua academia. Antes de eu te enviar, me responde uma coisa rapidinho:\nHoje, quem responde no WhatsApp as pessoas que perguntam sobre a academia?\n1️⃣ Eu mesmo(a)\n2️⃣ A recepção\n3️⃣ Uma consultora ou vendedora\nÉ só responder com o número 🙂'},
-    {tipo:'D1 · Vídeo + Texto · Checklist do 1º dia do aluno',texto:'{PNOME}, separei um trecho de uma aula do Nelson com donos de academia: o que tem que acontecer no primeiro dia do aluno, da recepção até a conversa final, pra ele não ir embora sem vínculo. São 7 pontos. Vale assistir com quem cuida da recepção. [vídeo]'},
-    {tipo:'D3 · Áudio do Nelson (~40 s)',texto:'{PNOME}, o Nelson pediu pra te mandar um recado rápido: [áudio do Nelson]'},
-    {tipo:'D5 · Link · Presente + faixa de faturamento',texto:'{PNOME}, liberei pra você [NOME DA FERRAMENTA]: [o que ela faz em uma linha]. Abre no celular, é só usar: [LINK]\nE pra eu te mandar os próximos materiais certos, o faturamento mensal da academia fica em qual faixa?\n1️⃣ Até R$20 mil\n2️⃣ R$20 a 35 mil\n3️⃣ R$35 a 50 mil\n4️⃣ R$50 a 70 mil\n5️⃣ Acima de R$70 mil'},
-    {tipo:'D7 · Vídeo + Texto · Caso real',texto:'{PNOME}, numa rede de 4 unidades que o Nelson ajudou a estruturar, todo dia às 5h30 a primeira pessoa a chegar mandava no grupo o print dos agendamentos do dia. Se o dia começava com um agendamento só, já se sabia que algo não tinha rodado. Ele conta aqui: [vídeo]'},
-    {tipo:'D10 · Vídeo · Indicação',texto:'{PNOME}, esse aqui é sobre indicação: o momento certo de pedir (entre o 3º e o 7º dia do aluno) e por que ela tem que vir como presente, não como pedido. [Reels "Indicação não é esmola"]'},
-    {tipo:'D14 · Texto · Convite para o diagnóstico',texto:'{PNOME}, o Nelson abre poucos horários por semana pra um diagnóstico de 30 minutos da parte comercial: ele olha como o lead chega, como é respondido e onde a matrícula se perde, e você sai com um plano de ação. Quer que eu veja um horário pra você?'},
-    {tipo:'D21 · Texto · Encerramento',texto:'{PNOME}, vou parar de te mandar coisas por aqui pra não encher teu WhatsApp. Se quiser ajuda com a recepção ou as vendas da sua academia, é só chamar nesse número. Sucesso aí!'}
+    {tipo:'D0 · Texto · Boas-vindas',
+     texto:'Oi, {PNOME}! Aqui é o Oliver, do time do Nelson Rabelo. Parabéns pela decisão de querer melhorar a recepção da sua academia, isso já te coloca à frente da maioria das academias do Brasil.\nTenho um segundo presente pra te ajudar ainda mais na parte comercial. Antes de te enviar, me conta uma coisa: hoje quem responde as pessoas que chamam no WhatsApp da academia? É você mesmo, a sua recepção, ou você já tem uma consultora ou vendedora treinada pra isso?',
+     aqui:{a:'Parabéns pela decisão de melhorar a recepção.',q:'Quem responde os leads hoje: o dono, a recepção ou uma consultora.',u:'Responder a pergunta para receber o segundo presente.',i:'Estar à frente da maioria das academias do Brasil.'}},
+    {tipo:'D1 · Vídeo + Texto · Checklist do 1º dia do aluno',
+     texto:'{PNOME}, separei um trecho de uma aula do Nelson com donos de academia sobre o primeiro dia do aluno: o que precisa acontecer da recepção até a conversa final pra ele não ir embora sem vínculo. São 7 pontos, vale assistir junto com quem cuida da recepção.\nDepois me conta: desses 7, quantos já acontecem aí na sua academia hoje? [vídeo]',
+     aqui:{a:'Conteúdo separado pensando nele.',q:'Quantos dos 7 pontos já acontecem na academia.',u:'Assistir o vídeo.',i:'Assistir junto com a equipe da recepção.'}},
+    {tipo:'D3 · Áudio do Nelson (~40 s)',
+     texto:'{PNOME}, o Nelson gravou um recado rapidinho pra você. Dá uma ouvida quando tiver um minutinho: [áudio do Nelson]',
+     aqui:{a:'Recado pessoal do Nelson.',q:'No áudio, o Nelson pergunta qual a maior dúvida para aplicar o material.',u:'Ouvir o áudio e responder.',i:'Autoridade do Nelson, usada uma vez só.'}},
+    {tipo:'D5 · Link · Presente + faturamento',
+     texto:'{PNOME}, separei um presente pra você: [NOME DA FERRAMENTA], [o que ela faz em uma linha]. Abre no celular, é só usar: [LINK]\nE pra eu conseguir te indicar o que faz mais sentido pro momento da academia, me conta: hoje o faturamento mensal fica mais ou menos em qual faixa? Até uns 20 mil, entre 20 e 35, entre 35 e 50, ou já passa disso?',
+     aqui:{a:'Presente entregue antes de pedir qualquer coisa.',q:'Faixa de faturamento, que define o caminho A ou B.',u:'Abrir a ferramenta.',i:'Material escolhido para o momento da academia.'}},
+    {tipo:'D7 · Vídeo + Texto · Caso real',
+     texto:'{PNOME}, numa rede de 4 unidades que o Nelson ajudou a estruturar, todo dia às 5h30 a primeira pessoa a chegar mandava no grupo o print dos agendamentos do dia. Se o dia começava com um agendamento só, todo mundo já sabia que alguma coisa não tinha rodado. Ele conta aqui: [vídeo]\nAí na sua academia, vocês já começam o dia sabendo quantos agendamentos têm?',
+     aqui:{a:'História real de quem passou pelo mesmo problema.',q:'Se a academia começa o dia sabendo os agendamentos.',u:'Assistir o caso.',i:'Mostrar que é possível com uma rotina simples.'}},
+    {tipo:'D10 · Vídeo · Indicação',
+     texto:'{PNOME}, esse aqui é sobre indicação: o momento certo de pedir, que fica entre o 3º e o 7º dia do aluno, e por que ela tem que chegar como presente, não como pedido. [Reels "Indicação não é esmola"]\nHoje vocês pedem indicação em algum momento combinado ou acaba ficando no improviso?',
+     aqui:{a:'Tema que todo dono quer resolver.',q:'Se existe um momento combinado para pedir indicação.',u:'Assistir o vídeo.',i:'Indicação como presente, não como pedido.'}},
+    {tipo:'D14 · Texto · Convite para o diagnóstico',
+     texto:'{PNOME}, o Nelson abre poucos horários por semana pra um diagnóstico de 30 minutos da parte comercial. Ele olha como o lead chega, como é respondido e onde a matrícula se perde, e você sai com um plano de ação pra aplicar já na semana seguinte.\nFaz sentido pra você agora? Se fizer, te passo os horários que ele tem livres.',
+     aqui:{a:'Convite pessoal, com vagas reais.',q:'Se faz sentido para o momento dele.',u:'Aceitar ver os horários livres.',i:'Sair com um plano de ação pronto.'}},
+    {tipo:'D21 · Texto · Encerramento',
+     texto:'{PNOME}, obrigado pela confiança de ter baixado o material e acompanhado as mensagens até aqui. Vou parar de te mandar coisas pra não encher teu WhatsApp.\nSe em algum momento quiser ajuda com a recepção ou com as vendas da academia, é só me chamar nesse número. Sucesso aí!',
+     aqui:{a:'Gratidão pela confiança.',q:'(sem pergunta: encerramento)',u:'Saber que pode chamar a qualquer momento.',i:'Votos de sucesso, porta aberta.'}}
   ]
 };
 function ehEspacoGefit(){return ((typeof kbCampanha!=='undefined'&&kbCampanha&&kbCampanha.academia_id)||(sessao&&sessao.academia_id))===GEFIT_GESTAO_ID;}
 function scriptsDoPerfil(p){return (ehEspacoGefit()&&SCRIPT_CADENCIA_GEFIT[p])||SCRIPT_CADENCIA[p]||[];}
 function textoScript(txt,nome){const n=(nome||'').trim();return txt.replaceAll('{NOME}',n).replaceAll('{PNOME}',n.split(/\s+/)[0]||n);}
-function abrirWhatsScriptAtendimento(){
-  const c=cardAberto;const el=document.getElementById('scriptAtendimentoTexto');if(!c||!el)return;
-  let d=String(c.telefone||'').replace(/\D/g,'');if(!d){toast('Card sem telefone',true);return;}
-  if(d.length<=11)d='55'+d;
-  window.open('https://wa.me/'+d+'?text='+encodeURIComponent(el.innerText),'_blank');
+function blocoAqui(s){
+  if(!s||!s.aqui)return '';
+  const l=(k,v)=>`<div style="margin-top:3px"><b style="color:var(--texto)">${k}</b> ${v}</div>`;
+  return `<div style="font-size:12px;color:var(--texto2);margin:-4px 0 12px;padding:8px 10px;border:1px dashed var(--borda);border-radius:8px"><div style="font-weight:700;margin-bottom:2px">Como esta mensagem aplica o AQÚI (não vai no WhatsApp)</div>${l('A · Acolher:',s.aqui.a)}${l('Q · Qualificar:',s.aqui.q)}${l('Ú · Única coisa:',s.aqui.u)}${l('I · Incentivar:',s.aqui.i)}</div>`;
 }
 
 const SCRIPT_CADENCIA={
@@ -2457,9 +2473,9 @@ function renderCardModalBody(){
       <div class="at-script-box">
         <div class="at-script-tipo">Script sugerido</div>
         <button class="at-copy-btn" onclick="copiarScriptAtendimento()">Copiar</button>
-        ${ehEspacoGefit()?'<button class="at-copy-btn" style="right:84px" onclick="abrirWhatsScriptAtendimento()">Abrir WhatsApp</button>':''}
         <div class="at-script-texto" id="scriptAtendimentoTexto" style="white-space:pre-line">${textoScript(scriptAtual.texto,c.nome)}</div>
       </div>
+      ${blocoAqui(scriptAtual)}
       ${interacaoHojeAtual?'<div style="font-size:12px;color:var(--verde);margin-bottom:10px">✓ Já tem registro de hoje pra esse card, marque o que mudou e salve de novo.</div>':''}
       <label class="fl" style="display:block;margin-bottom:8px">O que já aconteceu nesse contato? (marque quantos fizerem sentido)</label>
       <div class="at-checks">
