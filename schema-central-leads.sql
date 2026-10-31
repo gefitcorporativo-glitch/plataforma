@@ -104,8 +104,8 @@ alter table lead_campanhas disable row level security;
 alter table leads disable row level security;
 
 -- ============ Áreas da matriz GeFit ============
--- 1) GeFit · Comercial: leads reais da GeFit (donos e gestores de academia)
-insert into academias (id, nome, cidade) values ('9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90', 'GeFit · Comercial', 'Uruguaiana')
+-- 1) GeFit | Painel Gestão: leads reais da GeFit (donos e gestores de academia)
+insert into academias (id, nome, cidade) values ('9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90', 'GeFit | Painel Gestão', '')
 on conflict (id) do nothing;
 insert into gestores (id, nome, email, senha_hash, academia_id, role, ativo, modulos_ativos)
 values ('gest_gefit_comercial', 'Nelson Rabelo (GeFit Comercial)', 'comercial@gefit.com.br', 'GeFit@Comercial2026', '9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90', 'gestor', true, array['roi21','campanhas','scripts','experiencias'])
