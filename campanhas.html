@@ -2516,6 +2516,16 @@ function renderCardModalBody(){
     </div>
   `;
 
+  const telDig=String(c.telefone||'').replace(/\D/g,'');
+  const telCompleto=telDig?(telDig.length<=11?'55'+telDig:telDig):'';
+  const telFmt=telDig.length===11?`(${telDig.slice(0,2)}) ${telDig.slice(2,7)}-${telDig.slice(7)}`:(telDig.length===10?`(${telDig.slice(0,2)}) ${telDig.slice(2,6)}-${telDig.slice(6)}`:telDig);
+  const blocoTelefone = `
+    <div class="at-perfil-box">
+      <span class="at-perfil-lbl">WhatsApp:</span>
+      ${telDig?`<span style="font-size:15px;font-weight:700;letter-spacing:.3px">${telFmt}</span>
+      <button class="at-perfil-btn" onclick="copiarTelefoneCard('${telCompleto}')" title="Copia com o código do país, pronto para o chat direto">📋 Copiar número</button>`:'<span style="font-size:12.5px;color:var(--texto2)">sem número no card</span>'}
+    </div>
+  `;
   const blocoOrigemData = (c.origem_lead||c.data_lead) ? `
     <div class="at-perfil-box" style="opacity:.85;">
       <span class="at-perfil-lbl">Origem/data do lead:</span>
@@ -2627,6 +2637,7 @@ function renderCardModalBody(){
   }
 
   document.getElementById('cardModalBody').innerHTML=`
+    ${blocoTelefone}
     ${ehEspacoGefit()?tagsGefitHtml:blocoPerfil+blocoPrograma}
     ${blocoOrigemData}
     ${blocoObservacoes}
@@ -2698,6 +2709,7 @@ async function salvarQualificacao(){
     renderCardModalBody();
   }catch(e){console.error(e);toast('Erro ao salvar qualificação',true);}
 }
+function copiarTelefoneCard(n){navigator.clipboard.writeText(n).then(()=>toast('Número copiado: '+n)).catch(()=>prompt('Copie o número:',n));}
 function copiarScriptAtendimento(){
   const txt=document.getElementById('scriptAtendimentoTexto').innerText;
   navigator.clipboard.writeText(txt).then(()=>toast('Script copiado!'));
