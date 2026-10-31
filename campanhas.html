@@ -683,6 +683,7 @@ function abrirAgendaExperienciasCampanhas(){
 }
 function abrirCentralScriptsCampanhas(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
+  if(sessao.academia_id===GEFIT_GESTAO_ID&&window.ftGefit){abrirBibliotecaGefit();return;}
   window.location.href=`central-scripts-aqui.html?uid=${encodeURIComponent(sessao.id)}`;
 }
 
@@ -2046,9 +2047,10 @@ function renderKbCard(c){
   }else if(c.status==='espera'){
     prox=`Retorno: ${c.proxima_acao_data||'-'}`;
   }else{
-    prox=c.cadencia_atual>0?`Tentativa ${c.cadencia_atual} de ${c.cadencia_total}`:'Aguardando 1º contato';
+    prox=c.cadencia_atual>0?`Tentativa ${c.cadencia_atual} de ${ehEspacoGefit()?(scriptsDoPerfil(c.perfil).length||c.cadencia_total):c.cadencia_total}`:'Aguardando 1º contato';
   }
-  const badgeCadencia=ETAPAS_COMPROMISSO.includes(c.etapa_atual)?'📅':`${c.cadencia_atual}/${c.cadencia_total}`;
+  const totCard=ehEspacoGefit()?(scriptsDoPerfil(c.perfil).length||c.cadencia_total):c.cadencia_total;
+  const badgeCadencia=ETAPAS_COMPROMISSO.includes(c.etapa_atual)?'📅':`${c.cadencia_atual}/${totCard}`;
   const perfilBadge=(ehEspacoGefit()&&tagsConfig)?((c.tags&&c.tags.modelo&&tagLabel('modelo',c.tags.modelo))?`<span class="kperfil" style="font-size:10px">${tagLabel('modelo',c.tags.modelo)}</span>`:''):(c.perfil_qualificacao?`<span class="kperfil kperfil-${c.perfil_qualificacao}">${c.perfil_qualificacao}%</span>`:'');
   return `
     <div class="kb-card ${PTAG_CLASS[c.perfil]}-b" draggable="true" data-id="${c.id}"
@@ -2709,6 +2711,33 @@ async function salvarQualificacao(){
     renderCardModalBody();
   }catch(e){console.error(e);toast('Erro ao salvar qualificação',true);}
 }
+// Biblioteca de scripts da GeFit (mesmo conteúdo da aba Ferramentas & Scripts do hub), aberta por cima do Kanban
+function abrirBibliotecaGefit(){
+  let ov=document.getElementById('m-biblioteca');
+  if(!ov){
+    ov=document.createElement('div');ov.id='m-biblioteca';
+    ov.style.cssText='position:fixed;inset:0;z-index:900;background:rgba(3,6,14,.78);display:flex;justify-content:center;align-items:flex-start;padding:24px 16px;overflow-y:auto';
+    ov.innerHTML=`<style>
+      #m-biblioteca{--s1:var(--fundo2);--s2:var(--fundo3);--bd:rgba(232,228,220,.14);--tx:var(--texto);--tm:#C9C3B8;--td:var(--texto2);--or:var(--laranja)}
+      #m-biblioteca .btn-or{background:var(--laranja);color:#0B1222;border:0;border-radius:6px;font-weight:700;cursor:pointer}
+      #m-biblioteca select,#m-biblioteca input{font-family:inherit}
+    </style>
+    <div style="width:100%;max-width:1100px;background:var(--fundo);border:1px solid var(--borda);border-radius:14px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px">
+        <div><div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--laranja);text-transform:uppercase">📚 Biblioteca de scripts · GeFit</div>
+        <div style="font-size:12.5px;color:var(--texto2)">Filtre por funil, etapa, canal ou modelo de negócio. Clique na linha e copie a mensagem.</div></div>
+        <button class="btn-gh" onclick="fecharBibliotecaGefit()">✕ Fechar</button>
+      </div>
+      <div id="ft-gefit"></div>
+    </div>`;
+    ov.addEventListener('click',e=>{if(e.target===ov)fecharBibliotecaGefit()});
+    document.body.appendChild(ov);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('m-biblioteca')&&document.getElementById('m-biblioteca').style.display!=='none')fecharBibliotecaGefit()});
+  }
+  ov.style.display='flex';document.body.style.overflow='hidden';
+  window.ftGefit.tab('mesa');
+}
+function fecharBibliotecaGefit(){const ov=document.getElementById('m-biblioteca');if(ov)ov.style.display='none';document.body.style.overflow='';}
 function copiarTelefoneCard(n){navigator.clipboard.writeText(n).then(()=>toast('Número copiado: '+n)).catch(()=>prompt('Copie o número:',n));}
 function copiarScriptAtendimento(){
   const txt=document.getElementById('scriptAtendimentoTexto').innerText;
@@ -3627,5 +3656,6 @@ async function pularUploadPerfil(){
 }
 
 </script>
+<script src="ferramentas-gefit.js"></script>
 </body>
 </html>
