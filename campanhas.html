@@ -1286,7 +1286,14 @@ async function carregarJornadas(){
   try{
     const acs=await sbGet('academias',`id=eq.${sessao.academia_id}&select=jornada_leads,jornada_rematricula,jornada_renovacao,jornada_sucesso,metas_padrao`);
     const reg=acs&&acs[0]||{};
-    ETAPAS.leads=(reg.jornada_leads&&reg.jornada_leads.length)?reg.jornada_leads:JORNADAS_PADRAO.leads;
+    // Espaço GeFit | Painel Gestão: mesmas chaves (automações continuam), nomes do comercial GeFit
+    const padraoLeads=(sessao.academia_id==='9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90')?[
+      {k:'lista',l:'Novo lead / Iniciar cadência'},{k:'tentativa1',l:'1º contato enviado'},
+      {k:'atendimento',l:'Em conversa (qualificação)'},{k:'exp_agendada',l:'Diagnóstico agendado'},
+      {k:'exp_iniciada',l:'Diagnóstico realizado'},{k:'agendada_matricula',l:'Proposta enviada'},
+      {k:'convertido',l:'Cliente GeFit',end:true},{k:'cadencia_futura',l:'Nutrição (retomar depois)',end:true,wait:true}
+    ]:JORNADAS_PADRAO.leads;
+    ETAPAS.leads=(reg.jornada_leads&&reg.jornada_leads.length)?reg.jornada_leads:padraoLeads;
     ETAPAS.rematricula=(reg.jornada_rematricula&&reg.jornada_rematricula.length)?reg.jornada_rematricula:JORNADAS_PADRAO.rematricula;
     ETAPAS.renovacao=(reg.jornada_renovacao&&reg.jornada_renovacao.length)?reg.jornada_renovacao:JORNADAS_PADRAO.renovacao;
     ETAPAS.sucesso_cliente=(reg.jornada_sucesso&&reg.jornada_sucesso.length)?reg.jornada_sucesso:JORNADAS_PADRAO.sucesso_cliente;
@@ -2018,7 +2025,8 @@ let kbFiltroConsultor=''; // '' = todos(as), só gestor(a)/admin usa isso
 function renderKanbanBoard(){
   const etapas=ETAPAS[kbPerfilAtivo]||[];
   const termo=(document.getElementById('kbSearch')?.value||'').trim().toLowerCase();
-  let cardsDoPerfil=kbCards.filter(c=>c.perfil===kbPerfilAtivo);
+  // Card enviado para Perdas sai do quadro (continua contado no resumo "Perdas")
+  let cardsDoPerfil=kbCards.filter(c=>c.perfil===kbPerfilAtivo&&c.status!=='perdido');
   if(kbFiltroConsultor)cardsDoPerfil=cardsDoPerfil.filter(c=>c.consultora_id===kbFiltroConsultor);
   if(termo){
     cardsDoPerfil=cardsDoPerfil.filter(c=>
@@ -3092,13 +3100,23 @@ const MOTIVOS_PERDA=[
   {k:'nao_contatar',l:'Pediu para não ser mais contatado'},
   {k:'outro',l:'Outro'}
 ];
+const MOTIVOS_PERDA_GEFIT=[
+  {k:'sem_perfil',l:'Não é dono/gestor ou está fora do perfil'},
+  {k:'sem_interesse',l:'Sem interesse agora'},
+  {k:'sem_resposta',l:'Não respondeu depois da cadência'},
+  {k:'numero_errado',l:'Número errado/inválido'},
+  {k:'nao_contatar',l:'Pediu para não ser mais contatado'},
+  {k:'teste_duplicado',l:'Card de teste ou duplicado'},
+  {k:'outro',l:'Outro'}
+];
+function motivosPerdaAtuais(){return ehEspacoGefit()?MOTIVOS_PERDA_GEFIT:MOTIVOS_PERDA;}
 function abrirModalPerda(){
-  document.getElementById('motivosList').innerHTML=MOTIVOS_PERDA.map(m=>`<button class="motivo-btn" onclick="confirmarPerda('${m.k}')">${m.l}</button>`).join('');
+  document.getElementById('motivosList').innerHTML=motivosPerdaAtuais().map(m=>`<button class="motivo-btn" onclick="confirmarPerda('${m.k}')">${m.l}</button>`).join('');
   closeM('m-card');
   openM('m-perda');
 }
 async function confirmarPerda(motivoKey){
-  const motivoLbl=MOTIVOS_PERDA.find(m=>m.k===motivoKey).l;
+  const motivoLbl=(motivosPerdaAtuais().find(m=>m.k===motivoKey)||MOTIVOS_PERDA.find(m=>m.k===motivoKey)||{l:motivoKey}).l;
   let nota='';
   if(motivoKey==='outro'){nota=prompt('Descreva o motivo:')||'';}
   try{
