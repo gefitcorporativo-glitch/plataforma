@@ -645,6 +645,9 @@ async function loadEquipe(){
 // (Gestão de acesso individual, Equipe, foi centralizada no Desafio ROI 21 Dias,
 // pra não ter dois lugares diferentes criando login com regras diferentes.)
 
+// Espaço ativo do admin (Academia Modelo / GeFit | Painel Gestão), vindo do hub em ?ac=
+const GF_AC=(()=>{const p=new URLSearchParams(location.search).get('ac');if(p){try{sessionStorage.setItem('gefit_admin_ac',p)}catch(e){}return p}try{return sessionStorage.getItem('gefit_admin_ac')}catch(e){return null}})();
+function gfEspaco(u){return (u&&u.role==='admin'&&GF_AC)?{...u,academia_id:GF_AC}:u;}
 // Login automático quando chega pelo painel principal (ROI 21 Dias / Campanhas),
 // via ?uid=<id do gestor> na URL, mesmo padrão de SSO usado nos outros módulos.
 async function tentarLoginAutomatico(){
@@ -669,7 +672,7 @@ async function tentarLoginAutomatico(){
       return false;
     }
 
-    currentUser = data;
+    currentUser = gfEspaco(data);
     await startApp();
     const tabParam = params.get('tab');
     const openExpParam = params.get('openExp');

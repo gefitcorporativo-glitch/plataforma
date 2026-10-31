@@ -83,6 +83,7 @@
   const H={apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`,'Content-Type':'application/json'};
   async function sbGet(t,p=''){const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{headers:H});if(!r.ok)throw new Error(await r.text());return r.json()}
 
+const GF_AC=(()=>{const p=new URLSearchParams(location.search).get('ac');if(p){try{sessionStorage.setItem('gefit_admin_ac',p)}catch(e){}return p}try{return sessionStorage.getItem('gefit_admin_ac')}catch(e){return null}})(); // espaço ativo do admin, vindo do hub
   const params=new URLSearchParams(location.search);
   const uid=params.get('uid');
   let academiaId=null;
@@ -98,7 +99,7 @@
 
   async function init(){
     if(uid){
-      try{const g=await sbGet('gestores',`id=eq.${uid}`);academiaId=g[0]?.academia_id;}catch(e){console.error(e);}
+      try{const g=await sbGet('gestores',`id=eq.${uid}`);academiaId=(g[0]?.role==='admin'&&GF_AC)||g[0]?.academia_id;}catch(e){console.error(e);}
     }
     renderMetodologia();
     renderFunilPicker();

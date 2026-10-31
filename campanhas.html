@@ -708,13 +708,19 @@ async function checkSession(){
 }
 
 let consultoras=[];
+// Espaço ativo do admin (Academia Modelo / GeFit | Painel Gestão), vindo do hub em ?ac=
+const GF_AC=(()=>{const p=new URLSearchParams(location.search).get('ac');if(p){try{sessionStorage.setItem('gefit_admin_ac',p)}catch(e){}return p}try{return sessionStorage.getItem('gefit_admin_ac')}catch(e){return null}})();
+function gfEspaco(u){return (u&&u.role==='admin'&&GF_AC)?{...u,academia_id:GF_AC}:u;}
+
 let treinadores=[];
 let gestoresAcademia=[];
 async function iniciarApp(s){
+  s=gfEspaco(s);
   sessao=s;
   sessionStorage.setItem('qg90_sessao',JSON.stringify(s));
   document.getElementById('userNome').textContent=s.nome||s.email;
   document.getElementById('userAcademia').textContent=s.role==='admin'?'GeFit · Master':(s.role==='consultor'?'Consultor(a)':(s.role==='treinador'?'Treinador(a)':'Gestor(a)'));
+  if(s.role==='admin'&&GF_AC){document.getElementById('userAcademia').textContent=GF_AC===GEFIT_GESTAO_ID?'Espaço: GeFit | Painel Gestão':(GF_AC==='1e4293f8-78f8-488d-bd9e-dc5658b3909e'?'Espaço: Academia Modelo':'Admin · outra academia');}
   mostrarTela('appWrap');
   try{
     consultoras=s.academia_id?await sbGet('consultoras',`academia_id=eq.${s.academia_id}&select=id,nome,meta,meta_tipo,metas`):[];

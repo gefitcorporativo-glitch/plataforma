@@ -1444,6 +1444,7 @@ function isAdmin(){return MODO_MESTRE&&sessao&&sessao.role==='admin'}
 const ESPACOS={modelo:{id:'1e4293f8-78f8-488d-bd9e-dc5658b3909e',nome:'Academia Modelo GeFit'},gestao:{id:'9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90',nome:'GeFit | Painel Gestão'}};
 function espacoDe(id){return Object.keys(ESPACOS).find(k=>ESPACOS[k].id===id)||null}
 function modoEmpresa(){return acId===ESPACOS.gestao.id}
+function acParam(){return (isAdmin()&&acId)?'&ac='+encodeURIComponent(acId):''}
 async function garantirEspacoGestao(){
   // cria (ou renomeia) a "academia" da GeFit uma única vez, sem precisar de SQL
   const g=ESPACOS.gestao;
@@ -1562,31 +1563,31 @@ async function checkSessaoInicial(){
 // IMPORTANTE: se o arquivo estiver em outra pasta/domínio, ajuste a URL abaixo.
 function abrirCentralScripts(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
-  window.location.href=`central-scripts-aqui.html?uid=${encodeURIComponent(sessao.id)}`;
+  window.location.href=`central-scripts-aqui.html?uid=${encodeURIComponent(sessao.id)}${acParam()}`;
 }
 function abrirCentralScriptsV2(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
-  window.location.href=`central-scripts-v2.html?uid=${encodeURIComponent(sessao.id)}`;
+  window.location.href=`central-scripts-v2.html?uid=${encodeURIComponent(sessao.id)}${acParam()}`;
 }
 function abrirCampanhas(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
-  window.location.href=`campanhas.html?uid=${encodeURIComponent(sessao.id)}`;
+  window.location.href=`campanhas.html?uid=${encodeURIComponent(sessao.id)}${acParam()}`;
 }
 function abrirCampanhasNoPerfil(perfil){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
-  window.location.href=`campanhas.html?uid=${encodeURIComponent(sessao.id)}&openPerfil=${encodeURIComponent(perfil)}`;
+  window.location.href=`campanhas.html?uid=${encodeURIComponent(sessao.id)}${acParam()}&openPerfil=${encodeURIComponent(perfil)}`;
 }
 function abrirExperiencias(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
-  window.location.href=`controle-experiencias.html?uid=${encodeURIComponent(sessao.id)}`;
+  window.location.href=`controle-experiencias.html?uid=${encodeURIComponent(sessao.id)}${acParam()}`;
 }
 function abrirCentralLeads(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
-  window.open(`central-leads.html?uid=${encodeURIComponent(sessao.id)}`,'_blank');
+  window.open(`central-leads.html?uid=${encodeURIComponent(sessao.id)}${acParam()}`,'_blank');
 }
 function abrirAgendaUnificada(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
-  window.location.href=`controle-experiencias.html?uid=${encodeURIComponent(sessao.id)}&tab=agenda`;
+  window.location.href=`controle-experiencias.html?uid=${encodeURIComponent(sessao.id)}${acParam()}&tab=agenda`;
 }
 
 // ══ INICIAR APP ══
