@@ -2191,6 +2191,31 @@ function closeM(id){document.getElementById(id).classList.remove('open');}
 
 // Repertório de scripts por tentativa, baseado nos blocos B.11 (leads/10x15),
 // B.13/B.14 (rematrícula) e B.17 (renovação) já validados na Central de Scripts.
+// ── Cadência do Oliver (SDR da GeFit): vale só para campanhas do GeFit | Painel Gestão ──
+// Donos e gestores de academia. Academias clientes continuam com SCRIPT_CADENCIA.
+const GEFIT_GESTAO_ID='9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90';
+const SCRIPT_CADENCIA_GEFIT={
+  leads:[
+    {tipo:'D0 · Texto · Boas-vindas + 1 pergunta',texto:'Oi, {PNOME}! Aqui é o Oliver, do time do Nelson Rabelo. Obrigado por pegar o Recepção que Vende, seja bem-vindo(a)!\nTemos um segundo presente especial pra melhorar ainda mais a gestão comercial da sua academia. Antes de eu te enviar, me responde uma coisa rapidinho:\nHoje, quem responde no WhatsApp as pessoas que perguntam sobre a academia?\n1️⃣ Eu mesmo(a)\n2️⃣ A recepção\n3️⃣ Uma consultora ou vendedora\nÉ só responder com o número 🙂'},
+    {tipo:'D1 · Vídeo + Texto · Checklist do 1º dia do aluno',texto:'{PNOME}, separei um trecho de uma aula do Nelson com donos de academia: o que tem que acontecer no primeiro dia do aluno, da recepção até a conversa final, pra ele não ir embora sem vínculo. São 7 pontos. Vale assistir com quem cuida da recepção. [vídeo]'},
+    {tipo:'D3 · Áudio do Nelson (~40 s)',texto:'{PNOME}, o Nelson pediu pra te mandar um recado rápido: [áudio do Nelson]'},
+    {tipo:'D5 · Link · Presente + faixa de faturamento',texto:'{PNOME}, liberei pra você [NOME DA FERRAMENTA]: [o que ela faz em uma linha]. Abre no celular, é só usar: [LINK]\nE pra eu te mandar os próximos materiais certos, o faturamento mensal da academia fica em qual faixa?\n1️⃣ Até R$20 mil\n2️⃣ R$20 a 35 mil\n3️⃣ R$35 a 50 mil\n4️⃣ R$50 a 70 mil\n5️⃣ Acima de R$70 mil'},
+    {tipo:'D7 · Vídeo + Texto · Caso real',texto:'{PNOME}, numa rede de 4 unidades que o Nelson ajudou a estruturar, todo dia às 5h30 a primeira pessoa a chegar mandava no grupo o print dos agendamentos do dia. Se o dia começava com um agendamento só, já se sabia que algo não tinha rodado. Ele conta aqui: [vídeo]'},
+    {tipo:'D10 · Vídeo · Indicação',texto:'{PNOME}, esse aqui é sobre indicação: o momento certo de pedir (entre o 3º e o 7º dia do aluno) e por que ela tem que vir como presente, não como pedido. [Reels "Indicação não é esmola"]'},
+    {tipo:'D14 · Texto · Convite para o diagnóstico',texto:'{PNOME}, o Nelson abre poucos horários por semana pra um diagnóstico de 30 minutos da parte comercial: ele olha como o lead chega, como é respondido e onde a matrícula se perde, e você sai com um plano de ação. Quer que eu veja um horário pra você?'},
+    {tipo:'D21 · Texto · Encerramento',texto:'{PNOME}, vou parar de te mandar coisas por aqui pra não encher teu WhatsApp. Se quiser ajuda com a recepção ou as vendas da sua academia, é só chamar nesse número. Sucesso aí!'}
+  ]
+};
+function ehEspacoGefit(){return ((typeof kbCampanha!=='undefined'&&kbCampanha&&kbCampanha.academia_id)||(sessao&&sessao.academia_id))===GEFIT_GESTAO_ID;}
+function scriptsDoPerfil(p){return (ehEspacoGefit()&&SCRIPT_CADENCIA_GEFIT[p])||SCRIPT_CADENCIA[p]||[];}
+function textoScript(txt,nome){const n=(nome||'').trim();return txt.replaceAll('{NOME}',n).replaceAll('{PNOME}',n.split(/\s+/)[0]||n);}
+function abrirWhatsScriptAtendimento(){
+  const c=cardAberto;const el=document.getElementById('scriptAtendimentoTexto');if(!c||!el)return;
+  let d=String(c.telefone||'').replace(/\D/g,'');if(!d){toast('Card sem telefone',true);return;}
+  if(d.length<=11)d='55'+d;
+  window.open('https://wa.me/'+d+'?text='+encodeURIComponent(el.innerText),'_blank');
+}
+
 const SCRIPT_CADENCIA={
   leads:[
     {tipo:'Texto + Áudio · Primeiro Contato',texto:'Oi, {NOME}! Que alegria receber sua mensagem 🙌 Parabéns pela decisão, dar esse passo já mostra que você está levando sua saúde a sério. Aqui a gente trabalha diferente das academias convencionais: montamos um projeto personalizado pra cada aluno. Pra eu te ajudar melhor: qual sua idade, e você já está treinando atualmente?'},
@@ -2322,10 +2347,11 @@ function trocarModoScriptCompromisso(modo){modoScriptCompromisso=modo;renderCard
 function renderCardModalBody(){
   const c=cardAberto;
   const etapas=ETAPAS[c.perfil]||[];
-  const scripts=SCRIPT_CADENCIA[c.perfil]||[];
+  const scripts=scriptsDoPerfil(c.perfil);
   const proximoIndice=c.cadencia_atual; // 0-indexed: próxima tentativa a ser feita
   const scriptAtual=scripts[proximoIndice];
-  const cadenciaEsgotada=c.cadencia_atual>=c.cadencia_total;
+  const totalCad=ehEspacoGefit()?scripts.length:c.cadencia_total;
+  const cadenciaEsgotada=c.cadencia_atual>=totalCad;
   const sugestaoData=new Date();sugestaoData.setDate(sugestaoData.getDate()+2);
   const sugestaoISO=c.proxima_acao_data||sugestaoData.toISOString().slice(0,10);
   const acoesPrevias=interacaoHojeAtual&&interacaoHojeAtual.resultado?interacaoHojeAtual.resultado.split(','):[];
@@ -2427,11 +2453,12 @@ function renderCardModalBody(){
     acaoConfirmadaNesteCard=true; // consultar essa etapa não exige registro obrigatório
   }else if(c.status==='ativo'&&!cadenciaEsgotada&&scriptAtual){
     blocoAtendimento=`
-      <div class="at-proxima"><b>Tentativa ${proximoIndice+1} de ${c.cadencia_total}</b> · ${scriptAtual.tipo}</div>
+      <div class="at-proxima"><b>Tentativa ${proximoIndice+1} de ${totalCad}</b> · ${scriptAtual.tipo}</div>
       <div class="at-script-box">
         <div class="at-script-tipo">Script sugerido</div>
         <button class="at-copy-btn" onclick="copiarScriptAtendimento()">Copiar</button>
-        <div class="at-script-texto" id="scriptAtendimentoTexto">${scriptAtual.texto.replaceAll('{NOME}',c.nome)}</div>
+        ${ehEspacoGefit()?'<button class="at-copy-btn" style="right:84px" onclick="abrirWhatsScriptAtendimento()">Abrir WhatsApp</button>':''}
+        <div class="at-script-texto" id="scriptAtendimentoTexto" style="white-space:pre-line">${textoScript(scriptAtual.texto,c.nome)}</div>
       </div>
       ${interacaoHojeAtual?'<div style="font-size:12px;color:var(--verde);margin-bottom:10px">✓ Já tem registro de hoje pra esse card, marque o que mudou e salve de novo.</div>':''}
       <label class="fl" style="display:block;margin-bottom:8px">O que já aconteceu nesse contato? (marque quantos fizerem sentido)</label>
@@ -2549,7 +2576,7 @@ async function registrarContatoCard(){
     if(interacaoHojeAtual){
       await fetch(`${SB_URL}/rest/v1/campanha_interacoes?id=eq.${interacaoHojeAtual.id}`,{method:'PATCH',headers:H,body:JSON.stringify({resultado:resultadoCSV,nota})});
     }else{
-      await sbPost('campanha_interacoes',{card_id:c.id,data:new Date().toISOString().slice(0,10),canal:(SCRIPT_CADENCIA[c.perfil]||[])[c.cadencia_atual]?.tipo||'',tentativa_numero:c.cadencia_atual+1,resultado:resultadoCSV,nota,consultora_id:c.consultora_id,created_at:Date.now()});
+      await sbPost('campanha_interacoes',{card_id:c.id,data:new Date().toISOString().slice(0,10),canal:scriptsDoPerfil(c.perfil)[c.cadencia_atual]?.tipo||'',tentativa_numero:c.cadencia_atual+1,resultado:resultadoCSV,nota,consultora_id:c.consultora_id,created_at:Date.now()});
     }
     const patch={proxima_acao_data:proximaData,updated_at:Date.now()};
     if(ehNovoRegistroHoje){
