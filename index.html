@@ -428,13 +428,13 @@ body.role-consultor #painel-prod-time,body.role-consultor #painel-cons-filter{di
         <div class="kpi"><div class="kpi-label">ROAS</div><div class="kpi-value" id="vm-roas">-</div></div>
       </div>
       <div class="kpi-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
-        <div class="kpi"><div class="kpi-label">CONVERSÃO LEAD → MATRÍCULA</div><div class="kpi-value" id="vm-conv">-</div></div>
-        <div class="kpi"><div class="kpi-label">EXPERIÊNCIAS NO PERÍODO</div><div class="kpi-value" id="vm-exps">-</div></div>
-        <div class="kpi"><div class="kpi-label">ADESÃO MÉDIA À ROTINA</div><div class="kpi-value" id="vm-adesao">-</div></div>
+        <div class="kpi"><div class="kpi-label"><span id="vm-l-conv">CONVERSÃO LEAD → MATRÍCULA</span></div><div class="kpi-value" id="vm-conv">-</div></div>
+        <div class="kpi"><div class="kpi-label"><span id="vm-l-exps">EXPERIÊNCIAS NO PERÍODO</span></div><div class="kpi-value" id="vm-exps">-</div></div>
+        <div class="kpi"><div class="kpi-label"><span id="vm-l-adesao">ADESÃO MÉDIA À ROTINA</span></div><div class="kpi-value" id="vm-adesao">-</div></div>
       </div>
 
       <div class="chart-card" style="margin-bottom:16px">
-        <h3>Experiências: agendadas → compareceram → convertidas</h3>
+        <h3 id="vm-l-funil">Experiências: agendadas → compareceram → convertidas</h3>
         <div id="vm-funil" style="margin-top:14px"></div>
       </div>
 
@@ -1447,6 +1447,7 @@ function isAdmin(){return MODO_MESTRE&&sessao&&sessao.role==='admin'}
 const ESPACOS={modelo:{id:'1e4293f8-78f8-488d-bd9e-dc5658b3909e',nome:'Academia Modelo GeFit'},gestao:{id:'9a6c2f10-1b4e-4c7a-8d2e-0f5b3c7e1a90',nome:'GeFit | Painel Gestão'}};
 function espacoDe(id){return Object.keys(ESPACOS).find(k=>ESPACOS[k].id===id)||null}
 function modoEmpresa(){return acId===ESPACOS.gestao.id}
+function acAtual(){return (isAdmin()&&acId)?acId:(sessao&&sessao.academia_id)}
 function acParam(){return (isAdmin()&&acId)?'&ac='+encodeURIComponent(acId):''}
 async function garantirEspacoGestao(){
   // cria (ou renomeia) a "academia" da GeFit uma única vez, sem precisar de SQL
@@ -1462,6 +1463,7 @@ function irEspaco(k){
   acId=e.id;const s=document.getElementById('sel-ac');if(s)s.value=acId;
   try{localStorage.setItem('gefit_espaco',k)}catch(_){}
   renderAll();window.scrollTo({top:0});
+  try{const p=document.querySelector('.panel.active');if(p&&p.id)switchTab(p.id.replace('pan-',''))}catch(e){}
 }
 const VOCAB_EMPRESA=[['ALUNOS ATIVOS','CLIENTES ATIVOS'],['Alunos ativos','Clientes ativos'],['Alunos','Clientes']];
 function aplicarEspaco(){
@@ -3569,7 +3571,7 @@ const MODALIDADES_OPCOES=['Musculação/Fitness','Aulas Coletivas','Piscina Infa
 let bgRow=null;
 function bgLink(){
   const base=location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/,'');
-  return base+'briefing-gestora.html?a='+encodeURIComponent(sessao.academia_id);
+  return base+'briefing-gestora.html?a='+encodeURIComponent(acAtual());
 }
 function bgCopiarLink(){
   const l=bgLink();
@@ -3577,8 +3579,8 @@ function bgCopiarLink(){
   else prompt('Copie o link:',l);
 }
 async function bgCarregar(){
-  const el=document.getElementById('bg-resp'); if(!el||!sessao.academia_id)return;
-  try{const rows=await sbGet('briefing_gestora',`academia_id=eq.${sessao.academia_id}`);bgRow=rows&&rows[0]||null}
+  const el=document.getElementById('bg-resp'); if(!el||!acAtual())return;
+  try{const rows=await sbGet('briefing_gestora',`academia_id=eq.${acAtual()}`);bgRow=rows&&rows[0]||null}
   catch(e){console.error('briefing gestora:',e);bgRow=null;el.innerHTML='<div style="font-size:12px;color:var(--td)">Para usar o briefing respondido pelo gestor, rode o SQL <code>schema-briefing-gestora.sql</code> no Supabase.</div>';return}
   bgRender();
 }
@@ -3611,7 +3613,7 @@ async function bgSalvarEdicoes(){
   const resp=bgRow.respostas||{};
   Object.keys(resp).forEach(k=>{const t=document.getElementById('bgr-'+k);if(t)resp[k].a=t.value.trim()});
   try{
-    await sbUpsert('briefing_gestora',{academia_id:sessao.academia_id,respostas:resp,status:bgRow.status||'rascunho',updated_at:Date.now()});
+    await sbUpsert('briefing_gestora',{academia_id:acAtual(),respostas:resp,status:bgRow.status||'rascunho',updated_at:Date.now()});
     bgRow.respostas=resp;bgRow.updated_at=Date.now();toast('Respostas salvas!');bgRender();
   }catch(e){console.error(e);toast('Erro ao salvar.',true)}
 }
@@ -3736,9 +3738,9 @@ function bcRenderPers(p){
    (ca.length?'<div class="lbl" style="margin:14px 0 6px">Ideias de campanha</div>'+ca.map((s,i)=>card(bcEsc(s.perfil||'')+(s.ideia?'-'+bcEsc(s.ideia):''),bcEsc(s.mensagem||''),'campanhas',i)).join(''):'');
 }
 async function bcCarregar(){
-  if(!sessao.academia_id)return;
+  if(!acAtual())return;
   try{
-    const rows=await sbGet('briefing_negocio',`academia_id=eq.${sessao.academia_id}`);
+    const rows=await sbGet('briefing_negocio',`academia_id=eq.${acAtual()}`);
     const b=rows&&rows[0];
     bcDados=(b&&b.dados&&b.dados.blocos)?b.dados:null;
   }catch(e){console.error('briefing completo:',e);bcDados=null}
@@ -3788,10 +3790,10 @@ function bcColetar(){
   return b;
 }
 async function bcSalvar(veioDoImport){
-  if(!sessao.academia_id)return toast('Selecione uma academia.',true);
+  if(!acAtual())return toast('Selecione uma academia.',true);
   const b=veioDoImport===true?bcDados:bcColetar();
   const bl=b.blocos||{}; const g=(i,k)=>(bl[i]||{})[k];
-  const payload={academia_id:sessao.academia_id,dados:b,updated_at:Date.now()};
+  const payload={academia_id:acAtual(),dados:b,updated_at:Date.now()};
   // espelha os campos do perfil rápido
   const n=v=>(v==null||v==='')?null:(parseFloat(v)||null);
   if(g('estrutura','espaco_m2')!=null)payload.espaco_m2=n(g('estrutura','espaco_m2'));
@@ -3819,9 +3821,9 @@ function bcExportar(){
 }
 
 async function carregarBriefing(){
-  if(!sessao.academia_id)return;
+  if(!acAtual())return;
   try{
-    const rows=await sbGet('briefing_negocio',`academia_id=eq.${sessao.academia_id}`);
+    const rows=await sbGet('briefing_negocio',`academia_id=eq.${acAtual()}`);
     const b=rows&&rows[0];
     if(b){
       document.getElementById('bf-m2').value=b.espaco_m2??'';
@@ -3838,7 +3840,7 @@ async function carregarBriefing(){
 async function salvarBriefing(){
   const modalidades=[...document.querySelectorAll('#bf-modalidades-chk input:checked')].map(el=>el.value);
   const payload={
-    academia_id:sessao.academia_id,
+    academia_id:acAtual(),
     espaco_m2:parseFloat(document.getElementById('bf-m2').value)||null,
     ticket_atual:parseFloat(document.getElementById('bf-ticket').value)||null,
     modalidade_principal:document.getElementById('bf-modalidade-principal').value||null,
@@ -3857,7 +3859,7 @@ async function salvarBriefing(){
 async function carregarTranscricoes(){
   const el=document.getElementById('bf-transcricoes-lista');
   try{
-    const rows=await sbGet('briefing_transcricoes',`academia_id=eq.${sessao.academia_id}&order=data.desc`);
+    const rows=await sbGet('briefing_transcricoes',`academia_id=eq.${acAtual()}&order=data.desc`);
     if(!rows.length){el.innerHTML='<div style="color:var(--td);font-size:12px">Nenhuma transcrição registrada ainda.</div>';return;}
     el.innerHTML=rows.map(r=>`<details style="background:var(--s2);border-radius:8px;padding:10px 14px;margin-bottom:8px">
       <summary style="cursor:pointer;font-size:13px;font-weight:600">${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}, ${r.titulo||'Sem título'}</summary>
@@ -3871,7 +3873,7 @@ async function addTranscricao(){
   if(!data||!conteudo)return toast('Preencha data e conteúdo da transcrição.',true);
   try{
     await sbPost('briefing_transcricoes',{
-      academia_id:sessao.academia_id, data, titulo:document.getElementById('bf-t-titulo').value||null,
+      academia_id:acAtual(), data, titulo:document.getElementById('bf-t-titulo').value||null,
       conteudo, criado_em:Date.now()
     });
     document.getElementById('bf-t-titulo').value=''; document.getElementById('bf-t-conteudo').value='';
@@ -3885,15 +3887,15 @@ async function addTranscricao(){
 // ══════════════════════════════════════
 let chVmOrigem=null, chRtRenov=null, chRtExp=null;
 async function carregarVendasMkt(){
-  if(!sessao.academia_id)return;
+  if(!acAtual())return;
   const mesAtual=new Date().toISOString().slice(0,7);
   let cards=[],exps=[],campanhas=[],vendas=[];
   try{
     [cards,exps,campanhas,vendas]=await Promise.all([
-      sbGet('campanha_cards',`select=*,campanhas!inner(academia_id)&campanhas.academia_id=eq.${sessao.academia_id}`).catch(()=>[]),
-      sbGet('experiencias',`academia_id=eq.${sessao.academia_id}`),
-      sbGet('campanhas',`academia_id=eq.${sessao.academia_id}`),
-      sbGet('vendas',`academia_id=eq.${sessao.academia_id}`)
+      sbGet('campanha_cards',`select=*,campanhas!inner(academia_id)&campanhas.academia_id=eq.${acAtual()}`).catch(()=>[]),
+      sbGet('experiencias',`academia_id=eq.${acAtual()}`),
+      sbGet('campanhas',`academia_id=eq.${acAtual()}`),
+      sbGet('vendas',`academia_id=eq.${acAtual()}`)
     ]);
   }catch(e){console.error(e);}
 
@@ -3903,26 +3905,37 @@ async function carregarVendasMkt(){
   document.getElementById('vm-cpl').textContent=leads?fmtR$(investTotal/leads):'-';
   const vendidoTotal=vendas.reduce((s,v)=>s+Number(v.valor||0),0);
   document.getElementById('vm-roas').textContent=investTotal?(vendidoTotal/investTotal).toFixed(1)+'x':'-';
-  const matriculados=cards.filter(c=>c.status==='matriculado'||c.etapa_atual==='matriculado').length;
+  const emp=(typeof modoEmpresa==='function')&&modoEmpresa();
+  const setL=(id,txt)=>{const e=document.getElementById(id);if(e)e.textContent=txt};
+  setL('vm-l-conv',emp?'CONVERSÃO LEAD → CLIENTE':'CONVERSÃO LEAD → MATRÍCULA');
+  setL('vm-l-exps',emp?'DIAGNÓSTICOS REALIZADOS (MÊS)':'EXPERIÊNCIAS NO PERÍODO');
+  setL('vm-l-adesao',emp?'DIAGNÓSTICO → CLIENTE':'ADESÃO MÉDIA À ROTINA');
+  setL('vm-l-funil',emp?'Reuniões de diagnóstico: agendadas → compareceram → viraram cliente':'Experiências: agendadas → compareceram → convertidas');
+  const matriculados=emp
+    ?cards.filter(c=>['convertido','matriculado'].includes(c.etapa_atual)||['convertido','matriculado'].includes(c.status)).length
+    :cards.filter(c=>c.status==='matriculado'||c.etapa_atual==='matriculado').length;
   document.getElementById('vm-conv').textContent=leads?((matriculados/leads)*100).toFixed(1)+'%':'-';
 
   const expsMes=exps.filter(e=>String(e.data_agendada||e.criado_em||'').slice(0,7)===mesAtual);
-  document.getElementById('vm-exps').textContent=expsMes.length;
+  const realizou=e=>['comparecida','convertida','nao_convertida'].includes(e.status);
+  document.getElementById('vm-exps').textContent=emp?expsMes.filter(realizou).length:expsMes.length;
 
   const [consultoras,registros]=await Promise.all([
-    sbGet('consultoras',`academia_id=eq.${sessao.academia_id}`),
-    sbGet('registros',`academia_id=eq.${sessao.academia_id}&data=gte.${mesAtual}-01`)
+    sbGet('consultoras',`academia_id=eq.${acAtual()}`),
+    sbGet('registros',`academia_id=eq.${acAtual()}&data=gte.${mesAtual}-01`)
   ]);
   const diasDoMes=new Date().getDate();
   const adesoes=consultoras.map(c=>{
     const diasComRegistro=new Set(registros.filter(r=>r.consultora_id===c.id).map(r=>r.data)).size;
     return diasDoMes?diasComRegistro/diasDoMes*100:0;
   });
-  document.getElementById('vm-adesao').textContent=adesoes.length?(adesoes.reduce((s,v)=>s+v,0)/adesoes.length).toFixed(0)+'%':'-';
+  if(emp){const feitos=exps.filter(realizou).length,clientes=exps.filter(e=>e.status==='convertida').length;
+    document.getElementById('vm-adesao').textContent=feitos?((clientes/feitos)*100).toFixed(0)+'%':'-';}
+  else document.getElementById('vm-adesao').textContent=adesoes.length?(adesoes.reduce((s,v)=>s+v,0)/adesoes.length).toFixed(0)+'%':'-';
 
   // Funil de experiências
   const statusExp=['agendada','comparecida','convertida','nao_convertida'];
-  const statusLbl={agendada:'Agendadas',comparecida:'Compareceram',convertida:'Convertidas',nao_convertida:'Não convertidas'};
+  const statusLbl=emp?{agendada:'Agendadas',comparecida:'Compareceram',convertida:'Viraram cliente',nao_convertida:'Não fecharam'}:{agendada:'Agendadas',comparecida:'Compareceram',convertida:'Convertidas',nao_convertida:'Não convertidas'};
   const statusCor={agendada:'#B3F400',comparecida:'#3b82f6',convertida:'#22c55e',nao_convertida:'#ef4444'};
   const total=exps.length||1;
   document.getElementById('vm-funil').innerHTML=statusExp.map(s=>{
@@ -3950,14 +3963,14 @@ async function carregarVendasMkt(){
   // Ranking consultores
   document.getElementById('vm-ranking').innerHTML=consultoras.map(c=>{
     const leadsC=cards.filter(cd=>cd.consultora_id===c.id).length;
-    const matC=cards.filter(cd=>cd.consultora_id===c.id&&(cd.status==='matriculado'||cd.etapa_atual==='matriculado')).length;
+    const matC=cards.filter(cd=>cd.consultora_id===c.id&&(cd.status==='matriculado'||cd.etapa_atual==='matriculado'||(emp&&(cd.etapa_atual==='convertido'||cd.status==='convertido')))).length;
     const vendasC=vendas.filter(v=>v.consultora_id===c.id);
     const ticket=vendasC.length?vendasC.reduce((s,v)=>s+Number(v.valor||0),0)/vendasC.length:0;
     const diasComRegistro=new Set(registros.filter(r=>r.consultora_id===c.id).map(r=>r.data)).size;
     const adesao=diasDoMes?(diasComRegistro/diasDoMes*100).toFixed(0):0;
     return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12.5px">
       <span>${c.nome}</span>
-      <span style="color:var(--td)">${leadsC} leads · ${leadsC?((matC/leadsC)*100).toFixed(0):0}% conv. · ${fmtR$(ticket)} · ${adesao}% rotina</span>
+      <span style="color:var(--td)">${leadsC} leads · ${leadsC?((matC/leadsC)*100).toFixed(0):0}% conv. · ${fmtR$(ticket)}${emp?'':' · '+adesao+'% rotina'}</span>
     </div>`;
   }).join('')||'<div style="color:var(--td);font-size:12px">Nenhum(a) consultor(a) cadastrado(a).</div>';
 }
@@ -3966,14 +3979,14 @@ async function carregarVendasMkt(){
 // RETENÇÃO
 // ══════════════════════════════════════
 async function carregarRetencao(){
-  if(!sessao.academia_id)return;
+  if(!acAtual())return;
   const mesAtual=new Date().toISOString().slice(0,7);
   const hoje=new Date();
   const [alunos,exps,treins,planRows]=await Promise.all([
-    sbGet('alunos',`academia_id=eq.${sessao.academia_id}`),
-    sbGet('experiencias',`academia_id=eq.${sessao.academia_id}`),
-    sbGet('treinadores',`academia_id=eq.${sessao.academia_id}`),
-    sbGet('planejamento_mensal',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mesAtual}-01`)
+    sbGet('alunos',`academia_id=eq.${acAtual()}`),
+    sbGet('experiencias',`academia_id=eq.${acAtual()}`),
+    sbGet('treinadores',`academia_id=eq.${acAtual()}`),
+    sbGet('planejamento_mensal',`academia_id=eq.${acAtual()}&mes_referencia=eq.${mesAtual}-01`)
   ]);
   const plan=planRows[0];
   const ativos=alunos.filter(a=>a.status==='ativo');
@@ -4033,16 +4046,16 @@ async function carregarRetencao(){
 let chGeFat=null, chGeDespesas=null;
 function fmtR$(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 async function carregarGeral(){
-  if(!sessao.academia_id)return;
+  if(!acAtual())return;
   const mesAtual=new Date().toISOString().slice(0,7);
   const anoAtual=mesAtual.slice(0,4);
   try{
     const [registros, planRows, alunos, despesas, npsRows] = await Promise.all([
-      sbGet('registros',`academia_id=eq.${sessao.academia_id}&data=gte.${anoAtual}-01-01`),
-      sbGet('planejamento_mensal',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mesAtual}-01`),
-      sbGet('alunos',`academia_id=eq.${sessao.academia_id}`),
-      sbGet('centros_custo',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mesAtual}-01`),
-      sbGet('nps_respostas',`academia_id=eq.${sessao.academia_id}`)
+      sbGet('registros',`academia_id=eq.${acAtual()}&data=gte.${anoAtual}-01-01`),
+      sbGet('planejamento_mensal',`academia_id=eq.${acAtual()}&mes_referencia=eq.${mesAtual}-01`),
+      sbGet('alunos',`academia_id=eq.${acAtual()}`),
+      sbGet('centros_custo',`academia_id=eq.${acAtual()}&mes_referencia=eq.${mesAtual}-01`),
+      sbGet('nps_respostas',`academia_id=eq.${acAtual()}`)
     ]);
     const plan=planRows&&planRows[0];
 
@@ -4149,9 +4162,9 @@ async function carregarGeral(){
 // ══════════════════════════════════════
 let alunosCache=[];
 async function carregarAlunos(){
-  if(!sessao.academia_id)return;
+  if(!acAtual())return;
   try{
-    alunosCache=await sbGet('alunos',`academia_id=eq.${sessao.academia_id}&order=criado_em.desc`);
+    alunosCache=await sbGet('alunos',`academia_id=eq.${acAtual()}&order=criado_em.desc`);
   }catch(e){console.error(e);alunosCache=[];}
   renderAlunos();
 }
@@ -4195,7 +4208,7 @@ async function salvarAluno(){
   const nome=document.getElementById('al-nome').value.trim();
   if(!nome){toast('Digite o nome do aluno.',true);return;}
   const payload={
-    academia_id:sessao.academia_id,
+    academia_id:acAtual(),
     nome, telefone:document.getElementById('al-tel').value||null,
     plano_tipo:document.getElementById('al-tipo').value,
     grupo_receita:document.getElementById('al-grupo').value,
@@ -4298,16 +4311,16 @@ function atualizarMediasDiag(){
   document.getElementById('diag-media-retencao').textContent=mediaPilares('tec','suc');
 }
 async function carregarDiagnostico(){
-  if(!sessao.academia_id)return;
+  if(!acAtual())return;
   try{
-    const rows=await sbGet('diagnostico_avaliacao',`academia_id=eq.${sessao.academia_id}`);
+    const rows=await sbGet('diagnostico_avaliacao',`academia_id=eq.${acAtual()}`);
     diagValores=(rows&&rows[0]&&rows[0].indicadores)||{};
   }catch(e){console.error('Erro ao carregar diagnóstico:',e);diagValores={};}
   renderDiagnostico();
 }
 async function salvarDiagnostico(){
   try{
-    await sbUpsert('diagnostico_avaliacao',{academia_id:sessao.academia_id,indicadores:diagValores,updated_at:Date.now()});
+    await sbUpsert('diagnostico_avaliacao',{academia_id:acAtual(),indicadores:diagValores,updated_at:Date.now()});
     document.getElementById('diag-msg').textContent='✓ Salvo!';
     setTimeout(()=>document.getElementById('diag-msg').textContent='',2500);
     toast('Diagnóstico salvo!');
@@ -4336,7 +4349,7 @@ function addLinhaDespesa(categoria='',meta='',realizado=''){
 }
 async function carregarDespesas(mes){
   try{
-    const rows=await sbGet('centros_custo',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mes}-01`);
+    const rows=await sbGet('centros_custo',`academia_id=eq.${acAtual()}&mes_referencia=eq.${mes}-01`);
     renderLinhasDespesa(rows||[]);
   }catch(e){console.error(e);renderLinhasDespesa([]);}
 }
@@ -4346,7 +4359,7 @@ async function salvarDespesas(mes){
     return {categoria:inputs[0].value.trim(),meta_mensal:parseFloat(inputs[1].value)||null,realizado_mensal:parseFloat(inputs[2].value)||null};
   }).filter(d=>d.categoria);
   for(const d of linhas){
-    await sbUpsert('centros_custo',{academia_id:sessao.academia_id,mes_referencia:mes+'-01',categoria:d.categoria,meta_mensal:d.meta_mensal,realizado_mensal:d.realizado_mensal});
+    await sbUpsert('centros_custo',{academia_id:acAtual(),mes_referencia:mes+'-01',categoria:d.categoria,meta_mensal:d.meta_mensal,realizado_mensal:d.realizado_mensal});
   }
 }
 function initPlanejamento(){
@@ -4361,7 +4374,7 @@ function initPlanejamento(){
   carregarDespesas(campo.value);
 }
 function renderCarteirasPlanejamento(){
-  const ac=db.acs[sessao.academia_id];
+  const ac=db.acs[acAtual()];
   const treinadores=ac?Object.entries(ac.treinadores||{}):[];
   const wrap=document.getElementById('pj-carteiras');
   if(!treinadores.length){wrap.innerHTML='<div style="font-size:12px;color:var(--td)">Nenhum(a) treinador(a) cadastrado(a) ainda, cadastre na aba Equipe.</div>';return;}
@@ -4373,9 +4386,9 @@ function renderCarteirasPlanejamento(){
 }
 async function carregarPlanejamento(){
   const mes=document.getElementById('pj-mes').value;
-  if(!mes||!sessao.academia_id)return;
+  if(!mes||!acAtual())return;
   try{
-    const rows=await sbGet('planejamento_mensal',`academia_id=eq.${sessao.academia_id}&mes_referencia=eq.${mes}-01`);
+    const rows=await sbGet('planejamento_mensal',`academia_id=eq.${acAtual()}&mes_referencia=eq.${mes}-01`);
     const p=rows&&rows[0];
     const ids=['pj-m1-fat','pj-m1-planos','pj-m1-ativos','pj-m2-fat','pj-m2-planos','pj-m2-ativos','pj-ms-fat','pj-ms-planos','pj-ms-ativos','pj-fc-atual','pj-fc-ant','pj-fc-ano-ant','pj-custo','pj-inadimp','pj-fat-ano-ant','pj-enc-meta','pj-enc-atual','pj-a-renovar','pj-renov-enc','pj-renov-nenc','pj-cancel','pj-recebiveis','pj-reserva-min','pj-reserva-max'];
     ids.forEach(id=>document.getElementById(id).value='');
@@ -4415,12 +4428,12 @@ async function salvarPlanejamento(){
   const mes=document.getElementById('pj-mes').value;
   if(!mes){toast('Selecione o mês do planejamento.',true);return;}
   const num=id=>{const v=document.getElementById(id).value;return v===''?null:parseFloat(v);};
-  const ac=db.acs[sessao.academia_id];
+  const ac=db.acs[acAtual()];
   const treinadores=ac?Object.keys(ac.treinadores||{}):[];
   const carteiras_meta={};
   treinadores.forEach(id=>{const el=document.getElementById('pj-cart-'+id);if(el&&el.value!=='')carteiras_meta[id]=parseFloat(el.value);});
   const payload={
-    academia_id:sessao.academia_id, mes_referencia:mes+'-01',
+    academia_id:acAtual(), mes_referencia:mes+'-01',
     meta1_faturamento:num('pj-m1-fat'), meta1_planos:num('pj-m1-planos'), meta1_ativos:num('pj-m1-ativos'),
     meta2_faturamento:num('pj-m2-fat'), meta2_planos:num('pj-m2-planos'), meta2_ativos:num('pj-m2-ativos'),
     supermeta_faturamento:num('pj-ms-fat'), supermeta_planos:num('pj-ms-planos'), supermeta_ativos:num('pj-ms-ativos'),
