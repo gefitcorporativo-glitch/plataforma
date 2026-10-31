@@ -1104,6 +1104,9 @@ body.role-consultor #painel-prod-time,body.role-consultor #painel-cons-filter{di
           </div>
         </div>
 
+        <!-- GeFit | Painel Gestão: scripts do Oliver (ferramentas-gefit.js) -->
+        <div id="ft-gefit" style="display:none"></div>
+
         <!-- NAV SEÇÕES -->
         <div style="display:flex;gap:5px;margin-bottom:18px;flex-wrap:wrap" id="ft-nav">
           <button id="ft-tab-bv"      onclick="ftTab('bv')"      class="btn-or"  style="font-size:11px;padding:6px 12px">👋 Boas-Vindas</button>
@@ -1463,6 +1466,7 @@ function irEspaco(k){
 const VOCAB_EMPRESA=[['ALUNOS ATIVOS','CLIENTES ATIVOS'],['Alunos ativos','Clientes ativos'],['Alunos','Clientes']];
 function aplicarEspaco(){
   const emp=modoEmpresa(),k=espacoDe(acId);
+  try{window.ftGefitAplicar&&window.ftGefitAplicar(emp)}catch(e){console.warn(e)}
   document.body.classList.toggle('modo-empresa',emp);
   document.body.classList.toggle('espaco-ativo',isAdmin()&&!!k);
   document.querySelectorAll('#espacos button').forEach(b=>b.classList.toggle('on',b.dataset.esp===k));
@@ -4492,7 +4496,7 @@ function copiarScript(id){
 
 function renderFerramentas(){
   const nm=document.getElementById('ft-academia-nome');
-  if(nm)nm.textContent=ftNomeAcademia();
+  if(nm&&!(typeof modoEmpresa==='function'&&modoEmpresa()))nm.textContent=ftNomeAcademia();
   renderBoasVindas();
   renderCadencia();
   renderCad7Dias();
@@ -4970,5 +4974,6 @@ setInterval(()=>{
 
 checkSessaoInicial();
 </script>
+<script src="ferramentas-gefit.js"></script>
 </body>
 </html>
