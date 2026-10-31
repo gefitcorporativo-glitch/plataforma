@@ -146,6 +146,7 @@ a.wa{color:var(--link);text-decoration:none;font-weight:600}
         <button class="btn" onclick="limparFiltros()">Limpar filtros</button>
         <button class="btn" onclick="carregarLeads()">↻ Atualizar</button>
         <button class="btn" onclick="exportarCSV()">⬇ Exportar planilha</button>
+        <button class="btn" onclick="enviarParaCampanha(filtrados().filter(l=>!l.card_id).map(l=>l.id))" title="Envia os leads do filtro atual que ainda não estão no Kanban">📢 Enviar filtrados para campanha</button>
         <div class="sp"></div>
         <span class="cont" id="cont"></span>
       </div>
@@ -193,8 +194,10 @@ a.wa{color:var(--link);text-decoration:none;font-weight:600}
     <div class="f"><label>Status</label><select id="ml-status"></select></div>
     <div class="f"><label>Consultora</label><select id="ml-cons"></select></div>
   </div>
+  <div id="ml-extra" style="margin-bottom:12px"></div>
   <div class="f"><label>Observações</label><textarea id="ml-obs" rows="4"></textarea></div>
   <div class="mrod">
+    <button class="btn" onclick="enviarParaCampanha([leadAtual.id])">📢 Enviar para campanha</button>
     <a class="btn" id="ml-wa" target="_blank" rel="noopener">Abrir WhatsApp</a>
     <button class="btn" onclick="fechar('m-lead')">Cancelar</button>
     <button class="btn pri" onclick="salvarLead()">Salvar</button>
@@ -236,6 +239,10 @@ a.wa{color:var(--link);text-decoration:none;font-weight:600}
         <input id="mc-img" class="sl-url" placeholder="ou cole o endereço da imagem"></div>
     </div>
   </details>
+  <div class="grid2">
+    <div class="f"><label>Formulário para</label><select id="mc-pub"><option value="aluno">Aluno (idade, se treina)</option><option value="gestor">Gestor de academia (cargo)</option></select><div class="dica">Nome e WhatsApp sempre entram.</div></div>
+    <div class="f"><label>Perguntas extras (uma por linha)</label><textarea id="mc-extras" rows="3" placeholder="*Nome da academia | academia_nome&#10;Cidade | cidade&#10;*Alunos ativos: Até 150; 150 a 300; 300 a 600; Mais de 600"></textarea><div class="dica">* no início = obrigatória. "Pergunta: op1; op2" vira múltipla escolha. "| chave" define o nome do campo (academia_nome e cidade viram colunas).</div></div>
+  </div>
   <label class="chk"><input type="checkbox" id="mc-sorteio"> Campanha com sorteio (libera a lista para imprimir)</label>
   <label class="chk"><input type="checkbox" id="mc-p-idade" checked> Perguntar idade</label>
   <label class="chk"><input type="checkbox" id="mc-p-treina" checked> Perguntar se treina (e há quanto tempo está parado)</label>
@@ -288,12 +295,19 @@ a.wa{color:var(--link);text-decoration:none;font-weight:600}
   </div>
 </div></div>
 
+<div class="modal" id="m-enviar"><div class="mbox">
+  <h2>Enviar para campanha</h2>
+  <p class="cont" id="me-txt"></p>
+  <div class="f"><label>Campanha (módulo Campanhas / Desafio ROI 21 Dias)</label><select id="me-sel"></select></div>
+  <div class="mrod"><button class="btn" onclick="fechar('m-enviar')">Cancelar</button><button class="btn pri" onclick="confirmarEnvio()">Enviar</button></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const SB_URL='https://irwvagffrguiljaxrzmd.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyd3ZhZ2Zmcmd1aWxqYXhyem1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNDk5ODUsImV4cCI6MjEwNDkyNTk4NX0.YAApyaH6iIHEua_89fgCUpMzgXRIcWb_vNRkBQAoq5A',P='';
 const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
-const ORIGENS={indicacao_digital:'Indicação digital',trafego_pago:'Tráfego pago',whatsapp_organico:'WhatsApp orgânico',instagram_organico:'Instagram orgânico',evento:'Evento',parceria:'Parceria',indicacao:'Indicação',site:'Site',outro:'Outro'};
+const ORIGENS={indicacao_digital:'Indicação digital',instagram_nelson:'Instagram Nelson',instagram_gefit:'Instagram GeFit',isca_digital:'Isca digital',palestra:'Evento/palestra',trafego_pago:'Tráfego pago',whatsapp_organico:'WhatsApp orgânico',instagram_organico:'Instagram orgânico',evento:'Evento',parceria:'Parceria',indicacao:'Indicação',site:'Site',outro:'Outro'};
 const STATUS={novo:'Novo',contatado:'Contatado',agendado:'Agendado',experiencia:'Em Experiência',convertido:'Convertido',perdido:'Perdido'};
 const TREINA={aluno:'Já é aluno(a)',academia:'Treina em outra academia',por_conta:'Treina por conta',nao_treina:'Não treina'};
 const PARADO={menos_6m:'parado < 6 meses','6_12m':'parado 6 a 12 meses',mais_1a:'parado > 1 ano',nunca:'nunca treinou'};
@@ -380,6 +394,7 @@ function filtrados(){
 }
 function nomeCamp(id){const c=camps.find(x=>x.id===id);return c?c.nome:''}
 function nomeIndicador(l){const x=l.indicado_por_codigo&&leads.find(y=>y.codigo===l.indicado_por_codigo);return x?x.nome:(l.indicado_por_nome||'')}
+function nomeCampSlug(s){const c=camps.find(x=>x.slug===s);return c?c.nome:s}
 function nomeCons(id){const c=cons.find(x=>x.id===id);return c?c.nome:''}
 function render(){
   const f=filtrados();
@@ -396,8 +411,9 @@ function render(){
   $('cont').textContent=`${f.length} de ${leads.length} leads`;
   if(!f.length){$('tb').innerHTML=`<tr><td colspan="10" class="vazio">${leads.length?'Nenhum lead com esses filtros.':'Ainda não chegou nenhum lead. Crie um link em "Links de captação".'}</td></tr>`;return}
   $('tb').innerHTML=f.map(l=>{
-    const perfil=(TREINA[l.treina]||'')+(l.tempo_parado?`<div class="sub">${PARADO[l.tempo_parado]||''}</div>`:'');
-    const rep=l.whatsapp_norm&&cont[l.whatsapp_norm]>1?' <span class="tag rep">repetido</span>':'';
+    const perfil=l.cargo?`${esc(l.cargo)}<div class="sub">${esc([l.academia_nome,l.cidade].filter(Boolean).join(' · '))}</div>`:(TREINA[l.treina]||'')+(l.tempo_parado?`<div class="sub">${PARADO[l.tempo_parado]||''}</div>`:'');
+    const toques=Array.isArray(l.historico)?l.historico.length:0;
+    const rep=(l.whatsapp_norm&&cont[l.whatsapp_norm]>1?' <span class="tag rep">repetido</span>':'')+(toques>1?` <span class="tag" title="Formulários preenchidos">${toques} contatos</span>`:'')+(l.demo?' <span class="tag">demonstração</span>':'')+(l.card_id?' <span class="tag" title="Já está no Kanban de Campanhas">no Kanban</span>':'');
     return `<tr>
       <td>${dataBR(l.created_at)}</td>
       <td><div class="nm">${esc(l.nome)}${rep}</div><div class="sub">${[l.idade?l.idade+' anos':'',l.codigo?esc(l.codigo):''].filter(Boolean).join(' · ')}</div></td>
@@ -422,6 +438,12 @@ function abrirLead(id){
   const l=leads.find(x=>x.id===id);if(!l)return;leadAtual=l;
   $('ml-nome').textContent=l.nome;
   $('ml-info').innerHTML=[dataBR(l.created_at),l.idade?l.idade+' anos':'',TREINA[l.treina]||'',PARADO[l.tempo_parado]||'',ORIGENS[l.origem]||'',nomeCamp(l.campanha_id),l.codigo?'código '+l.codigo:'',l.indicado_por_codigo?'indicado por '+nomeIndicador(l)+' ('+l.indicado_por_codigo+')':''].filter(Boolean).map(esc).join(' · ');
+  const resp=Object.entries(l.respostas||{}).filter(([k])=>!['academia_nome','cidade'].includes(k));
+  const hist=Array.isArray(l.historico)?l.historico:[];
+  $('ml-extra').innerHTML=(l.cargo||l.academia_nome||l.cidade?`<div class="cont"><b>${esc([l.cargo,l.academia_nome,l.cidade].filter(Boolean).join(' · '))}</b></div>`:'')+
+    (resp.length?`<div class="cont" style="margin-top:6px">${resp.map(([k,v])=>`<div>${esc(k.replace(/_/g,' '))}: <b>${esc(v)}</b></div>`).join('')}</div>`:'')+
+    (hist.length?`<div class="cont" style="margin-top:8px"><b>Pontos de contato (${hist.length})</b>${hist.map(h=>`<div>• ${dataBR(h.data)} · ${esc(ORIGENS[h.origem]||h.origem||'')}${h.campanha?' · '+esc(nomeCampSlug(h.campanha)):''}${h.utm_source?' · '+esc(h.utm_source):''}</div>`).join('')}</div>`:'')+
+    (l.origem_primeira&&l.origem_primeira!==l.origem?`<div class="cont">Primeiro contato: ${esc(ORIGENS[l.origem_primeira]||l.origem_primeira)}</div>`:'');
   $('ml-status').value=l.status||'novo';$('ml-cons').value=l.consultora_id||'';$('ml-obs').value=l.observacoes||'';
   $('ml-wa').href=l.whatsapp_norm?'https://wa.me/'+l.whatsapp_norm:'#';
   $('m-lead').classList.add('show');
@@ -433,8 +455,9 @@ async function salvarLead(){
 }
 function exportarCSV(){
   const f=filtrados();
-  const cab=['Data','Nome','WhatsApp','Idade','Treina','Parado há','Origem','Campanha','Código','Indicado por','Código de quem indicou','utm_source','utm_medium','utm_content','Status','Consultora','Observações'];
-  const lin=f.map(l=>[dataBR(l.created_at),l.nome,l.whatsapp,l.idade||'',TREINA[l.treina]||'',PARADO[l.tempo_parado]||'',ORIGENS[l.origem]||l.origem||'',nomeCamp(l.campanha_id),l.codigo||'',l.indicado_por_codigo?nomeIndicador(l):'',l.indicado_por_codigo||'',l.utm_source||'',l.utm_medium||'',l.utm_content||'',STATUS[l.status]||l.status,nomeCons(l.consultora_id),l.observacoes||'']);
+  const extrasK=[...new Set(f.flatMap(l=>Object.keys(l.respostas||{})))];
+  const cab=['Data','Nome','WhatsApp','Idade','Treina','Parado há','Cargo','Academia','Cidade','Pontos de contato','Primeiro contato','Origem','Campanha','Código','Indicado por','Código de quem indicou','utm_source','utm_medium','utm_content','Status','Consultora','Observações',...extrasK];
+  const lin=f.map(l=>[dataBR(l.created_at),l.nome,l.whatsapp,l.idade||'',TREINA[l.treina]||'',PARADO[l.tempo_parado]||'',l.cargo||'',l.academia_nome||'',l.cidade||'',(l.historico||[]).length,ORIGENS[l.origem_primeira]||l.origem_primeira||'',ORIGENS[l.origem]||l.origem||'',nomeCamp(l.campanha_id),l.codigo||'',l.indicado_por_codigo?nomeIndicador(l):'',l.indicado_por_codigo||'',l.utm_source||'',l.utm_medium||'',l.utm_content||'',STATUS[l.status]||l.status,nomeCons(l.consultora_id),l.observacoes||'',...extrasK.map(k=>(l.respostas||{})[k]??'')]);
   const csv='﻿'+[cab,...lin].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='leads-'+hojeISO()+'.csv';a.click();
 }
@@ -470,6 +493,45 @@ function renderInd(){
 }
 function verIndicados(cod){limparFiltros();$('f-ind').value='veio';filtroCodigo=cod;document.querySelector('.tab[data-t=leads]').click();render();toast('Mostrando os amigos indicados por '+cod)}
 let filtroCodigo=null;
+function textoParaExtras(txt){
+  return txt.split('\n').map(s=>s.trim()).filter(Boolean).map((linha,i)=>{
+    let obrig=false;if(linha.startsWith('*')){obrig=true;linha=linha.slice(1).trim()}
+    let k=null;const pk=linha.lastIndexOf('|');if(pk>-1){k=slugify(linha.slice(pk+1)).replace(/-/g,'_');linha=linha.slice(0,pk).trim()}
+    let label=linha,opcoes=null;const pc=linha.indexOf(':');
+    if(pc>-1&&linha.slice(pc+1).includes(';')){label=linha.slice(0,pc).trim();opcoes=linha.slice(pc+1).split(';').map(s=>s.trim()).filter(Boolean)}
+    return {k:k||slugify(label).replace(/-/g,'_')||('campo_'+(i+1)),label,tipo:opcoes?'opcoes':(/(n[uú]mero|quantos|quantidade)/i.test(label)?'numero':'texto'),opcoes,obrig};
+  });
+}
+function extrasParaTexto(l){return (l||[]).map(x=>(x.obrig?'*':'')+x.label+(x.opcoes?': '+x.opcoes.join('; '):'')+' | '+x.k).join('\n')}
+// ---------- enviar para o Kanban de Campanhas ----------
+let envIds=[];
+async function enviarParaCampanha(ids){
+  envIds=ids.filter(Boolean);if(!envIds.length){toast('Nenhum lead para enviar (os que já estão no Kanban ficam de fora).',true);return}
+  let cs=[];try{cs=await sbGet(P+'campanhas',`academia_id=eq.${encodeURIComponent(acad)}&select=id,nome,status,perfis&order=created_at.desc`)}catch(e){toast('Não consegui ler as campanhas: '+e.message,true);return}
+  cs=cs.filter(c=>c.status!=='finalizada'&&c.status!=='encerrada'&&(!c.perfis||!c.perfis.length||c.perfis.includes('leads')));
+  if(!cs.length){toast('Crie primeiro uma campanha com perfil Leads no módulo Campanhas.',true);return}
+  $('me-sel').innerHTML=cs.map(c=>`<option value="${c.id}">${esc(c.nome)}${c.status?' ('+esc(c.status)+')':''}</option>`).join('');
+  $('me-txt').textContent=`${envIds.length} lead(s) vão entrar na primeira coluna do Kanban (perfil Leads) da campanha escolhida.`;
+  $('m-enviar').classList.add('show');
+}
+async function confirmarEnvio(){
+  const campId=$('me-sel').value;if(!campId)return;
+  let etapa='lista';
+  try{const a=await sbGet(P+'academias',`id=eq.${encodeURIComponent(acad)}&select=jornada_leads`);const j=a[0]&&a[0].jornada_leads;if(Array.isArray(j)&&j.length&&j[0].k)etapa=j[0].k}catch(e){}
+  let ok=0,falhas=0;
+  for(const id of envIds){
+    const l=leads.find(x=>x.id===id);if(!l||l.card_id)continue;
+    const extra=[l.cargo,l.academia_nome,l.cidade,TREINA[l.treina],PARADO[l.tempo_parado],...Object.entries(l.respostas||{}).filter(([k])=>!['academia_nome','cidade'].includes(k)).map(([k,v])=>k.replace(/_/g,' ')+': '+v),l.indicado_por_codigo?'indicado por '+nomeIndicador(l):'',l.observacoes].filter(Boolean).join(' · ');
+    try{
+      const r=await sbPost(P+'campanha_cards',{campanha_id:campId,onda_id:null,perfil:'leads',nome:l.nome,telefone:(l.whatsapp_norm||'').replace(/^55(?=\d{10,11}$)/,''),idade:l.idade||null,
+        observacoes:extra.slice(0,900),data_lead:diaLocal(l.created_at),origem_lead:(ORIGENS[l.origem]||l.origem||'')+(nomeCamp(l.campanha_id)?' · '+nomeCamp(l.campanha_id):''),
+        etapa_atual:etapa,etapa_maxima:etapa,consultora_id:l.consultora_id||null,cadencia_atual:0,cadencia_total:9,status:'ativo',created_at:Date.now(),updated_at:Date.now()});
+      const cid=r&&r[0]&&r[0].id;
+      await sbPatch(P+'leads','id=eq.'+l.id,{card_id:cid||null,updated_at:new Date().toISOString()});l.card_id=cid||'ok';ok++;
+    }catch(e){console.error(e);falhas++}
+  }
+  fechar('m-enviar');fechar('m-lead');render();toast(`${ok} lead(s) enviados para o Kanban${falhas?` · ${falhas} com erro`:''}.`,!!falhas);
+}
 function verLeadsCamp(id){limparFiltros();$('f-camp').value=id;document.querySelector('.tab[data-t=leads]').click();render()}
 function copiar(t){navigator.clipboard.writeText(t).then(()=>toast('Link copiado')).catch(()=>{prompt('Copie o link:',t)})}
 function abrirCampanha(id){
@@ -479,6 +541,7 @@ function abrirCampanha(id){
   $('mc-origem').value=c.origem||'evento';$('mc-cor').value=c.cor||'#E6007E';
   $('mc-tit').value=c.titulo||'';$('mc-sub').value=c.subtitulo||'';$('mc-info').value=c.info||'';$('mc-capa').value=c.capa_url||'';$('mc-capa2').value=c.capa_convidado||'';
   $('mc-sorteio').checked=!!c.sorteio;$('mc-ativo').checked=c.ativo!==false;
+  $('mc-pub').value=c.publico||'aluno';$('mc-extras').value=extrasParaTexto(c.campos_extra||[]);
   const pg=c.perguntas||{};$('mc-p-idade').checked=pg.idade!==false;$('mc-p-treina').checked=pg.treina!==false;
   const dl=v=>{if(!v)return'';const d=new Date(v);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
   $('mc-ind').checked=!!c.indicacao;$('mc-sigla').value=c.codigo_sigla||'';$('mc-lim').value=dl(c.indicacao_limite);$('mc-pres').value=(c.presentes||[]).join('\n');$('mc-img').value=c.convite_img||'';atualizarSlots();
@@ -489,7 +552,7 @@ function abrirCampanha(id){
 async function salvarCampanha(){
   const nome=$('mc-nome').value.trim(),slug=slugify($('mc-slug').value||nome);
   if(!nome||!slug){toast('Preencha o nome da campanha',true);return}
-  const b={nome,origem:$('mc-origem').value,cor:$('mc-cor').value,titulo:$('mc-tit').value.trim()||null,subtitulo:$('mc-sub').value.trim()||null,info:$('mc-info').value.trim()||null,capa_url:$('mc-capa').value.trim()||null,capa_convidado:$('mc-capa2').value.trim()||null,sorteio:$('mc-sorteio').checked,ativo:$('mc-ativo').checked,perguntas:{idade:$('mc-p-idade').checked,treina:$('mc-p-treina').checked,parado:$('mc-p-treina').checked},
+  const b={publico:$('mc-pub').value,campos_extra:textoParaExtras($('mc-extras').value),nome,origem:$('mc-origem').value,cor:$('mc-cor').value,titulo:$('mc-tit').value.trim()||null,subtitulo:$('mc-sub').value.trim()||null,info:$('mc-info').value.trim()||null,capa_url:$('mc-capa').value.trim()||null,capa_convidado:$('mc-capa2').value.trim()||null,sorteio:$('mc-sorteio').checked,ativo:$('mc-ativo').checked,perguntas:{idade:$('mc-p-idade').checked,treina:$('mc-p-treina').checked,parado:$('mc-p-treina').checked},
     indicacao:$('mc-ind').checked,codigo_sigla:$('mc-sigla').value.trim().toUpperCase()||null,indicacao_limite:$('mc-lim').value?new Date($('mc-lim').value).toISOString():null,
     presentes:$('mc-pres').value.split('\n').map(s=>s.trim()).filter(Boolean),convite_img:$('mc-img').value.trim()||null,
     evento_titulo:$('mc-evt').value.trim()||null,evento_texto:$('mc-evx').value.trim()||null,evento_mapa:$('mc-map').value.trim()||null,evento_fim:$('mc-evf').value?new Date($('mc-evf').value).toISOString():null,
