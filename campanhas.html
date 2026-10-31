@@ -683,7 +683,7 @@ function abrirAgendaExperienciasCampanhas(){
 }
 function abrirCentralScriptsCampanhas(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
-  if(sessao.academia_id===GEFIT_GESTAO_ID&&window.ftGefit){abrirBibliotecaGefit();return;}
+  if(sessao.academia_id===GEFIT_GESTAO_ID||ehEspacoGefit()){abrirBibliotecaGefit();return;}
   window.location.href=`central-scripts-aqui.html?uid=${encodeURIComponent(sessao.id)}`;
 }
 
@@ -2613,6 +2613,7 @@ function renderCardModalBody(){
         <div class="at-script-texto" id="scriptAtendimentoTexto" style="white-space:pre-line">${textoScript(scriptAtual.texto,c.nome)}</div>
       </div>
       ${blocoAqui(scriptAtual)}
+      ${ehEspacoGefit()?'<button class="btn-gh" style="width:100%;margin:-4px 0 14px;font-size:13px" onclick="abrirConversaQualificacao()">💬 O lead respondeu? Ver as próximas mensagens da conversa</button>':''}
       ${interacaoHojeAtual?'<div style="font-size:12px;color:var(--verde);margin-bottom:10px">✓ Já tem registro de hoje pra esse card, marque o que mudou e salve de novo.</div>':''}
       <label class="fl" style="display:block;margin-bottom:8px">O que já aconteceu nesse contato? (marque quantos fizerem sentido)</label>
       <div class="at-checks">
@@ -2735,8 +2736,10 @@ function abrirBibliotecaGefit(){
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('m-biblioteca')&&document.getElementById('m-biblioteca').style.display!=='none')fecharBibliotecaGefit()});
   }
   ov.style.display='flex';document.body.style.overflow='hidden';
+  if(!window.ftGefit){const s=document.createElement('script');s.src='ferramentas-gefit.js?v='+Date.now();s.onload=()=>window.ftGefit&&window.ftGefit.tab('mesa');document.body.appendChild(s);return;}
   window.ftGefit.tab('mesa');
 }
+function abrirConversaQualificacao(){abrirBibliotecaGefit();setTimeout(()=>{if(window.ftGefit){window.ftGefit.funil('entrada');window.ftGefit.etapa('qualif');}},window.ftGefit?0:900);}
 function fecharBibliotecaGefit(){const ov=document.getElementById('m-biblioteca');if(ov)ov.style.display='none';document.body.style.overflow='';}
 function copiarTelefoneCard(n){navigator.clipboard.writeText(n).then(()=>toast('Número copiado: '+n)).catch(()=>prompt('Copie o número:',n));}
 function copiarScriptAtendimento(){
