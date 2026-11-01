@@ -329,6 +329,7 @@ body.role-consultor #painel-prod-time,body.role-consultor #painel-cons-filter{di
           <button onclick="abrirExperiencias()">🧪 Experiências</button>
           <button onclick="abrirAgendaUnificada()">📅 Agenda</button>
           <button onclick="abrirCentralScripts()">📚 Central de Scripts</button>
+          <button class="so-gestao" onclick="abrirConteudo()" style="display:none">🎬 Biblioteca de Conteúdo</button>
           <button onclick="abrirCentralScriptsV2()" style="color:var(--am)" title="Versão nova, ainda em construção">🚧 Scripts v2 (beta)</button>
           <div class="dd-sep"></div>
           <button id="btn-add-cons-top" onclick="if(!ac()){toast('Selecione uma academia no seletor acima.',true);return}openM('m-cons')" style="display:none">➕ Consultor(a)</button>
@@ -355,6 +356,7 @@ body.role-consultor #painel-prod-time,body.role-consultor #painel-cons-filter{di
     <div class="nav-group-label">📈 Vendas</div>
     <div class="tab" data-tab="vendasmkt" onclick="switchTab('vendasmkt')">Vendas & Marketing</div>
     <div class="tab" onclick="abrirCentralLeads()" title="Abre em nova aba, já logado">🎯 Central de Leads ↗</div>
+    <div class="tab so-gestao" onclick="abrirConteudo()" title="Abre em nova aba" style="display:none">🎬 Conteúdo ↗</div>
     <div class="tab" data-tab="funis" onclick="switchTab('funis')">Funis & Indicadores</div>
     <div class="tab" data-tab="consultoras" onclick="switchTab('consultoras')">Equipe</div>
     <div class="tab" data-tab="relatorio" onclick="switchTab('relatorio')">Relatório</div>
@@ -1470,6 +1472,7 @@ function aplicarEspaco(){
   const emp=modoEmpresa(),k=espacoDe(acId);
   try{window.ftGefitAplicar&&window.ftGefitAplicar(emp)}catch(e){console.warn(e)}
   document.body.classList.toggle('modo-empresa',emp);
+  document.querySelectorAll('.so-gestao').forEach(el=>el.style.display=(isAdmin()&&emp)?'':'none');
   document.body.classList.toggle('espaco-ativo',isAdmin()&&!!k);
   document.querySelectorAll('#espacos button').forEach(b=>b.classList.toggle('on',b.dataset.esp===k));
   // vocabulário: no Painel Gestão os clientes são academias, não alunos
@@ -1591,6 +1594,7 @@ function abrirCentralLeads(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
   window.open(`central-leads.html?uid=${encodeURIComponent(sessao.id)}${acParam()}`,'_blank');
 }
+function abrirConteudo(){window.open('conteudo.html','_blank');}
 function abrirAgendaUnificada(){
   if(!sessao||!sessao.id){toast('Faça login primeiro.',true);return;}
   window.location.href=`controle-experiencias.html?uid=${encodeURIComponent(sessao.id)}${acParam()}&tab=agenda`;
