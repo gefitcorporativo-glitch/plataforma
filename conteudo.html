@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Biblioteca de Conteúdo · Nelson Rabelo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A0E1A;--bg2:#10162A;--card:#141A2B;--line:#262E45;--ink:#F2F4F8;--ink2:#B7BFD3;--ink3:#8D96AE;--lime:#B3F400;--blue:#3D7BFF;--amb:#F5A524;--red:#FF6B76;--grn:#3DBA7A}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Manrope,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:10;background:rgba(10,14,26,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:14px 20px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:1200px;margin:0 auto}
+h1{font-family:Archivo,sans-serif;font-weight:900;font-size:20px}
+h1 em{font-style:normal;color:var(--lime)}
+.sp{flex:1}
+.btn{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--lime)}
+.btn.pri{background:var(--lime);color:#0B1222;border-color:var(--lime)}
+.btn.sm{padding:6px 10px;font-size:12px}
+.tabs{display:flex;gap:6px;max-width:1200px;margin:12px auto 0;overflow-x:auto}
+.tab{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--ink2)}
+.tab.on{background:var(--lime);border-color:var(--lime);color:#0B1222}
+.tab b{margin-left:4px}
+main{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
+.hint{color:var(--ink3);font-size:13px;margin-bottom:14px}
+.banner{background:rgba(245,165,36,.1);border:1px solid var(--amb);color:var(--amb);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.thumb{position:relative;aspect-ratio:9/12;background:#0d1322 center/cover no-repeat;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.thumb .play{width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid rgba(255,255,255,.7)}
+.thumb .st{position:absolute;top:10px;left:10px;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.65)}
+.st.aprovar{color:var(--amb)}.st.exportar{color:var(--blue)}.st.pronto{color:var(--lime)}.st.postado{color:var(--grn)}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.ti{font-weight:800;font-size:15px}
+.meta{color:var(--ink3);font-size:12px}
+.vers{display:flex;flex-direction:column;gap:6px}
+.ver{display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:13px}
+.ver.on{border-color:var(--lime)}
+.ver span{flex:1;font-weight:700}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.empty{color:var(--ink3);text-align:center;padding:50px 10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.on{display:flex}
+.mbox{background:var(--card);border:1px solid var(--line);border-radius:16px;width:100%;max-width:440px;max-height:94vh;overflow:auto;padding:14px}
+.mbox.video{max-width:420px}
+.mhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.mhead b{flex:1;font-size:14px}
+.frame{width:100%;aspect-ratio:9/16;border:0;border-radius:10px;background:#000}
+label{display:block;font-size:12px;color:var(--ink3);margin:10px 0 4px;font-weight:700}
+input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:14px}
+textarea{min-height:90px;resize:vertical}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--lime);color:#0B1222;font-weight:800;padding:10px 16px;border-radius:10px;display:none;z-index:60}
+@media(max-width:600px){header,main{padding-left:16px;padding-right:16px}.grid{grid-template-columns:1fr 1fr;gap:10px}.ti{font-size:14px}.btn.sm{padding:6px 8px}}
+@media(max-width:380px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>Biblioteca de <em>Conteúdo</em></h1>
+    <div class="sp"></div>
+    <button class="btn" onclick="abrirNovo()">+ Adicionar vídeo</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+</header>
+<main>
+  <div id="banner"></div>
+  <div class="hint" id="hint"></div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="modal" id="mVideo" onclick="if(event.target===this)fechar('mVideo')">
+  <div class="mbox video">
+    <div class="mhead"><b id="vTitulo"></b><button class="btn sm" onclick="fechar('mVideo')">Fechar</button></div>
+    <iframe class="frame" id="vFrame" allow="autoplay" allowfullscreen></iframe>
+    <div class="acts" style="margin-top:10px" id="vActs"></div>
+    <div class="meta" style="margin-top:8px">Se o vídeo não carregar, entre na sua conta Google neste navegador: os arquivos continuam privados no seu Drive.</div>
+  </div>
+</div>
+
+<div class="modal" id="mEdit" onclick="if(event.target===this)fechar('mEdit')">
+  <div class="mbox">
+    <div class="mhead"><b id="eTitulo">Vídeo</b><button class="btn sm" onclick="fechar('mEdit')">Fechar</button></div>
+    <label for="fTitulo">Título</label><input id="fTitulo">
+    <label for="fStatus">Situação</label>
+    <select id="fStatus"><option value="aprovar">Para aprovar</option><option value="exportar">Escolhido · exportar versão final</option><option value="pronto">Pronto para postar</option><option value="postado">Postado</option></select>
+    <label for="fDrive">Link do vídeo final no Drive</label><input id="fDrive" placeholder="https://drive.google.com/file/d/...">
+    <label for="fData">Data da postagem</label><input id="fData" type="date">
+    <label for="fLink">Link do post no Instagram</label><input id="fLink" placeholder="https://www.instagram.com/reel/...">
+    <label for="fLeg">Legenda</label><textarea id="fLeg" placeholder="Cole aqui a legenda para copiar na hora de postar"></textarea>
+    <label for="fObs">Observações</label><input id="fObs">
+    <div class="acts" style="margin-top:14px"><button class="btn pri" onclick="salvarEdicao()">Salvar</button><button class="btn" id="btnCopiaLeg" onclick="copiarLegenda()">Copiar legenda</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL="https://irwvagffrguiljaxrzmd.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyd3ZhZ2Zmcmd1aWxqYXhyem1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNDk5ODUsImV4cCI6MjEwNDkyNTk4NX0.YAApyaH6iIHEua_89fgCUpMzgXRIcWb_vNRkBQAoq5A";
+const H={"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"};
+const LS="nr_conteudo_v1";
+const STATUS={aprovar:"Para aprovar",exportar:"Exportar versão final",pronto:"Pronto para postar",postado:"Postado"};
+const ORDEM=["aprovar","exportar","pronto","postado"];
+const IG="https://www.instagram.com/nelsonrabelo165/reel/";
+
+// Levantamento de 31/10/2026 (Drive + Instagram). As mudanças feitas na página ficam salvas por cima disto.
+const SEED=[
+ {id:"r08",titulo:"#08 · Experiência só na sexta é a pior burrada",status:"pronto",drive:"1DAKelyUdgFhmW_oozTukSthqJMFTPSrA",ordem:1},
+ {id:"r06",titulo:"#06 · Quem você é no salão de musculação",status:"pronto",drive:"1RoonDWjGabRnHxqhVEgeWoMEvRWy0w1o",ordem:2},
+ {id:"r07",titulo:"#07 · Sua postura na academia também comunica",status:"pronto",drive:"1nRlMuFGkkwcaXbY6lm6EddwvnzRxKr2M",ordem:3},
+ {id:"teste",titulo:"Faça esse teste · Clone + página (link na bio)",status:"pronto",drive:"11GvOPFkmJZBVGenEXaFhP0biHXy_Po9f",ordem:4},
+ {id:"p20min",titulo:"20 minutos planejados",status:"aprovar",versoes:[{n:"Painel",d:"1hILHTACXtgGcolpL_d2X9VdXXZf91aKF"},{n:"Resumo digitado",d:"1exArd1dFPUqQvMaJW07zIiIJ5rccIgWU"}]},
+ {id:"pfalta",titulo:"O cliente não sente falta",status:"aprovar",versoes:[{n:"Painel",d:"1GkAKu7qYmm6aDWX8igQSHO_j2KIBlXOr"},{n:"Resumo digitado",d:"1aoShus6tEl4bzKfiEpmw-X0t7ehjlAXR"},{n:"Trilha dinâmica",d:"1B1A2yRP0QvyIvRAFoXygm98qs2ZxItnz"}]},
+ {id:"psexta",titulo:"Revisão de treino na sexta",status:"aprovar",versoes:[{n:"Painel",d:"17UZhxkHzXJfl-7cOe-8bQWKn1LYCWUQP"},{n:"Resumo digitado",d:"1UX36QqkdGM_Shy06q9XQ1BL5ZYogKm5I"}]},
+ {id:"psemtempo",titulo:"Aluno sem tempo na academia",status:"aprovar",versoes:[{n:"Painel",d:"1Tk4bUEWJNUfkSu4r9qC5FnSlZYo0RJpO"}]},
+ {id:"pautomatico",titulo:"Automático e intencionalidade",status:"aprovar",versoes:[{n:"Impacto",d:"1yznpeQ5uIglJG6dnWW6wMge2rZhp_QQb"}]},
+ {id:"p150",titulo:"150 academias (tabela de preço e silêncio)",status:"postado",postado_em:"2026-10-30",link:IG+"DfI5dS3R47o/",versoes:[{n:"Funil",d:"1sSovt6gEf6qByT3LBp40sc8lHaJw4nfs"},{n:"Impacto",d:"1LAIz_BeXlniQQcOyJI0jRVQDEkfJhyPk"}]},
+ {id:"r05",titulo:"#05 · Sua academia tem instrutores ou treinadores?",status:"postado",postado_em:"2026-10-17",link:IG+"DenU1WDxoJk/",drive:"1yoNph8aI0d0BUx2JY4DIvP0zHZeTDJqz"},
+ {id:"indicacao",titulo:"Indicação não é esmola",status:"postado",postado_em:"2026-10-07",link:IG+"DeNwvsrxUwj/",drive:"1w32z36Qxuj4u3YBcbHWHHutqyg4Bczs3",obs:"Também no perfil da GeFit"},
+ {id:"r04",titulo:"#04 · Da recepção ao treinador",status:"postado",postado_em:"2026-10-02",link:IG+"DeA6Y0puqc0/",drive:"1UbG6j6hnruAkFdPWs2ovBs0LDxg_pDYl"},
+ {id:"r02",titulo:"#02 · O que conferir em cada lead",status:"postado",postado_em:"2026-10-01",link:IG+"Dd9Mq9YR2uX/",drive:"1ajCluKzohJ0ORUICHE7gnHH-vrMw9xyT"},
+ {id:"r01",titulo:"#01 · O que medir no funil (35 tentativas)",status:"postado",postado_em:"2026-09-29",link:IG+"Dd5eusQxn0E/",drive:"1oaaqmVjxOTFBrkN1gYgIHrCiKJ5HYlYA"}
+];
+
+let itens=[], aba="pronto", nuvem=true, editId=null;
+const $=id=>document.getElementById(id);
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function toast(t){const e=$("toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",1800)}
+function driveId(v){if(!v)return"";const m=String(v).match(/[-\w]{25,}/);return m?m[0]:""}
+function thumb(d){return d?`https://drive.google.com/thumbnail?id=${d}&sz=w480`:""}
+function baixar(d){return `https://drive.google.com/uc?export=download&id=${d}`}
+function dataBR(s){if(!s)return"";const[a,m,d]=s.split("-");return `${d}/${m}/${a}`}
+function principal(it){return it.drive||(it.escolhida&&(it.versoes||[]).find(v=>v.n===it.escolhida)||{}).d||((it.versoes||[])[0]||{}).d||""}
+
+async function carregar(){
+  let salvo={};
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/conteudos?select=id,dados`,{headers:H});
+    if(!r.ok)throw new Error(r.status);
+    (await r.json()).forEach(x=>salvo[x.id]=x.dados);
+  }catch(e){
+    nuvem=false;
+    try{salvo=JSON.parse(localStorage.getItem(LS)||"{}")}catch(_){salvo={}}
+    $("banner").innerHTML='<div class="banner">As mudanças estão sendo salvas só neste aparelho. Para ver o mesmo quadro no celular e no computador, falta criar a tabela de conteúdo no Supabase (o Claude te passou o comando).</div>';
+  }
+  const ids=new Set(SEED.map(s=>s.id));
+  itens=SEED.map(s=>({...s,...(salvo[s.id]||{})}));
+  Object.entries(salvo).forEach(([id,d])=>{if(!ids.has(id))itens.push({id,...d})});
+  render();
+}
+async function salvar(it){
+  const dados={...it};delete dados.id;
+  if(nuvem){
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/conteudos`,{method:"POST",headers:{...H,"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:it.id,dados,updated_at:new Date().toISOString()})});
+      if(!r.ok)throw new Error(r.status);return;
+    }catch(e){nuvem=false}
+  }
+  try{const s=JSON.parse(localStorage.getItem(LS)||"{}");s[it.id]=dados;localStorage.setItem(LS,JSON.stringify(s))}catch(_){}
+}
+
+function render(){
+  const cont={};ORDEM.forEach(k=>cont[k]=itens.filter(i=>i.status===k).length);
+  $("tabs").innerHTML=ORDEM.map(k=>`<button class="tab ${aba===k?"on":""}" onclick="aba='${k}';render()">${STATUS[k]}<b>${cont[k]}</b></button>`).join("");
+  $("hint").textContent={
+    aprovar:"Assista as versões de cada tema e escolha a melhor. A escolhida vai para Exportar versão final.",
+    exportar:"Versões escolhidas, esperando a exportação em qualidade final no Remotion. Depois, cole o link do vídeo final e mude para Pronto.",
+    pronto:"Prontos para postar, em ordem de prioridade. Assista, baixe e poste. Depois, marque como postado.",
+    postado:"Já publicados no Instagram, do mais recente para o mais antigo."
+  }[aba];
+  let lista=itens.filter(i=>i.status===aba);
+  lista.sort(aba==="postado"?(a,b)=>(b.postado_em||"").localeCompare(a.postado_em||""):(a,b)=>(a.ordem||99)-(b.ordem||99));
+  $("grid").innerHTML=lista.length?lista.map(card).join(""):'<div class="empty">Nada por aqui.</div>';
+}
+function card(it){
+  const d=principal(it);
+  const vers=(it.status==="aprovar"||it.status==="exportar")&&(it.versoes||[]).length?`<div class="vers">${it.versoes.map(v=>`
+      <div class="ver ${it.escolhida===v.n?"on":""}"><span>${esc(v.n)}${it.escolhida===v.n?" ✓":""}</span>
+        <button class="btn sm" onclick="assistir('${it.id}','${v.d}','${esc(v.n)}')">▶</button>
+        ${it.status==="aprovar"?`<button class="btn sm" onclick="escolher('${it.id}','${esc(v.n)}')">Escolher</button>`:""}
+      </div>`).join("")}</div>`:"";
+  const meta=[it.status==="postado"&&it.postado_em?"Postado em "+dataBR(it.postado_em):"",it.obs||""].filter(Boolean).join(" · ");
+  let acts="";
+  if(it.status==="pronto"){acts=`${d?`<a class="btn sm pri" href="${baixar(d)}" target="_blank" rel="noopener">⬇ Baixar</a>`:""}<button class="btn sm" onclick="marcarPostado('${it.id}')">Marquei como postado</button>`}
+  if(it.status==="exportar"){acts=`<button class="btn sm" onclick="editar('${it.id}')">Colar vídeo final</button>`}
+  if(it.status==="postado"&&it.link){acts=`<a class="btn sm" href="${esc(it.link)}" target="_blank" rel="noopener">Ver no Instagram</a>`}
+  if(it.legenda)acts+=`<button class="btn sm" onclick="copiarDe('${it.id}')">Copiar legenda</button>`;
+  acts+=`<button class="btn sm" onclick="editar('${it.id}')">Editar</button>`;
+  return `<div class="card">
+    <div class="thumb" style="background-image:url('${thumb(d)}')" onclick="${d?`assistir('${it.id}','${d}','')`:""}">
+      <span class="st ${it.status}">${STATUS[it.status]}</span>${d?'<div class="play">▶</div>':""}
+    </div>
+    <div class="body"><div class="ti">${esc(it.titulo)}</div>${meta?`<div class="meta">${esc(meta)}</div>`:""}${vers}<div class="acts">${acts}</div></div>
+  </div>`;
+}
+function achar(id){return itens.find(i=>i.id===id)}
+function assistir(id,d,ver){
+  const it=achar(id);
+  $("vTitulo").textContent=it.titulo+(ver?" · "+ver:"");
+  $("vFrame").src=`https://drive.google.com/file/d/${d}/preview`;
+  $("vActs").innerHTML=`<a class="btn sm pri" href="${baixar(d)}" target="_blank" rel="noopener">⬇ Baixar</a><a class="btn sm" href="https://drive.google.com/file/d/${d}/view" target="_blank" rel="noopener">Abrir no Drive</a>`;
+  $("mVideo").classList.add("on");
+}
+function fechar(m){$(m).classList.remove("on");if(m==="mVideo")$("vFrame").src="about:blank";if(m==="mEdit"){const it=achar(editId);if(it&&it.novo)itens=itens.filter(i=>i!==it)}}
+async function escolher(id,n){const it=achar(id);it.escolhida=n;it.status="exportar";await salvar(it);render();toast("Versão escolhida: "+n)}
+async function marcarPostado(id){
+  const it=achar(id);it.status="postado";
+  const d=new Date();it.postado_em=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  await salvar(it);render();toast("Marcado como postado hoje");
+}
+function editar(id){
+  editId=id;const it=achar(id);
+  $("eTitulo").textContent=it.titulo;$("fTitulo").value=it.titulo||"";$("fStatus").value=it.status;
+  $("fDrive").value=it.drive?`https://drive.google.com/file/d/${it.drive}/view`:"";$("fData").value=it.postado_em||"";
+  $("fLink").value=it.link||"";$("fLeg").value=it.legenda||"";$("fObs").value=it.obs||"";
+  $("mEdit").classList.add("on");
+}
+function abrirNovo(){
+  editId="novo-"+Date.now().toString(36);
+  itens.push({id:editId,titulo:"",status:aba==="postado"?"pronto":aba,ordem:99,novo:true});
+  editar(editId);$("eTitulo").textContent="Novo vídeo";
+}
+async function salvarEdicao(){
+  const it=achar(editId);delete it.novo;
+  it.titulo=$("fTitulo").value.trim()||"Sem título";it.status=$("fStatus").value;
+  const d=driveId($("fDrive").value);if(d)it.drive=d;else delete it.drive;
+  it.postado_em=$("fData").value||"";it.link=$("fLink").value.trim();it.legenda=$("fLeg").value;it.obs=$("fObs").value.trim();
+  await salvar(it);fechar("mEdit");aba=it.status;render();toast("Salvo");
+}
+async function copiarTxt(t){try{await navigator.clipboard.writeText(t);toast("Legenda copiada")}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();toast("Legenda copiada")}}
+function copiarLegenda(){copiarTxt($("fLeg").value)}
+function copiarDe(id){copiarTxt(achar(id).legenda||"")}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){fechar("mVideo");fechar("mEdit")}});
+carregar();
+</script>
+</body>
+</html>
