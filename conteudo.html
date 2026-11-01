@@ -87,7 +87,7 @@ textarea{min-height:90px;resize:vertical}
     <div class="mhead"><b id="eTitulo">Vídeo</b><button class="btn sm" onclick="fechar('mEdit')">Fechar</button></div>
     <label for="fTitulo">Título</label><input id="fTitulo">
     <label for="fStatus">Situação</label>
-    <select id="fStatus"><option value="aprovar">Para aprovar</option><option value="exportar">Escolhido · exportar versão final</option><option value="pronto">Pronto para postar</option><option value="postado">Postado</option></select>
+    <select id="fStatus"><option value="aprovar">Prévia</option><option value="exportar">Em edição</option><option value="pronto">Pronto para postar</option><option value="postado">Postado</option></select>
     <label for="fDrive">Link do vídeo final no Drive</label><input id="fDrive" placeholder="https://drive.google.com/file/d/...">
     <label for="fData">Data da postagem</label><input id="fData" type="date">
     <label for="fLink">Link do post no Instagram</label><input id="fLink" placeholder="https://www.instagram.com/reel/...">
@@ -103,7 +103,7 @@ const SB_URL="https://irwvagffrguiljaxrzmd.supabase.co";
 const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyd3ZhZ2Zmcmd1aWxqYXhyem1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNDk5ODUsImV4cCI6MjEwNDkyNTk4NX0.YAApyaH6iIHEua_89fgCUpMzgXRIcWb_vNRkBQAoq5A";
 const H={"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"};
 const LS="nr_conteudo_v1";
-const STATUS={aprovar:"Para aprovar",exportar:"Exportar versão final",pronto:"Pronto para postar",postado:"Postado"};
+const STATUS={aprovar:"Prévias",exportar:"Em edição",pronto:"Pronto para postar",postado:"Postado"};
 const ORDEM=["aprovar","exportar","pronto","postado"];
 const IG="https://www.instagram.com/nelsonrabelo165/reel/";
 
@@ -167,8 +167,8 @@ function render(){
   const cont={};ORDEM.forEach(k=>cont[k]=itens.filter(i=>i.status===k).length);
   $("tabs").innerHTML=ORDEM.map(k=>`<button class="tab ${aba===k?"on":""}" onclick="aba='${k}';render()">${STATUS[k]}<b>${cont[k]}</b></button>`).join("");
   $("hint").textContent={
-    aprovar:"Assista as versões de cada tema e escolha a melhor. A escolhida vai para Exportar versão final.",
-    exportar:"Versões escolhidas, esperando a exportação em qualidade final no Remotion. Depois, cole o link do vídeo final e mude para Pronto.",
+    aprovar:"Prévias: trechos curtos (até uns 30 segundos) para aprovar o estilo de edição. Não são o vídeo completo. Escolha a versão e ela vai para Em edição, onde a edição completa é feita.",
+    exportar:"Estilo escolhido, edição completa em andamento. Quando o vídeo final estiver no Drive, cole o link dele e mude para Pronto para postar.",
     pronto:"Prontos para postar, em ordem de prioridade. Assista, baixe e poste. Depois, marque como postado.",
     postado:"Já publicados no Instagram, do mais recente para o mais antigo."
   }[aba];
