@@ -59,6 +59,9 @@ main{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
 label{display:block;font-size:12px;color:var(--ink3);margin:10px 0 4px;font-weight:700}
 input,select,textarea{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:14px}
 textarea{min-height:90px;resize:vertical}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts .fch{padding:6px 10px}
+.reftext{color:var(--ink2);font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--lime);color:#0B1222;font-weight:800;padding:10px 16px;border-radius:10px;display:none;z-index:60}
 @media(max-width:600px){header,main{padding-left:16px;padding-right:16px}.grid{grid-template-columns:1fr 1fr;gap:10px}.ti{font-size:14px}.btn.sm{padding:6px 8px}}
 @media(max-width:380px){.grid{grid-template-columns:1fr}}
@@ -115,6 +118,19 @@ textarea{min-height:90px;resize:vertical}
     <div class="acts" style="margin-top:12px"><button class="btn pri" onclick="confirmarEscolha()">Copiar pedido e mover para Em edição</button></div>
   </div>
 </div>
+<div class="modal" id="mRef" onclick="if(event.target===this)fechar('mRef')">
+  <div class="mbox">
+    <div class="mhead"><b id="rTitulo">Nova referência</b><button class="btn sm" onclick="fechar('mRef')">Fechar</button></div>
+    <label for="rUrl">Link do post</label><input id="rUrl" placeholder="https://www.instagram.com/reel/...">
+    <label>O que chamou a atenção</label>
+    <div class="opts" id="rInt"></div>
+    <label for="rNota">Sua nota</label><textarea id="rNota" style="min-height:60px" placeholder="Por que vale modelar? Ex.: gancho forte, carrossel com dados, edição com cenas de academia"></textarea>
+    <label for="rEtapa">Etapa</label><select id="rEtapa"><option value="nova">Nova</option><option value="analisada">Analisada</option><option value="virou">Virou conteúdo</option></select>
+    <label for="rAnalise">Análise</label><textarea id="rAnalise" placeholder="Preenchida na conversa com o Claude"></textarea>
+    <label for="rRoteiro">Roteiro modelado</label><textarea id="rRoteiro" placeholder="Formato, Local, Frase na tela, Gancho, Blocos, Fechamento, CTA"></textarea>
+    <div class="acts" style="margin-top:14px"><button class="btn pri" onclick="salvarRef()">Salvar</button><button class="btn" onclick="copiarTxt($('rRoteiro').value)">Copiar roteiro</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -149,6 +165,10 @@ const SEED=[
  {id:"r01",codigo:"R-01",tipo:"organico",marca:"Nelson Rabelo",titulo:"#01 · O que medir no funil (35 tentativas)",status:"postado",postado_em:"2026-09-29",link:IG+"Dd5eusQxn0E/",drive:"1oaaqmVjxOTFBrkN1gYgIHrCiKJ5HYlYA"}
 ];
 
+let refEtapa="nova", refEdit=null;
+const INTERESSES=["Gancho","Estrutura","Design","Edição","Tema"];
+const REDES=[["instagram.com","Instagram"],["tiktok.com","TikTok"],["youtube.com","YouTube"],["youtu.be","YouTube"],["linkedin.com","LinkedIn"]];
+function rede(u){const r=REDES.find(([d])=>String(u||"").includes(d));return r?r[1]:"Link"}
 let itens=[], aba="pronto", nuvem=true, editId=null, fMarca="", fTipo="";
 const MARCAS=["Nelson Rabelo","GeFit","Collab"];
 const TIPOS={organico:"Orgânico",criativo:"Criativo de anúncio"};
@@ -190,9 +210,10 @@ async function salvar(it){
 }
 
 function render(){
+  if(aba==="ref")return renderRefs();
   const cont={};ORDEM.forEach(k=>cont[k]=itens.filter(i=>i.status===k&&passaFiltro(i)).length);
   $("filtros").innerHTML='<span>Identidade</span>'+["",...MARCAS].map(m=>`<button class="fch ${fMarca===m?"on":""}" onclick="fMarca=\'${m}\';render()">${m||"Todas"}</button>`).join("")+'<span>Tipo</span>'+[["","Todos"],["organico","Orgânico"],["criativo","Criativo de anúncio"]].map(([k,l])=>`<button class="fch ${fTipo===k?"on":""}" onclick="fTipo=\'${k}\';render()">${l}</button>`).join("");
-  $("tabs").innerHTML=ORDEM.map(k=>`<button class="tab ${aba===k?"on":""}" onclick="aba='${k}';render()">${STATUS[k]}<b>${cont[k]}</b></button>`).join("");
+  $("tabs").innerHTML=ORDEM.map(k=>`<button class="tab ${aba===k?"on":""}" onclick="aba='${k}';render()">${STATUS[k]}<b>${cont[k]}</b></button>`).join("")+tabRef();
   $("hint").textContent={
     aprovar:"Prévias: trechos curtos (até uns 30 segundos) para aprovar o estilo de edição. Não são o vídeo completo. Escolha a versão e ela vai para Em edição, onde a edição completa é feita.",
     exportar:"Estilo escolhido, edição completa em andamento. Quando o vídeo final estiver no Drive, cole o link dele e mude para Pronto para postar.",
@@ -200,6 +221,7 @@ function render(){
     noar:"Criativos rodando no tráfego pago agora. Quando pausar ou encerrar o anúncio, clique em Tirei do ar.",
     postado:"Já publicados no Instagram (e anúncios encerrados), do mais recente para o mais antigo."
   }[aba];
+  $("filtros").style.display="";
   let lista=itens.filter(i=>i.status===aba&&passaFiltro(i));
   lista.sort(aba==="postado"?(a,b)=>(b.postado_em||"").localeCompare(a.postado_em||""):(a,b)=>(a.ordem||99)-(b.ordem||99));
   $("grid").innerHTML=lista.length?lista.map(card).join(""):'<div class="empty">Nada por aqui.</div>';
@@ -228,6 +250,36 @@ function card(it){
   </div>`;
 }
 function achar(id){return itens.find(i=>i.id===id)}
+function tabRef(){const n=itens.filter(i=>i.status==="ref"&&(i.etapa||"nova")==="nova").length;return `<button class="tab ${aba==="ref"?"on":""}" onclick="aba='ref';render()">🔎 Referências<b>${n||""}</b></button>`}
+function renderRefs(){
+  const cont={};ORDEM.forEach(k=>cont[k]=itens.filter(i=>i.status===k&&passaFiltro(i)).length);
+  $("tabs").innerHTML=ORDEM.map(k=>`<button class="tab" onclick="aba='${k}';render()">${STATUS[k]}<b>${cont[k]}</b></button>`).join("")+tabRef();
+  const refs=itens.filter(i=>i.status==="ref");
+  const ET={nova:"Novas",analisada:"Analisadas",virou:"Viraram conteúdo"};
+  $("filtros").style.display="";
+  $("filtros").innerHTML='<button class="btn sm pri" onclick="novaRef()">+ Referência</button><span>Etapa</span>'+Object.entries(ET).map(([k,l])=>`<button class="fch ${refEtapa===k?"on":""}" onclick="refEtapa='${k}';render()">${l} ${refs.filter(r=>(r.etapa||"nova")===k).length}</button>`).join("");
+  $("hint").textContent={nova:"Links salvos para modelar. Numa conversa com o Claude, peça: analisa as referências novas da Biblioteca.",analisada:"Já analisadas: gancho, estrutura, formato e roteiro modelado para o seu posicionamento.",virou:"Referências que já viraram vídeo ou carrossel."}[refEtapa];
+  const lista=refs.filter(r=>(r.etapa||"nova")===refEtapa).sort((a,b)=>(b.criado_em||"").localeCompare(a.criado_em||""));
+  $("grid").innerHTML=lista.length?lista.map(r=>`<div class="card"><div class="body">
+    <div class="meta">${esc(rede(r.url))} · salva em ${dataBR(r.criado_em)}</div>
+    <div class="ti">${esc(r.titulo||r.nota||r.url)}</div>
+    ${(r.interesse||[]).length?`<div class="opts">${r.interesse.map(x=>`<span class="fch on" style="cursor:default">${esc(x)}</span>`).join("")}</div>`:""}
+    ${r.nota&&r.titulo?`<div class="meta">${esc(r.nota)}</div>`:""}
+    ${r.analise?`<div class="reftext">${esc(r.analise)}</div>`:""}
+    <div class="acts"><a class="btn sm pri" href="${esc(r.url)}" target="_blank" rel="noopener">Abrir post</a>${r.roteiro?`<button class="btn sm" onclick="copiarTxt(achar('${r.id}').roteiro)">Copiar roteiro</button>`:""}<button class="btn sm" onclick="editarRef('${r.id}')">Editar</button></div>
+  </div></div>`).join(""):'<div class="empty">Nenhuma referência aqui ainda.</div>';
+}
+function novaRef(){refEdit=null;$("rTitulo").textContent="Nova referência";["rUrl","rNota","rAnalise","rRoteiro"].forEach(i=>$(i).value="");$("rEtapa").value="nova";pintarInt([]);$("mRef").classList.add("on")}
+function editarRef(id){const r=achar(id);refEdit=id;$("rTitulo").textContent="Referência";$("rUrl").value=r.url||"";$("rNota").value=r.nota||"";$("rAnalise").value=r.analise||"";$("rRoteiro").value=r.roteiro||"";$("rEtapa").value=r.etapa||"nova";pintarInt(r.interesse||[]);$("mRef").classList.add("on")}
+function pintarInt(sel){$("rInt").innerHTML=INTERESSES.map(x=>`<button type="button" class="fch ${sel.includes(x)?"on":""}" onclick="this.classList.toggle('on')">${x}</button>`).join("")}
+async function salvarRef(){
+  const url=$("rUrl").value.trim();if(!url){toast("Cole o link do post");return}
+  let r=refEdit?achar(refEdit):null;
+  if(!r){r={id:"ref-"+Date.now().toString(36),status:"ref",criado_em:hoje()};itens.push(r)}
+  r.url=url;r.nota=$("rNota").value.trim();r.analise=$("rAnalise").value;r.roteiro=$("rRoteiro").value;r.etapa=$("rEtapa").value;
+  r.interesse=[...$("rInt").querySelectorAll(".fch.on")].map(b=>b.textContent);
+  await salvar(r);fechar("mRef");refEtapa=r.etapa;render();toast("Referência salva");
+}
 function assistir(id,d,ver){
   const it=achar(id);
   $("vTitulo").textContent=it.titulo+(ver?" · "+ver:"");
@@ -283,7 +335,7 @@ async function salvarEdicao(){
 async function copiarTxt(t){try{await navigator.clipboard.writeText(t);toast("Copiado")}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();toast("Copiado")}}
 function copiarLegenda(){copiarTxt($("fLeg").value)}
 function copiarDe(id){copiarTxt(achar(id).legenda||"")}
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){fechar("mVideo");fechar("mEdit");fechar("mEsc")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){fechar("mVideo");fechar("mEdit");fechar("mEsc");fechar("mRef")}});
 carregar();
 </script>
 </body>
