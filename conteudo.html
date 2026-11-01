@@ -39,7 +39,7 @@ main{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
 .thumb{position:relative;aspect-ratio:9/12;background:#0d1322 center/cover no-repeat;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .thumb .play{width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid rgba(255,255,255,.7)}
 .thumb .st{position:absolute;top:10px;left:10px;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.65)}
-.st.aprovar{color:var(--amb)}.st.exportar{color:var(--blue)}.st.pronto{color:var(--lime)}.st.postado{color:var(--grn)}
+.st.noar{color:#7FB0FF}.st.aprovar{color:var(--amb)}.st.exportar{color:var(--blue)}.st.pronto{color:var(--lime)}.st.postado{color:var(--grn)}
 .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
 .ti{font-weight:800;font-size:15px}
 .meta{color:var(--ink3);font-size:12px}
@@ -94,9 +94,9 @@ textarea{min-height:90px;resize:vertical}
     <div class="mhead"><b id="eTitulo">Vídeo</b><button class="btn sm" onclick="fechar('mEdit')">Fechar</button></div>
     <label for="fTitulo">Título</label><input id="fTitulo">
     <label for="fStatus">Situação</label>
-    <select id="fStatus"><option value="aprovar">Prévia</option><option value="exportar">Em edição</option><option value="pronto">Pronto para postar</option><option value="postado">Postado</option></select>
+    <select id="fStatus"><option value="aprovar">Prévia</option><option value="exportar">Em edição</option><option value="pronto">Pronto para postar</option><option value="noar">No ar (tráfego)</option><option value="postado">Postado</option></select>
     <label for="fDrive">Link do vídeo final no Drive</label><input id="fDrive" placeholder="https://drive.google.com/file/d/...">
-    <label for="fData">Data da postagem</label><input id="fData" type="date">
+    <label for="fData">Data da postagem (ou da entrada no tráfego)</label><input id="fData" type="date">
     <label for="fLink">Link do post no Instagram</label><input id="fLink" placeholder="https://www.instagram.com/reel/...">
     <label for="fLeg">Legenda</label><textarea id="fLeg" placeholder="Cole aqui a legenda para copiar na hora de postar"></textarea>
     <label for="fMarca">Identidade visual</label><select id="fMarca"><option value="">Não definida</option><option>Nelson Rabelo</option><option>GeFit</option><option>Collab</option></select>
@@ -113,8 +113,8 @@ const SB_URL="https://irwvagffrguiljaxrzmd.supabase.co";
 const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyd3ZhZ2Zmcmd1aWxqYXhyem1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNDk5ODUsImV4cCI6MjEwNDkyNTk4NX0.YAApyaH6iIHEua_89fgCUpMzgXRIcWb_vNRkBQAoq5A";
 const H={"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"};
 const LS="nr_conteudo_v1";
-const STATUS={aprovar:"Prévias",exportar:"Em edição",pronto:"Pronto para postar",postado:"Postado"};
-const ORDEM=["aprovar","exportar","pronto","postado"];
+const STATUS={aprovar:"Prévias",exportar:"Em edição",pronto:"Pronto para postar",noar:"No ar (tráfego)",postado:"Postado"};
+const ORDEM=["aprovar","exportar","pronto","noar","postado"];
 const IG="https://www.instagram.com/nelsonrabelo165/reel/";
 
 // Levantamento de 31/10/2026 (Drive + Instagram). As mudanças feitas na página ficam salvas por cima disto.
@@ -188,7 +188,8 @@ function render(){
     aprovar:"Prévias: trechos curtos (até uns 30 segundos) para aprovar o estilo de edição. Não são o vídeo completo. Escolha a versão e ela vai para Em edição, onde a edição completa é feita.",
     exportar:"Estilo escolhido, edição completa em andamento. Quando o vídeo final estiver no Drive, cole o link dele e mude para Pronto para postar.",
     pronto:"Prontos para postar, em ordem de prioridade. Assista, baixe e poste. Depois, marque como postado.",
-    postado:"Já publicados no Instagram, do mais recente para o mais antigo."
+    noar:"Criativos rodando no tráfego pago agora. Quando pausar ou encerrar o anúncio, clique em Tirei do ar.",
+    postado:"Já publicados no Instagram (e anúncios encerrados), do mais recente para o mais antigo."
   }[aba];
   let lista=itens.filter(i=>i.status===aba&&passaFiltro(i));
   lista.sort(aba==="postado"?(a,b)=>(b.postado_em||"").localeCompare(a.postado_em||""):(a,b)=>(a.ordem||99)-(b.ordem||99));
@@ -201,9 +202,11 @@ function card(it){
         <button class="btn sm" onclick="assistir('${it.id}','${v.d}','${esc(v.n)}')">▶</button>
         ${it.status==="aprovar"?`<button class="btn sm" onclick="escolher('${it.id}','${esc(v.n)}')">Escolher</button>`:""}
       </div>`).join("")}</div>`:"";
-  const meta=[it.marca?(it.marca==="GeFit"?"Identidade GeFit · postar em collab":it.marca==="Collab"?"Collab Nelson + GeFit":"Identidade "+it.marca):"",it.status==="postado"&&it.postado_em?"Postado em "+dataBR(it.postado_em):"",it.obs||""].filter(Boolean).join(" · ");
+  const meta=[it.status==="noar"&&it.no_ar_em?"No ar desde "+dataBR(it.no_ar_em):"",it.marca?(it.marca==="GeFit"?"Identidade GeFit · postar em collab":it.marca==="Collab"?"Collab Nelson + GeFit":"Identidade "+it.marca):"",it.status==="postado"&&it.postado_em?"Postado em "+dataBR(it.postado_em):"",it.obs||""].filter(Boolean).join(" · ");
   let acts="";
-  if(it.status==="pronto"){acts=`${d?`<a class="btn sm pri" href="${baixar(d)}" target="_blank" rel="noopener">⬇ Baixar</a>`:""}<button class="btn sm" onclick="marcarPostado('${it.id}')">Marquei como postado</button>`}
+  const ehAd=it.tipo==="criativo"||it.tipo==="ambos";
+  if(it.status==="pronto"){acts=`${d?`<a class="btn sm pri" href="${baixar(d)}" target="_blank" rel="noopener">⬇ Baixar</a>`:""}${it.tipo!=="criativo"?`<button class="btn sm" onclick="marcarPostado('${it.id}')">Marquei como postado</button>`:""}${ehAd?`<button class="btn sm" onclick="subirTrafego('${it.id}')">Subi no tráfego</button>`:""}`}
+  if(it.status==="noar"){acts=`${d?`<a class="btn sm" href="${baixar(d)}" target="_blank" rel="noopener">⬇ Baixar</a>`:""}<button class="btn sm" onclick="tirarDoAr('${it.id}')">Tirei do ar</button>`}
   if(it.status==="exportar"){acts=`<button class="btn sm" onclick="editar('${it.id}')">Colar vídeo final</button>`}
   if(it.status==="postado"&&it.link){acts=`<a class="btn sm" href="${esc(it.link)}" target="_blank" rel="noopener">Ver no Instagram</a>`}
   if(it.legenda)acts+=`<button class="btn sm" onclick="copiarDe('${it.id}')">Copiar legenda</button>`;
@@ -225,6 +228,9 @@ function assistir(id,d,ver){
 }
 function fechar(m){$(m).classList.remove("on");if(m==="mVideo")$("vFrame").src="about:blank";if(m==="mEdit"){const it=achar(editId);if(it&&it.novo)itens=itens.filter(i=>i!==it)}}
 async function escolher(id,n){const it=achar(id);it.escolhida=n;it.status="exportar";await salvar(it);render();toast("Versão escolhida: "+n)}
+function hoje(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+async function subirTrafego(id){const it=achar(id);it.status="noar";it.no_ar_em=hoje();await salvar(it);render();toast("Criativo no ar desde hoje")}
+async function tirarDoAr(id){const it=achar(id);it.status="postado";it.encerrado_em=hoje();it.postado_em=it.postado_em||it.no_ar_em||hoje();it.obs=[it.obs,"Anúncio encerrado em "+dataBR(hoje())].filter(Boolean).join(" · ");await salvar(it);render();toast("Anúncio marcado como encerrado")}
 async function marcarPostado(id){
   const it=achar(id);it.status="postado";
   const d=new Date();it.postado_em=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
