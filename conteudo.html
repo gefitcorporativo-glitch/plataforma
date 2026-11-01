@@ -122,13 +122,15 @@ textarea{min-height:90px;resize:vertical}
   <div class="mbox">
     <div class="mhead"><b id="rTitulo">Nova referência</b><button class="btn sm" onclick="fechar('mRef')">Fechar</button></div>
     <label for="rUrl">Link do post</label><input id="rUrl" placeholder="https://www.instagram.com/reel/...">
+    <label for="rGrav">Gravação de tela no Drive (com áudio)</label><input id="rGrav" placeholder="Link do arquivo na pasta Referências para modelar">
+    <div class="meta" style="margin-top:4px"><a href="https://drive.google.com/drive/folders/1fcP7LtowhX2TXBd-hqnhlc_k6js0rG07" target="_blank" rel="noopener" style="color:var(--lime)">Abrir a pasta Referências para modelar</a></div>
     <label>O que chamou a atenção</label>
     <div class="opts" id="rInt"></div>
     <label for="rNota">Sua nota</label><textarea id="rNota" style="min-height:60px" placeholder="Por que vale modelar? Ex.: gancho forte, carrossel com dados, edição com cenas de academia"></textarea>
     <label for="rEtapa">Etapa</label><select id="rEtapa"><option value="nova">Nova</option><option value="analisada">Analisada</option><option value="virou">Virou conteúdo</option></select>
     <label for="rAnalise">Análise</label><textarea id="rAnalise" placeholder="Preenchida na conversa com o Claude"></textarea>
     <label for="rRoteiro">Roteiro modelado</label><textarea id="rRoteiro" placeholder="Formato, Local, Frase na tela, Gancho, Blocos, Fechamento, CTA"></textarea>
-    <div class="acts" style="margin-top:14px"><button class="btn pri" onclick="salvarRef()">Salvar</button><button class="btn" onclick="copiarTxt($('rRoteiro').value)">Copiar roteiro</button></div>
+    <div class="acts" style="margin-top:14px"><button class="btn pri" onclick="salvarRef()">Salvar</button><button class="btn" onclick="copiarPedidoAnalise()">Copiar pedido de análise</button><button class="btn" onclick="copiarTxt($('rRoteiro').value)">Copiar roteiro</button></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -258,7 +260,7 @@ function renderRefs(){
   const ET={nova:"Novas",analisada:"Analisadas",virou:"Viraram conteúdo"};
   $("filtros").style.display="";
   $("filtros").innerHTML='<button class="btn sm pri" onclick="novaRef()">+ Referência</button><span>Etapa</span>'+Object.entries(ET).map(([k,l])=>`<button class="fch ${refEtapa===k?"on":""}" onclick="refEtapa='${k}';render()">${l} ${refs.filter(r=>(r.etapa||"nova")===k).length}</button>`).join("");
-  $("hint").textContent={nova:"Links salvos para modelar. Numa conversa com o Claude, peça: analisa as referências novas da Biblioteca.",analisada:"Já analisadas: gancho, estrutura, formato e roteiro modelado para o seu posicionamento.",virou:"Referências que já viraram vídeo ou carrossel."}[refEtapa];
+  $("hint").textContent={nova:"Links salvos para modelar. Suba a gravação de tela na pasta Referências para modelar, cole o link e use Pedido de análise: copie e cole no Codex (ou no Claude com acesso ao computador).",analisada:"Já analisadas: gancho, estrutura, formato e roteiro modelado para o seu posicionamento.",virou:"Referências que já viraram vídeo ou carrossel."}[refEtapa];
   const lista=refs.filter(r=>(r.etapa||"nova")===refEtapa).sort((a,b)=>(b.criado_em||"").localeCompare(a.criado_em||""));
   $("grid").innerHTML=lista.length?lista.map(r=>`<div class="card"><div class="body">
     <div class="meta">${esc(rede(r.url))} · salva em ${dataBR(r.criado_em)}</div>
@@ -266,17 +268,29 @@ function renderRefs(){
     ${(r.interesse||[]).length?`<div class="opts">${r.interesse.map(x=>`<span class="fch on" style="cursor:default">${esc(x)}</span>`).join("")}</div>`:""}
     ${r.nota&&r.titulo?`<div class="meta">${esc(r.nota)}</div>`:""}
     ${r.analise?`<div class="reftext">${esc(r.analise)}</div>`:""}
-    <div class="acts"><a class="btn sm pri" href="${esc(r.url)}" target="_blank" rel="noopener">Abrir post</a>${r.roteiro?`<button class="btn sm" onclick="copiarTxt(achar('${r.id}').roteiro)">Copiar roteiro</button>`:""}<button class="btn sm" onclick="editarRef('${r.id}')">Editar</button></div>
+    <div class="acts"><a class="btn sm pri" href="${esc(r.url)}" target="_blank" rel="noopener">Abrir post</a>${r.gravacao?`<a class="btn sm" href="${esc(r.gravacao)}" target="_blank" rel="noopener">Gravação</a>`:""}${(r.etapa||"nova")==="nova"?`<button class="btn sm" onclick="copiarPedidoDe('${r.id}')">Pedido de análise</button>`:""}${r.roteiro?`<button class="btn sm" onclick="copiarTxt(achar('${r.id}').roteiro)">Copiar roteiro</button>`:""}<button class="btn sm" onclick="editarRef('${r.id}')">Editar</button></div>
   </div></div>`).join(""):'<div class="empty">Nenhuma referência aqui ainda.</div>';
 }
-function novaRef(){refEdit=null;$("rTitulo").textContent="Nova referência";["rUrl","rNota","rAnalise","rRoteiro"].forEach(i=>$(i).value="");$("rEtapa").value="nova";pintarInt([]);$("mRef").classList.add("on")}
-function editarRef(id){const r=achar(id);refEdit=id;$("rTitulo").textContent="Referência";$("rUrl").value=r.url||"";$("rNota").value=r.nota||"";$("rAnalise").value=r.analise||"";$("rRoteiro").value=r.roteiro||"";$("rEtapa").value=r.etapa||"nova";pintarInt(r.interesse||[]);$("mRef").classList.add("on")}
+function novaRef(){refEdit=null;$("rTitulo").textContent="Nova referência";["rUrl","rGrav","rNota","rAnalise","rRoteiro"].forEach(i=>$(i).value="");$("rEtapa").value="nova";pintarInt([]);$("mRef").classList.add("on")}
+function editarRef(id){const r=achar(id);refEdit=id;$("rTitulo").textContent="Referência";$("rUrl").value=r.url||"";$("rGrav").value=r.gravacao||"";$("rNota").value=r.nota||"";$("rAnalise").value=r.analise||"";$("rRoteiro").value=r.roteiro||"";$("rEtapa").value=r.etapa||"nova";pintarInt(r.interesse||[]);$("mRef").classList.add("on")}
 function pintarInt(sel){$("rInt").innerHTML=INTERESSES.map(x=>`<button type="button" class="fch ${sel.includes(x)?"on":""}" onclick="this.classList.toggle('on')">${x}</button>`).join("")}
+function pedidoAnalise(r){
+  const g=r.gravacao||"",post=r.url&&r.url!==g?r.url:"";
+  return `Análise de referência para modelar conteúdo (Biblioteca de Conteúdo, referência "${r.id}").
+${g?`Gravação de tela com áudio (Drive): ${g}`:"Sem gravação de tela: analise pela legenda e pelos quadros do post."}
+${post?`Post original: ${post}`:""}
+O que chamou a atenção: ${(r.interesse||[]).join(", ")||"não marcado"}. Nota: ${r.nota||"-"}
+Siga a seção "Análise de referências" do AGENTS.md em C:\\Users\\PC\\Projetos\\reels-remotion (Whisper local, sem instalar nada novo).
+Entregue gancho, estrutura com tempos, ritmo, modelo do Remotion mais próximo, adaptação para o meu posicionamento e roteiro no formato Formato, Local, Frase na tela, Gancho, Blocos, Fechamento, CTA.
+No fim, grave a análise e o roteiro nesta referência da Biblioteca e mude a etapa para "analisada". Não edite nenhum vídeo meu nesta etapa.`;
+}
+function copiarPedidoDe(id){copiarTxt(pedidoAnalise(achar(id)))}
+function copiarPedidoAnalise(){const r={id:refEdit||"(salve a referência antes)",url:$("rUrl").value.trim(),gravacao:$("rGrav").value.trim(),nota:$("rNota").value.trim(),interesse:[...$("rInt").querySelectorAll(".fch.on")].map(b=>b.textContent)};copiarTxt(pedidoAnalise(r))}
 async function salvarRef(){
-  const url=$("rUrl").value.trim();if(!url){toast("Cole o link do post");return}
+  const url=$("rUrl").value.trim()||$("rGrav").value.trim();if(!url){toast("Cole o link do post ou da gravação");return}
   let r=refEdit?achar(refEdit):null;
   if(!r){r={id:"ref-"+Date.now().toString(36),status:"ref",criado_em:hoje()};itens.push(r)}
-  r.url=url;r.nota=$("rNota").value.trim();r.analise=$("rAnalise").value;r.roteiro=$("rRoteiro").value;r.etapa=$("rEtapa").value;
+  r.url=url;r.gravacao=$("rGrav").value.trim();r.nota=$("rNota").value.trim();r.analise=$("rAnalise").value;r.roteiro=$("rRoteiro").value;r.etapa=$("rEtapa").value;
   r.interesse=[...$("rInt").querySelectorAll(".fch.on")].map(b=>b.textContent);
   await salvar(r);fechar("mRef");refEtapa=r.etapa;render();toast("Referência salva");
 }
