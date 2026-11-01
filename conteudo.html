@@ -106,6 +106,15 @@ textarea{min-height:90px;resize:vertical}
     <div class="acts" style="margin-top:14px"><button class="btn pri" onclick="salvarEdicao()">Salvar</button><button class="btn" id="btnCopiaLeg" onclick="copiarLegenda()">Copiar legenda</button></div>
   </div>
 </div>
+<div class="modal" id="mEsc" onclick="if(event.target===this)fechar('mEsc')">
+  <div class="mbox">
+    <div class="mhead"><b id="escTitulo">Escolher versão</b><button class="btn sm" onclick="fechar('mEsc')">Cancelar</button></div>
+    <div class="meta">Escolher não começa a edição sozinho. Copie o pedido abaixo e cole numa conversa do Claude (com acesso ao seu computador) ou no Codex, dentro do projeto reels-remotion. A edição completa segue as instruções do projeto.</div>
+    <label for="escTxt">Pedido de edição</label>
+    <textarea id="escTxt" style="min-height:170px" readonly></textarea>
+    <div class="acts" style="margin-top:12px"><button class="btn pri" onclick="confirmarEscolha()">Copiar pedido e mover para Em edição</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -207,7 +216,7 @@ function card(it){
   const ehAd=it.tipo==="criativo"||it.tipo==="ambos";
   if(it.status==="pronto"){acts=`${d?`<a class="btn sm pri" href="${baixar(d)}" target="_blank" rel="noopener">⬇ Baixar</a>`:""}${it.tipo!=="criativo"?`<button class="btn sm" onclick="marcarPostado('${it.id}')">Marquei como postado</button>`:""}${ehAd?`<button class="btn sm" onclick="subirTrafego('${it.id}')">Subi no tráfego</button>`:""}`}
   if(it.status==="noar"){acts=`${d?`<a class="btn sm" href="${baixar(d)}" target="_blank" rel="noopener">⬇ Baixar</a>`:""}<button class="btn sm" onclick="tirarDoAr('${it.id}')">Tirei do ar</button>`}
-  if(it.status==="exportar"){acts=`<button class="btn sm" onclick="editar('${it.id}')">Colar vídeo final</button>`}
+  if(it.status==="exportar"){acts=`<button class="btn sm" onclick="editar('${it.id}')">Colar vídeo final</button><button class="btn sm" onclick="desfazerEscolha('${it.id}')">Voltar para Prévias</button>`}
   if(it.status==="postado"&&it.link){acts=`<a class="btn sm" href="${esc(it.link)}" target="_blank" rel="noopener">Ver no Instagram</a>`}
   if(it.legenda)acts+=`<button class="btn sm" onclick="copiarDe('${it.id}')">Copiar legenda</button>`;
   acts+=`<button class="btn sm" onclick="editar('${it.id}')">Editar</button>`;
@@ -227,7 +236,23 @@ function assistir(id,d,ver){
   $("mVideo").classList.add("on");
 }
 function fechar(m){$(m).classList.remove("on");if(m==="mVideo")$("vFrame").src="about:blank";if(m==="mEdit"){const it=achar(editId);if(it&&it.novo)itens=itens.filter(i=>i!==it)}}
-async function escolher(id,n){const it=achar(id);it.escolhida=n;it.status="exportar";await salvar(it);render();toast("Versão escolhida: "+n)}
+let escPend=null;
+function escolher(id,n){
+  const it=achar(id);const v=(it.versoes||[]).find(x=>x.n===n)||{};escPend={id,n};
+  $("escTitulo").textContent=it.titulo+" · "+n;
+  $("escTxt").value=`Edição de Reels: "${it.titulo}".
+Aprovei a prévia no estilo "${n}" (arquivo no Drive: https://drive.google.com/file/d/${v.d}/view).
+Siga o AGENTS.md do projeto C:\\Users\\PC\\Projetos\\reels-remotion: antes de editar, faça as perguntas (orgânico ou criativo, identidade Nelson/GeFit/collab, recurso visual).
+Edite o vídeo completo nesse mesmo estilo e me mostre para aprovação.
+Depois de aprovado: suba o MP4 e a legenda ao Drive e atualize o item "${it.id}" na Biblioteca de Conteúdo para status "pronto", com o ID do arquivo final.`;
+  $("mEsc").classList.add("on");
+}
+async function confirmarEscolha(){
+  if(!escPend)return;const it=achar(escPend.id);
+  await copiarTxt($("escTxt").value);
+  it.escolhida=escPend.n;it.status="exportar";await salvar(it);fechar("mEsc");render();toast("Pedido copiado · item em Em edição");escPend=null;
+}
+async function desfazerEscolha(id){const it=achar(id);it.status="aprovar";delete it.escolhida;await salvar(it);render();toast("Voltou para Prévias")}
 function hoje(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 async function subirTrafego(id){const it=achar(id);it.status="noar";it.no_ar_em=hoje();await salvar(it);render();toast("Criativo no ar desde hoje")}
 async function tirarDoAr(id){const it=achar(id);it.status="postado";it.encerrado_em=hoje();it.postado_em=it.postado_em||it.no_ar_em||hoje();it.obs=[it.obs,"Anúncio encerrado em "+dataBR(hoje())].filter(Boolean).join(" · ");await salvar(it);render();toast("Anúncio marcado como encerrado")}
@@ -255,10 +280,10 @@ async function salvarEdicao(){
   it.postado_em=$("fData").value||"";it.link=$("fLink").value.trim();it.legenda=$("fLeg").value;it.obs=$("fObs").value.trim();it.marca=$("fMarca").value;it.tipo=$("fTipo").value;it.codigo=$("fCod").value.trim();
   await salvar(it);fechar("mEdit");aba=it.status;render();toast("Salvo");
 }
-async function copiarTxt(t){try{await navigator.clipboard.writeText(t);toast("Legenda copiada")}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();toast("Legenda copiada")}}
+async function copiarTxt(t){try{await navigator.clipboard.writeText(t);toast("Copiado")}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();toast("Copiado")}}
 function copiarLegenda(){copiarTxt($("fLeg").value)}
 function copiarDe(id){copiarTxt(achar(id).legenda||"")}
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){fechar("mVideo");fechar("mEdit")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){fechar("mVideo");fechar("mEdit");fechar("mEsc")}});
 carregar();
 </script>
 </body>
