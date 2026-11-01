@@ -25,6 +25,12 @@ h1 em{font-style:normal;color:var(--lime)}
 .tab{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--ink2)}
 .tab.on{background:var(--lime);border-color:var(--lime);color:#0B1222}
 .tab b{margin-left:4px}
+.filtros{display:flex;gap:6px;max-width:1200px;margin:8px auto 0;overflow-x:auto;align-items:center}
+.filtros span{color:var(--ink3);font-size:12px;font-weight:700;margin:0 2px 0 6px;white-space:nowrap}
+.fch{background:none;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink2);white-space:nowrap}
+.fch.on{border-color:var(--lime);color:var(--lime)}
+.cod{position:absolute;top:10px;right:10px;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.65);color:#fff}
+.cod.ad{background:#3D7BFF}
 main{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
 .hint{color:var(--ink3);font-size:13px;margin-bottom:14px}
 .banner{background:rgba(245,165,36,.1);border:1px solid var(--amb);color:var(--amb);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px}
@@ -66,6 +72,7 @@ textarea{min-height:90px;resize:vertical}
     <button class="btn" onclick="abrirNovo()">+ Adicionar vídeo</button>
   </div>
   <div class="tabs" id="tabs"></div>
+  <div class="filtros" id="filtros"></div>
 </header>
 <main>
   <div id="banner"></div>
@@ -92,7 +99,9 @@ textarea{min-height:90px;resize:vertical}
     <label for="fData">Data da postagem</label><input id="fData" type="date">
     <label for="fLink">Link do post no Instagram</label><input id="fLink" placeholder="https://www.instagram.com/reel/...">
     <label for="fLeg">Legenda</label><textarea id="fLeg" placeholder="Cole aqui a legenda para copiar na hora de postar"></textarea>
-    <label for="fMarca">Identidade visual</label><select id="fMarca"><option value="">Não definida</option><option>Nelson Rabelo</option><option>GeFit</option></select>
+    <label for="fMarca">Identidade visual</label><select id="fMarca"><option value="">Não definida</option><option>Nelson Rabelo</option><option>GeFit</option><option>Collab</option></select>
+    <label for="fTipo">Tipo</label><select id="fTipo"><option value="organico">Orgânico</option><option value="criativo">Criativo de anúncio</option><option value="ambos">Anúncio e orgânico</option></select>
+    <label for="fCod">Código</label><input id="fCod" placeholder="R-09 para Reels, CR-04 para criativo">
     <label for="fObs">Observações</label><input id="fObs">
     <div class="acts" style="margin-top:14px"><button class="btn pri" onclick="salvarEdicao()">Salvar</button><button class="btn" id="btnCopiaLeg" onclick="copiarLegenda()">Copiar legenda</button></div>
   </div>
@@ -110,24 +119,31 @@ const IG="https://www.instagram.com/nelsonrabelo165/reel/";
 
 // Levantamento de 31/10/2026 (Drive + Instagram). As mudanças feitas na página ficam salvas por cima disto.
 const SEED=[
- {id:"r08",marca:"Nelson Rabelo",legenda:"Sua academia só agenda experiência na sexta-feira porque é mais calmo? Esse é o erro.\n\nO aluno experimenta numa academia vazia, com o treinador em volta dele o tempo todo, e decide comprar. Na segunda-feira, chega com o salão lotado e ninguém olha na cara dele. A experiência que você vendeu não é a academia que ele vai frequentar.\n\nO caminho é um protocolo à prova de academia cheia: o mínimo que funciona mesmo no horário de pico, para nenhum aluno ir embora sem antes falar com alguém da equipe.\n\nO material completo da recepção, com scripts prontos, tá no link da bio. É grátis.\n\n#gestaodeacademias #donodeacademia #academia #retencaodealunos #nelsonrabelo",titulo:"#08 · Experiência só na sexta é a pior burrada",status:"pronto",drive:"1DAKelyUdgFhmW_oozTukSthqJMFTPSrA",ordem:1},
- {id:"r06",marca:"GeFit",legenda:"Na sua academia, a equipe reage ou conduz a jornada do aluno?\n\nInstrutor, professor e treinador: os nomes ajudam a explicar uma diferença de atitude no salão de musculação.\n\nO treinador se antecipa, acompanha e conecta o aluno ao que foi planejado. A meta passa a ser um compromisso compartilhado.\n\nLeve essa reflexão para a próxima reunião com sua equipe técnica.\n\nGeFit • Fitness Intelligence\n\n#GeFit #GestaoDeAcademias #EquipeTecnica #Treinador #RetencaoDeAlunos",titulo:"#06 · Quem você é no salão de musculação",status:"pronto",drive:"1RoonDWjGabRnHxqhVEgeWoMEvRWy0w1o",ordem:2},
- {id:"r07",marca:"GeFit",legenda:"Sua postura na academia também comunica.\n\nBraços cruzados, celular no salão, pé apoiado no aparelho e conversas longas entre treinadores interferem na percepção de disponibilidade da equipe.\n\nVale observar esses comportamentos, orientar o colega quando necessário e acolher o aluno que pede ajuda.\n\nSalve para conversar com sua equipe técnica.\n\nAs cenas de exemplo são ilustrativas, com imagens geradas por IA.\n\nGeFit • Fitness Intelligence\n\n#GeFit #GestaoDeAcademias #DonoDeAcademia #EquipeTecnica #AtendimentoNaAcademia",titulo:"#07 · Sua postura na academia também comunica",status:"pronto",drive:"1nRlMuFGkkwcaXbY6lm6EddwvnzRxKr2M",ordem:3},
- {id:"teste",marca:"Nelson Rabelo",legenda:"Faz esse teste hoje: manda \"quanto custa?\" pro WhatsApp da sua academia, como se fosse um lead.\n\nSe a resposta for a tabela de preço, o problema não é falta de lead. É conversa sem método.\n\nOrganizei a jornada inteira da recepção em 7 etapas, do primeiro \"oi\" até a indicação, com o script pronto pra copiar em cada uma. É o mesmo método que eu uso nas mentorias.\n\nO material é gratuito. Link na bio: coloca seus dados e baixa na hora.\n\n#gestaodeacademias #academia #recepcao #vendas #donodeacademia",titulo:"Faça esse teste · Clone + página (link na bio)",status:"pronto",drive:"11GvOPFkmJZBVGenEXaFhP0biHXy_Po9f",ordem:4},
+ {id:"r08",codigo:"R-08",tipo:"organico",marca:"Nelson Rabelo",legenda:"Sua academia só agenda experiência na sexta-feira porque é mais calmo? Esse é o erro.\n\nO aluno experimenta numa academia vazia, com o treinador em volta dele o tempo todo, e decide comprar. Na segunda-feira, chega com o salão lotado e ninguém olha na cara dele. A experiência que você vendeu não é a academia que ele vai frequentar.\n\nO caminho é um protocolo à prova de academia cheia: o mínimo que funciona mesmo no horário de pico, para nenhum aluno ir embora sem antes falar com alguém da equipe.\n\nO material completo da recepção, com scripts prontos, tá no link da bio. É grátis.\n\n#gestaodeacademias #donodeacademia #academia #retencaodealunos #nelsonrabelo",titulo:"#08 · Experiência só na sexta é a pior burrada",status:"pronto",drive:"1DAKelyUdgFhmW_oozTukSthqJMFTPSrA",ordem:1},
+ {id:"r06",codigo:"R-06",tipo:"organico",marca:"GeFit",legenda:"Na sua academia, a equipe reage ou conduz a jornada do aluno?\n\nInstrutor, professor e treinador: os nomes ajudam a explicar uma diferença de atitude no salão de musculação.\n\nO treinador se antecipa, acompanha e conecta o aluno ao que foi planejado. A meta passa a ser um compromisso compartilhado.\n\nLeve essa reflexão para a próxima reunião com sua equipe técnica.\n\nGeFit • Fitness Intelligence\n\n#GeFit #GestaoDeAcademias #EquipeTecnica #Treinador #RetencaoDeAlunos",titulo:"#06 · Quem você é no salão de musculação",status:"pronto",drive:"1RoonDWjGabRnHxqhVEgeWoMEvRWy0w1o",ordem:2},
+ {id:"r07",codigo:"R-07",tipo:"organico",marca:"GeFit",legenda:"Sua postura na academia também comunica.\n\nBraços cruzados, celular no salão, pé apoiado no aparelho e conversas longas entre treinadores interferem na percepção de disponibilidade da equipe.\n\nVale observar esses comportamentos, orientar o colega quando necessário e acolher o aluno que pede ajuda.\n\nSalve para conversar com sua equipe técnica.\n\nAs cenas de exemplo são ilustrativas, com imagens geradas por IA.\n\nGeFit • Fitness Intelligence\n\n#GeFit #GestaoDeAcademias #DonoDeAcademia #EquipeTecnica #AtendimentoNaAcademia",titulo:"#07 · Sua postura na academia também comunica",status:"pronto",drive:"1nRlMuFGkkwcaXbY6lm6EddwvnzRxKr2M",ordem:3},
+ {id:"teste",codigo:"CR-01",tipo:"ambos",marca:"Nelson Rabelo",legenda:"Faz esse teste hoje: manda \"quanto custa?\" pro WhatsApp da sua academia, como se fosse um lead.\n\nSe a resposta for a tabela de preço, o problema não é falta de lead. É conversa sem método.\n\nOrganizei a jornada inteira da recepção em 7 etapas, do primeiro \"oi\" até a indicação, com o script pronto pra copiar em cada uma. É o mesmo método que eu uso nas mentorias.\n\nO material é gratuito. Link na bio: coloca seus dados e baixa na hora.\n\n#gestaodeacademias #academia #recepcao #vendas #donodeacademia",titulo:"Faça esse teste · Clone + página (link na bio)",status:"pronto",drive:"11GvOPFkmJZBVGenEXaFhP0biHXy_Po9f",ordem:4},
+ {id:"cr03a",codigo:"CR-03A",tipo:"criativo",marca:"Nelson Rabelo",titulo:"Anúncio Recepção que Vende · Tabela e some · CTA Pega os scripts",status:"pronto",drive:"16f2LymvFfjcpmxhgH5zqUm-Vnv7lSu_I",ordem:10,legenda:"Sua recepção manda a tabela de preço e some?\n\nEu mandei mensagem pra quase 150 academias como se fosse um aluno. Em 95% das vezes, a tabela chegou até a terceira mensagem. Depois disso: silêncio. Ninguém perguntou meu objetivo, ninguém tentou me qualificar, ninguém retomou a conversa.\n\nPor isso juntei, num material gratuito, os scripts que eu uso nas mentorias: do primeiro \"oi\" até a matrícula, a ligação de dois minutos e o café de feedback. É pra deixar aberto no computador da recepção: clicou na etapa, copiou o script.\n\nToque em Saiba Mais e pegue os scripts de graça.\n\n#GestaoDeAcademias #RecepcaoQueVende #VendasNaAcademia #DonoDeAcademia #NelsonRabelo"},
+ {id:"cr03b",codigo:"CR-03B",tipo:"criativo",marca:"Nelson Rabelo",titulo:"Anúncio Recepção que Vende · Tabela e some · CTA Comece hoje",status:"pronto",drive:"19Ldm0WAtR4vrbzNeWhuJL0o-s4IgHSl2",ordem:11,legenda:"Sua recepção manda a tabela de preço e some?\n\nEu mandei mensagem pra quase 150 academias como se fosse um aluno. Em 95% das vezes, a tabela chegou até a terceira mensagem. Depois disso: silêncio. Ninguém perguntou meu objetivo, ninguém tentou me qualificar, ninguém retomou a conversa.\n\nPor isso juntei, num material gratuito, os scripts que eu uso nas mentorias: do primeiro \"oi\" até a matrícula, a ligação de dois minutos e o café de feedback. É pra deixar aberto no computador da recepção: clicou na etapa, copiou o script.\n\nClique em Saiba Mais, deixe aberto no computador da recepção e comece hoje mesmo.\n\n#GestaoDeAcademias #RecepcaoQueVende #VendasNaAcademia #DonoDeAcademia #NelsonRabelo"},
+ {id:"cr03c",codigo:"CR-03C",tipo:"criativo",marca:"Nelson Rabelo",titulo:"Anúncio Recepção que Vende · Me passei por aluno · CTA Pega os scripts",status:"pronto",drive:"14ShJspJFljOLLqD3az3-A3tbbNOITGAo",ordem:12,legenda:"Eu me passei por aluno em 150 academias.\n\nEm 95% das vezes, a tabela de preço chegou até a terceira mensagem. Depois disso: silêncio. Ninguém perguntou meu objetivo, ninguém tentou me qualificar, ninguém retomou a conversa. A recepção informou, mas não vendeu.\n\nPor isso juntei, num material gratuito, os scripts que eu uso nas mentorias: do primeiro \"oi\" até a matrícula, a ligação de dois minutos e o café de feedback. É pra deixar aberto no computador da recepção: clicou na etapa, copiou o script.\n\nToque em Saiba Mais e pegue os scripts de graça.\n\n#GestaoDeAcademias #RecepcaoQueVende #VendasNaAcademia #DonoDeAcademia #NelsonRabelo"},
+ {id:"cr03d",codigo:"CR-03D",tipo:"criativo",marca:"Nelson Rabelo",titulo:"Anúncio Recepção que Vende · Me passei por aluno · CTA Comece hoje",status:"pronto",drive:"1HIWdY57EWHkMNs4VHf_mtMlTUCCMPxGQ",ordem:13,legenda:"Eu me passei por aluno em 150 academias.\n\nEm 95% das vezes, a tabela de preço chegou até a terceira mensagem. Depois disso: silêncio. Ninguém perguntou meu objetivo, ninguém tentou me qualificar, ninguém retomou a conversa. A recepção informou, mas não vendeu.\n\nPor isso juntei, num material gratuito, os scripts que eu uso nas mentorias: do primeiro \"oi\" até a matrícula, a ligação de dois minutos e o café de feedback. É pra deixar aberto no computador da recepção: clicou na etapa, copiou o script.\n\nClique em Saiba Mais, deixe aberto no computador da recepção e comece hoje mesmo.\n\n#GestaoDeAcademias #RecepcaoQueVende #VendasNaAcademia #DonoDeAcademia #NelsonRabelo"},
  {id:"p20min",titulo:"20 minutos planejados",status:"aprovar",versoes:[{n:"Painel",d:"1hILHTACXtgGcolpL_d2X9VdXXZf91aKF"},{n:"Resumo digitado",d:"1exArd1dFPUqQvMaJW07zIiIJ5rccIgWU"}]},
  {id:"pfalta",titulo:"O cliente não sente falta",status:"aprovar",versoes:[{n:"Painel",d:"1GkAKu7qYmm6aDWX8igQSHO_j2KIBlXOr"},{n:"Resumo digitado",d:"1aoShus6tEl4bzKfiEpmw-X0t7ehjlAXR"},{n:"Trilha dinâmica",d:"1B1A2yRP0QvyIvRAFoXygm98qs2ZxItnz"}]},
  {id:"psexta",titulo:"Revisão de treino na sexta",status:"aprovar",versoes:[{n:"Painel",d:"17UZhxkHzXJfl-7cOe-8bQWKn1LYCWUQP"},{n:"Resumo digitado",d:"1UX36QqkdGM_Shy06q9XQ1BL5ZYogKm5I"}]},
  {id:"psemtempo",titulo:"Aluno sem tempo na academia",status:"aprovar",versoes:[{n:"Painel",d:"1Tk4bUEWJNUfkSu4r9qC5FnSlZYo0RJpO"}]},
  {id:"pautomatico",titulo:"Automático e intencionalidade",status:"aprovar",versoes:[{n:"Impacto",d:"1yznpeQ5uIglJG6dnWW6wMge2rZhp_QQb"}]},
- {id:"p150",titulo:"150 academias (tabela de preço e silêncio)",status:"postado",postado_em:"2026-10-30",link:IG+"DfI5dS3R47o/",versoes:[{n:"Funil",d:"1sSovt6gEf6qByT3LBp40sc8lHaJw4nfs"},{n:"Impacto",d:"1LAIz_BeXlniQQcOyJI0jRVQDEkfJhyPk"}]},
- {id:"r05",marca:"Nelson Rabelo",legenda:"Sua academia tem instrutores ou treinadores?\n\nA diferença aparece no dia a dia: na postura, na iniciativa de conversar com o aluno e no cuidado para transformar uma orientação em um planejamento que ele consiga cumprir.\n\nNeste vídeo, reuni pontos de um treinamento com equipe técnica:\n\n• Instrutor, professor e treinador: o que muda no comportamento.\n• Postura e atenção no salão de musculação.\n• Intervenções com propósito durante o treino.\n• Consultoria para definir prioridade, meta de comportamento e revisão.\n• Uma conversa para planejar os dias de treino junto com o aluno.\n\nO aluno precisa perceber que está sendo acompanhado.\n\nSalve e leve essa conversa para a próxima reunião com sua equipe técnica.\n\n#NelsonRabelo #GestaoDeAcademias #DonoDeAcademia #EquipeTecnica #RetencaoDeAlunos",titulo:"#05 · Sua academia tem instrutores ou treinadores?",status:"postado",postado_em:"2026-10-17",link:IG+"DenU1WDxoJk/",drive:"1yoNph8aI0d0BUx2JY4DIvP0zHZeTDJqz"},
- {id:"indicacao",titulo:"Indicação não é esmola",status:"postado",postado_em:"2026-10-07",link:IG+"DeNwvsrxUwj/",drive:"1w32z36Qxuj4u3YBcbHWHHutqyg4Bczs3",obs:"Também no perfil da GeFit"},
- {id:"r04",titulo:"#04 · Da recepção ao treinador",status:"postado",postado_em:"2026-10-02",link:IG+"DeA6Y0puqc0/",drive:"1UbG6j6hnruAkFdPWs2ovBs0LDxg_pDYl"},
- {id:"r02",titulo:"#02 · O que conferir em cada lead",status:"postado",postado_em:"2026-10-01",link:IG+"Dd9Mq9YR2uX/",drive:"1ajCluKzohJ0ORUICHE7gnHH-vrMw9xyT"},
- {id:"r01",titulo:"#01 · O que medir no funil (35 tentativas)",status:"postado",postado_em:"2026-09-29",link:IG+"Dd5eusQxn0E/",drive:"1oaaqmVjxOTFBrkN1gYgIHrCiKJ5HYlYA"}
+ {id:"p150",tipo:"organico",marca:"Nelson Rabelo",titulo:"150 academias (tabela de preço e silêncio)",status:"postado",postado_em:"2026-10-30",link:IG+"DfI5dS3R47o/",versoes:[{n:"Funil",d:"1sSovt6gEf6qByT3LBp40sc8lHaJw4nfs"},{n:"Impacto",d:"1LAIz_BeXlniQQcOyJI0jRVQDEkfJhyPk"}]},
+ {id:"r05",codigo:"R-05",tipo:"organico",marca:"Nelson Rabelo",legenda:"Sua academia tem instrutores ou treinadores?\n\nA diferença aparece no dia a dia: na postura, na iniciativa de conversar com o aluno e no cuidado para transformar uma orientação em um planejamento que ele consiga cumprir.\n\nNeste vídeo, reuni pontos de um treinamento com equipe técnica:\n\n• Instrutor, professor e treinador: o que muda no comportamento.\n• Postura e atenção no salão de musculação.\n• Intervenções com propósito durante o treino.\n• Consultoria para definir prioridade, meta de comportamento e revisão.\n• Uma conversa para planejar os dias de treino junto com o aluno.\n\nO aluno precisa perceber que está sendo acompanhado.\n\nSalve e leve essa conversa para a próxima reunião com sua equipe técnica.\n\n#NelsonRabelo #GestaoDeAcademias #DonoDeAcademia #EquipeTecnica #RetencaoDeAlunos",titulo:"#05 · Sua academia tem instrutores ou treinadores?",status:"postado",postado_em:"2026-10-17",link:IG+"DenU1WDxoJk/",drive:"1yoNph8aI0d0BUx2JY4DIvP0zHZeTDJqz"},
+ {id:"indicacao",codigo:"CR-02",tipo:"ambos",marca:"Collab",titulo:"Indicação não é esmola",status:"postado",postado_em:"2026-10-07",link:IG+"DeNwvsrxUwj/",drive:"1w32z36Qxuj4u3YBcbHWHHutqyg4Bczs3",obs:"Postado no Nelson e na GeFit"},
+ {id:"r04",codigo:"R-04",tipo:"organico",marca:"Nelson Rabelo",titulo:"#04 · Da recepção ao treinador",status:"postado",postado_em:"2026-10-02",link:IG+"DeA6Y0puqc0/",drive:"1UbG6j6hnruAkFdPWs2ovBs0LDxg_pDYl"},
+ {id:"r02",codigo:"R-02",tipo:"organico",marca:"Nelson Rabelo",titulo:"#02 · O que conferir em cada lead",status:"postado",postado_em:"2026-10-01",link:IG+"Dd9Mq9YR2uX/",drive:"1ajCluKzohJ0ORUICHE7gnHH-vrMw9xyT"},
+ {id:"r01",codigo:"R-01",tipo:"organico",marca:"Nelson Rabelo",titulo:"#01 · O que medir no funil (35 tentativas)",status:"postado",postado_em:"2026-09-29",link:IG+"Dd5eusQxn0E/",drive:"1oaaqmVjxOTFBrkN1gYgIHrCiKJ5HYlYA"}
 ];
 
-let itens=[], aba="pronto", nuvem=true, editId=null;
+let itens=[], aba="pronto", nuvem=true, editId=null, fMarca="", fTipo="";
+const MARCAS=["Nelson Rabelo","GeFit","Collab"];
+const TIPOS={organico:"Orgânico",criativo:"Criativo de anúncio"};
+function passaFiltro(i){if(fMarca&&i.marca!==fMarca)return false;if(fTipo==="organico"&&!(i.tipo==="organico"||i.tipo==="ambos"||!i.tipo))return false;if(fTipo==="criativo"&&!(i.tipo==="criativo"||i.tipo==="ambos"))return false;return true}
 const $=id=>document.getElementById(id);
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function toast(t){const e=$("toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display="none",1800)}
@@ -165,7 +181,8 @@ async function salvar(it){
 }
 
 function render(){
-  const cont={};ORDEM.forEach(k=>cont[k]=itens.filter(i=>i.status===k).length);
+  const cont={};ORDEM.forEach(k=>cont[k]=itens.filter(i=>i.status===k&&passaFiltro(i)).length);
+  $("filtros").innerHTML='<span>Identidade</span>'+["",...MARCAS].map(m=>`<button class="fch ${fMarca===m?"on":""}" onclick="fMarca=\'${m}\';render()">${m||"Todas"}</button>`).join("")+'<span>Tipo</span>'+[["","Todos"],["organico","Orgânico"],["criativo","Criativo de anúncio"]].map(([k,l])=>`<button class="fch ${fTipo===k?"on":""}" onclick="fTipo=\'${k}\';render()">${l}</button>`).join("");
   $("tabs").innerHTML=ORDEM.map(k=>`<button class="tab ${aba===k?"on":""}" onclick="aba='${k}';render()">${STATUS[k]}<b>${cont[k]}</b></button>`).join("");
   $("hint").textContent={
     aprovar:"Prévias: trechos curtos (até uns 30 segundos) para aprovar o estilo de edição. Não são o vídeo completo. Escolha a versão e ela vai para Em edição, onde a edição completa é feita.",
@@ -173,7 +190,7 @@ function render(){
     pronto:"Prontos para postar, em ordem de prioridade. Assista, baixe e poste. Depois, marque como postado.",
     postado:"Já publicados no Instagram, do mais recente para o mais antigo."
   }[aba];
-  let lista=itens.filter(i=>i.status===aba);
+  let lista=itens.filter(i=>i.status===aba&&passaFiltro(i));
   lista.sort(aba==="postado"?(a,b)=>(b.postado_em||"").localeCompare(a.postado_em||""):(a,b)=>(a.ordem||99)-(b.ordem||99));
   $("grid").innerHTML=lista.length?lista.map(card).join(""):'<div class="empty">Nada por aqui.</div>';
 }
@@ -184,7 +201,7 @@ function card(it){
         <button class="btn sm" onclick="assistir('${it.id}','${v.d}','${esc(v.n)}')">▶</button>
         ${it.status==="aprovar"?`<button class="btn sm" onclick="escolher('${it.id}','${esc(v.n)}')">Escolher</button>`:""}
       </div>`).join("")}</div>`:"";
-  const meta=[it.marca?(it.marca==="GeFit"?"Identidade GeFit · postar em collab":"Identidade "+it.marca):"",it.status==="postado"&&it.postado_em?"Postado em "+dataBR(it.postado_em):"",it.obs||""].filter(Boolean).join(" · ");
+  const meta=[it.marca?(it.marca==="GeFit"?"Identidade GeFit · postar em collab":it.marca==="Collab"?"Collab Nelson + GeFit":"Identidade "+it.marca):"",it.status==="postado"&&it.postado_em?"Postado em "+dataBR(it.postado_em):"",it.obs||""].filter(Boolean).join(" · ");
   let acts="";
   if(it.status==="pronto"){acts=`${d?`<a class="btn sm pri" href="${baixar(d)}" target="_blank" rel="noopener">⬇ Baixar</a>`:""}<button class="btn sm" onclick="marcarPostado('${it.id}')">Marquei como postado</button>`}
   if(it.status==="exportar"){acts=`<button class="btn sm" onclick="editar('${it.id}')">Colar vídeo final</button>`}
@@ -193,7 +210,7 @@ function card(it){
   acts+=`<button class="btn sm" onclick="editar('${it.id}')">Editar</button>`;
   return `<div class="card">
     <div class="thumb" style="background-image:url('${thumb(d)}')" onclick="${d?`assistir('${it.id}','${d}','')`:""}">
-      <span class="st ${it.status}">${STATUS[it.status]}</span>${d?'<div class="play">▶</div>':""}
+      <span class="st ${it.status}">${STATUS[it.status]}</span>${it.codigo?`<span class="cod ${it.tipo==="criativo"||it.tipo==="ambos"?"ad":""}">${esc(it.codigo)}${it.tipo==="criativo"?" · Anúncio":it.tipo==="ambos"?" · Anúncio + orgânico":""}</span>`:""}${d?'<div class="play">▶</div>':""}
     </div>
     <div class="body"><div class="ti">${esc(it.titulo)}</div>${meta?`<div class="meta">${esc(meta)}</div>`:""}${vers}<div class="acts">${acts}</div></div>
   </div>`;
@@ -217,7 +234,7 @@ function editar(id){
   editId=id;const it=achar(id);
   $("eTitulo").textContent=it.titulo;$("fTitulo").value=it.titulo||"";$("fStatus").value=it.status;
   $("fDrive").value=it.drive?`https://drive.google.com/file/d/${it.drive}/view`:"";$("fData").value=it.postado_em||"";
-  $("fLink").value=it.link||"";$("fLeg").value=it.legenda||"";$("fObs").value=it.obs||"";$("fMarca").value=it.marca||"";
+  $("fLink").value=it.link||"";$("fLeg").value=it.legenda||"";$("fObs").value=it.obs||"";$("fMarca").value=it.marca||"";$("fTipo").value=it.tipo||"organico";$("fCod").value=it.codigo||"";
   $("mEdit").classList.add("on");
 }
 function abrirNovo(){
@@ -229,7 +246,7 @@ async function salvarEdicao(){
   const it=achar(editId);delete it.novo;
   it.titulo=$("fTitulo").value.trim()||"Sem título";it.status=$("fStatus").value;
   const d=driveId($("fDrive").value);if(d)it.drive=d;else delete it.drive;
-  it.postado_em=$("fData").value||"";it.link=$("fLink").value.trim();it.legenda=$("fLeg").value;it.obs=$("fObs").value.trim();it.marca=$("fMarca").value;
+  it.postado_em=$("fData").value||"";it.link=$("fLink").value.trim();it.legenda=$("fLeg").value;it.obs=$("fObs").value.trim();it.marca=$("fMarca").value;it.tipo=$("fTipo").value;it.codigo=$("fCod").value.trim();
   await salvar(it);fechar("mEdit");aba=it.status;render();toast("Salvo");
 }
 async function copiarTxt(t){try{await navigator.clipboard.writeText(t);toast("Legenda copiada")}catch(e){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();toast("Legenda copiada")}}
