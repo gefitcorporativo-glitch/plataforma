@@ -344,7 +344,8 @@ async function enviarReset(){
   if(!email){ document.getElementById('msgResetError').textContent='Digite seu e-mail.';document.getElementById('msgResetError').classList.add('show');return; }
 
   const { error } = await sbClient.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/index.html'
+    // Resolve relativo à pasta atual (no GitHub Pages: .../retencao/redefinir_senha.html)
+    redirectTo: new URL('redefinir_senha.html', window.location.href).href
   });
 
   if(error){

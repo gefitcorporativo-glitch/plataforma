@@ -1,0 +1,8 @@
+# As funções validam o token do usuário por conta própria (auth.getUser),
+# então a verificação de JWT do gateway fica desligada. Isso é necessário
+# depois da troca para as novas chaves de assinatura (03/11/2026).
+[functions.gestor-equipe]
+verify_jwt = false
+
+[functions.admin-plataforma]
+verify_jwt = false

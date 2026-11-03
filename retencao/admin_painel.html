@@ -168,14 +168,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="login-logo"><img class="gf-logo" src="logo-gefit.png" alt="GeFit" style="height:34px"></div>
     <div class="login-sub">Painel Administrativo</div>
     <div class="field">
-      <label>Usuário</label>
-      <input type="text" id="loginUser" placeholder="admin" onkeydown="if(event.key==='Enter')fazerLogin()">
+      <label>E-mail</label>
+      <input type="email" id="loginUser" placeholder="seu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')fazerLogin()">
     </div>
     <div class="field">
       <label>Senha</label>
-      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()">
     </div>
-    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    <button class="btn-login" id="btnLoginAdmin" onclick="fazerLogin()">Entrar</button>
     <div class="login-error" id="loginError">Usuário ou senha incorretos</div>
   </div>
 </div>
@@ -706,14 +706,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 <script>
-// ── CREDENCIAIS ADMIN ─────────────────────────────────────────
-// ALTERE AQUI para definir usuário e senha do painel admin
-const ADMIN_USER = 'nelson';
-const ADMIN_PASS = 'QG90admin2026';
-
+// ── ACESSO ADMIN ──────────────────────────────────────────────
+// Login real do Supabase Auth. Só entra quem está na tabela
+// admins_plataforma (ver supabase/sql/01_admins_plataforma.sql).
+// Ações privilegiadas (criar login, trocar senha, excluir academia) rodam
+// na Edge Function "admin-plataforma" — nenhuma chave secreta no navegador.
 const SUPABASE_URL  = APP_CONFIG.SUPABASE_URL;
 const SUPABASE_ANON = APP_CONFIG.SUPABASE_ANON;
-const SUPABASE_SERVICE = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwdmVkaWhwZWppdm5rc3NyeWhjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTczMzY5MSwiZXhwIjoyMDk1MzA5NjkxfQ.9C-JwXbqyWC4cXHTNet20fOPfKI8rG0jDcZ_pQyLp7k';
+const ADMIN_FN_URL  = SUPABASE_URL + '/functions/v1/admin-plataforma';
 
 const PLANOS = {
   piloto: { label:'Piloto', valor: 0 },
@@ -733,44 +733,87 @@ let filtroTipoUserAtual = 'todos';
 let filtroAlunoStatusAtual = 'todos';
 
 // ── LOGIN ─────────────────────────────────────────────────────
-function fazerLogin(){
-  const user = document.getElementById('loginUser').value.trim();
-  const pass = document.getElementById('loginPass').value;
-  const errEl = document.getElementById('loginError');
+function getSb(){
+  if(!sb) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  return sb;
+}
 
-  if(user === ADMIN_USER && pass === ADMIN_PASS){
-    sessionStorage.setItem('qg90_admin', '1');
+async function adminApi(action, payload = {}){
+  const { data: { session } } = await getSb().auth.getSession();
+  if(!session) throw new Error('Sessão expirada — entre novamente.');
+  let resp, body;
+  try {
+    resp = await fetch(ADMIN_FN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + session.access_token,
+      },
+      body: JSON.stringify({ action, ...payload }),
+    });
+    body = await resp.json().catch(() => ({}));
+  } catch(e){
+    throw new Error('Não foi possível falar com o servidor (função admin-plataforma publicada?)');
+  }
+  if(!resp.ok || body.error) throw new Error(body.error || ('Erro ' + resp.status));
+  return body;
+}
+
+function mostrarErroLogin(msg){
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = msg;
+  errEl.style.display = 'block';
+}
+
+async function liberarSeAdmin(){
+  try {
+    const r = await adminApi('quem_sou');
+    const nomeEl = document.querySelector('.hadmin');
+    if(nomeEl && r.admin) nomeEl.textContent = '🔐 ' + (r.admin.nome || r.admin.email);
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('appWrap').style.display = 'block';
-    errEl.style.display = 'none';
-    iniciarApp();
-  } else {
-    errEl.style.display = 'block';
-    document.getElementById('loginPass').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    await carregarTudo();
+    return true;
+  } catch(err){
+    return err;
   }
 }
 
-function fazerLogout(){
-  sessionStorage.removeItem('qg90_admin');
+async function fazerLogin(){
+  const email = document.getElementById('loginUser').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if(!email || !pass){ mostrarErroLogin('Preencha e-mail e senha.'); return; }
+  const btn = document.getElementById('btnLoginAdmin');
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  try {
+    const { error } = await getSb().auth.signInWithPassword({ email, password: pass });
+    if(error){ mostrarErroLogin('E-mail ou senha incorretos.'); document.getElementById('loginPass').value=''; return; }
+    const ok = await liberarSeAdmin();
+    if(ok !== true){
+      await getSb().auth.signOut();
+      mostrarErroLogin(ok.message || 'Acesso restrito ao administrador da plataforma.');
+    }
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+}
+
+async function fazerLogout(){
+  try { await getSb().auth.signOut(); } catch(e){}
   document.getElementById('loginWrap').style.display = 'flex';
   document.getElementById('appWrap').style.display = 'none';
 }
 
-// Verificar sessão ao carregar
-window.addEventListener('DOMContentLoaded', () => {
-  if(sessionStorage.getItem('qg90_admin') === '1'){
-    document.getElementById('loginWrap').style.display = 'none';
-    document.getElementById('appWrap').style.display = 'block';
-    iniciarApp();
-  }
+// Retoma a sessão ao carregar (se já estiver logado como admin)
+window.addEventListener('DOMContentLoaded', async () => {
+  try { sessionStorage.removeItem('qg90_admin'); } catch(e){}
+  const { data: { session } } = await getSb().auth.getSession();
+  if(session) await liberarSeAdmin();
 });
 
 // ── INIT ──────────────────────────────────────────────────────
-async function iniciarApp(){
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  await carregarTudo();
-}
-
 async function carregarTudo(){
   try {
     const [acadRes, treinRes, gestRes, consRes, alunoRes, plannerRes] = await Promise.all([
@@ -963,14 +1006,9 @@ async function confirmarExcluirAcademia(){
   if(digitado !== excluirAcademiaAlvo.nome){ showToast('O nome digitado não confere.'); return; }
   const { id, nome } = excluirAcademiaAlvo;
   try {
-    const sbAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE);
-    // Apaga dependências primeiro (best-effort — ignora tabelas que não existirem)
-    const tabelasFilhas = ['compromissos','diario_treinador','experiencias','planners','alunos','consultores','gestores','treinadores'];
-    for(const t of tabelasFilhas){
-      try { await sbAdmin.from(t).delete().eq('academia_id', id); } catch(e){ console.warn('Falha ao limpar', t, e); }
-    }
-    const { error } = await sbAdmin.from('academias').delete().eq('id', id);
-    if(error) throw new Error(error.message);
+    // Apaga dependências e a academia no servidor (Edge Function admin-plataforma)
+    const r = await adminApi('excluir_academia', { academia_id: id });
+    if(r.avisos?.length) console.warn('Avisos ao excluir:', r.avisos);
     fecharModal('modalExcluirAcademia');
     showToast(`🗑️ ${nome} excluída (e todos os dados vinculados)`);
     carregarTudo();
@@ -1409,19 +1447,7 @@ async function salvarNovoUsuario(){
   const btn=document.getElementById('nuBtnSalvar');
   btn.disabled=true; btn.textContent='Criando...';
   try {
-    const sbAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE);
-    const {data:auth,error:authErr}=await sbAdmin.auth.admin.createUser({
-      email, password:senha,
-      email_confirm: true,
-      user_metadata:{nome, role:perfil, academia_id:acadId}
-    });
-    if(authErr) throw new Error(authErr.message);
-    const userId=auth.user?.id;
-    if(userId){
-      if(perfil==='treinador') await sb.from('treinadores').insert([{user_id:userId,academia_id:acadId,nome,email,tipo}]);
-      if(perfil==='gestor')    await sb.from('gestores').insert([{user_id:userId,academia_id:acadId,nome,email}]);
-      if(perfil==='consultor') await sb.from('consultores').insert([{user_id:userId,academia_id:acadId,nome,email,ativo:true}]);
-    }
+    await adminApi('criar_usuario', { perfil, academia_id: acadId, nome, email, senha, tipo });
     const perfilLabel = perfil==='treinador'?'Treinador(a)':perfil==='gestor'?'Gestor(a)':'Consultor(a)';
     const credText=`${perfilLabel}: ${nome}\nE-mail: ${email}\nSenha: ${senha}\nURL: https://gefitcorporativo-glitch.github.io/retencao/${perfil==='consultor'?'painel_vendas.html':''}`;
     window._nuCredText=credText;
@@ -1468,18 +1494,8 @@ async function salvarNovaSenha(){
   if(!novaSenha||novaSenha.length<8){ showToast('Senha mínimo 8 caracteres'); return; }
 
   try {
-    // Usar cliente admin com service role key
-    const sbAdmin = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE);
-    
-    // Buscar UID pelo email
-    const {data: users} = await sbAdmin.auth.admin.listUsers();
-    const user = users?.users?.find(u => u.email === email);
-    
-    if(!user){ showToast('Usuário não encontrado'); return; }
-    
-    const {error} = await sbAdmin.auth.admin.updateUserById(user.id, {password: novaSenha});
-    
-    if(error) throw new Error(error.message);
+    // Troca de senha feita no servidor (Edge Function admin-plataforma)
+    await adminApi('resetar_senha', { email, novaSenha });
 
     showToast('✅ Senha redefinida com sucesso!');
 
@@ -1702,38 +1718,21 @@ async function naCadastrar(){
 
     // 2. Gestor
     naSetStep('naStep2','loading');
-    const sbAdmin2 = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE);
-    const {data:gAuth, error:gErr} = await sbAdmin2.auth.admin.createUser({
-      email: gestorEmail, password: gestorSenha,
-      email_confirm: true,
-      user_metadata:{nome:gestorNome, role:'gestor', academia_id:academiaId}
-    });
-    if(gErr) throw new Error('Gestor: '+gErr.message);
-    if(gAuth.user?.id){
-      await sb.from('gestores').insert([{user_id:gAuth.user.id, academia_id:academiaId, nome:gestorNome, email:gestorEmail}]);
-    }
+    try {
+      await adminApi('criar_usuario', { perfil:'gestor', academia_id:academiaId, nome:gestorNome, email:gestorEmail, senha:gestorSenha });
+    } catch(e){ throw new Error('Gestor: '+e.message); }
     credentials.push({tipo:'Gestor', nome:gestorNome, email:gestorEmail, senha:gestorSenha});
     naSetStep('naStep2','done');
 
     // 3. Treinadores
     naSetStep('naStep3','loading');
     for(const t of naTreinadores){
-      const sbAdmin3 = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE);
-      const {data:tAuth, error:tErr} = await sbAdmin3.auth.admin.createUser({
-        email:t.email, password:t.senha,
-        email_confirm: true,
-        user_metadata:{nome:t.nome, role:'treinador', academia_id:academiaId}
-      });
-      if(tErr){ console.warn('Treinador err:', tErr.message); continue; }
-      if(tAuth.user?.id){
-        await sb.from('treinadores').insert([{user_id:tAuth.user.id, academia_id:academiaId, nome:t.nome, email:t.email, tipo:t.tipo}]);
-      }
+      try {
+        await adminApi('criar_usuario', { perfil:'treinador', academia_id:academiaId, nome:t.nome, email:t.email, senha:t.senha, tipo:t.tipo });
+      } catch(e){ console.warn('Treinador err:', e.message); showToast(`⚠️ ${t.nome}: ${e.message}`); continue; }
       credentials.push({tipo:'Treinador', nome:t.nome, email:t.email, senha:t.senha});
     }
     naSetStep('naStep3','done');
-
-    // Confirmar e-mails
-    await sb.rpc || null;
 
     // Resultado
     naCredenciaisTexto = `🏋️ ${nome}\n📍 ${cidade} / ${estado}\n\n🔗 URL: https://gefitcorporativo-glitch.github.io/retencao/\n\n`;

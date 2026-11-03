@@ -9,7 +9,27 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+// Chave secreta do servidor. As chaves JWT legadas (anon/service_role) foram
+// desativadas em 03/11/2026, então a ordem de preferência é:
+//   1. secret próprio "SB_SECRET_KEY" (sb_secret_...), definido em Edge Functions → Secrets
+//   2. SUPABASE_SECRET_KEYS (JSON injetado pela plataforma, chave "default")
+//   3. SUPABASE_SERVICE_ROLE_KEY (legado; só funciona se as chaves legadas forem reativadas)
+function chaveSecreta(): string {
+  const propria = Deno.env.get('SB_SECRET_KEY')
+  if (propria) return propria
+  const json = Deno.env.get('SUPABASE_SECRET_KEYS')
+  if (json) {
+    try {
+      const obj = JSON.parse(json)
+      const k = obj.default ?? Object.values(obj)[0]
+      if (typeof k === 'string' && k) return k
+    } catch (_) { /* ignora e cai no legado */ }
+  }
+  const legado = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (legado) return legado
+  throw new Error('Chave secreta não configurada (defina o secret SB_SECRET_KEY).')
+}
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -35,22 +55,22 @@ Deno.serve(async (req) => {
     const jwt = authHeader.replace('Bearer ', '')
     if (!jwt) return jsonResponse({ error: 'Não autenticado' }, 401)
 
-    // Cliente "anon" só pra validar o token do usuário chamador
-    const sbUser = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } },
+    // Cliente com a chave secreta — só usado aqui dentro, nunca sai do servidor
+    const sbAdmin = createClient(SUPABASE_URL, chaveSecreta(), {
+      auth: { persistSession: false, autoRefreshToken: false },
     })
-    const { data: { user }, error: userErr } = await sbUser.auth.getUser(jwt)
-    if (userErr || !user) return jsonResponse({ error: 'Sessão inválida' }, 401)
 
-    // Cliente com a service_role key — só usado aqui dentro, nunca sai do servidor
-    const sbAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+    // Valida o token de sessão do chamador direto no Auth (funciona com as
+    // novas chaves de assinatura; não depende do "Verify JWT" do gateway)
+    const { data: { user }, error: userErr } = await sbAdmin.auth.getUser(jwt)
+    if (userErr || !user) return jsonResponse({ error: 'Sessão inválida' }, 401)
 
     // 2. Confirmar que quem está chamando é DE FATO um gestor, e pegar a academia_id real dele
     const { data: gestor, error: gestorErr } = await sbAdmin
       .from('gestores')
       .select('id, academia_id, nome')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (gestorErr || !gestor) {
       return jsonResponse({ error: 'Só gestores podem gerenciar a equipe.' }, 403)
@@ -103,8 +123,8 @@ Deno.serve(async (req) => {
       if (novaSenha.length < 8) return jsonResponse({ error: 'Senha precisa ter no mínimo 8 caracteres.' }, 400)
 
       // Confirma que esse e-mail pertence a alguém DA MESMA academia do gestor
-      const { data: treinador } = await sbAdmin.from('treinadores').select('user_id, academia_id').eq('email', email).single()
-      const { data: consultor } = await sbAdmin.from('consultores').select('user_id, academia_id').eq('email', email).single()
+      const { data: treinador } = await sbAdmin.from('treinadores').select('user_id, academia_id').eq('email', email).maybeSingle()
+      const { data: consultor } = await sbAdmin.from('consultores').select('user_id, academia_id').eq('email', email).maybeSingle()
       const pessoa = treinador || consultor
 
       if (!pessoa || pessoa.academia_id !== academiaId) {
