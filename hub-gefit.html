@@ -38,6 +38,18 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.9;stro
 .pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:#5B6578;font-size:12.5px;font-weight:700;cursor:pointer;padding:8px}
 #lerr{display:none;background:#FDECEC;color:#B42318;border-radius:8px;font-size:13.5px;padding:10px 12px;margin-top:14px}
 #lerr.show{display:block}
+/* confirmação da senha da Retenção (só quando a senha é diferente da plataforma) */
+#retModal{position:fixed;inset:0;background:rgba(6,10,22,.72);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+#retModal.on{display:flex}
+#retModal .l-box{background:#fff;border-radius:16px;padding:28px 26px;width:100%;max-width:400px;color:#0B1222}
+#retModal h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;margin-bottom:6px}
+#retModal .sub{font-size:14px;color:#5A6478}
+#retErr{display:none;background:#FDECEC;color:#B42318;border-radius:8px;font-size:13.5px;padding:10px 12px;margin-top:14px}
+#retErr.show{display:block}
+#retModal .acoes{display:flex;gap:10px;margin-top:20px}
+#retModal .acoes button{flex:1;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;border:1.5px solid #D5DBE8;background:#fff;color:#3A455C}
+#retModal .acoes button.pri{background:#002E82;border-color:#002E82;color:#fff}
+#retModal .acoes button:disabled{opacity:.6;cursor:wait}
 #lbtn{width:100%;margin-top:20px;background:#002E82;color:#fff;border:0;border-radius:10px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;transition:filter .15s}
 #lbtn:hover{filter:brightness(1.15)}
 #lbtn:disabled{opacity:.6;cursor:wait}
@@ -145,6 +157,22 @@ iframe.show{display:block}
   </div>
 </div>
 
+<!-- Confirmação de acesso à Retenção -->
+<div id="retModal" role="dialog" aria-modal="true" aria-labelledby="retTit">
+  <form class="l-box" id="retForm" autocomplete="on">
+    <h2 id="retTit">Acesso à Retenção</h2>
+    <div class="sub">A senha da Retenção é diferente da senha da plataforma. Confirme uma vez e não pediremos de novo neste aparelho.</div>
+    <label for="retEmail">E-mail</label>
+    <input id="retEmail" type="email" autocomplete="username" required>
+    <label for="retSenha">Senha da Retenção</label>
+    <input id="retSenha" type="password" autocomplete="current-password" required>
+    <div id="retErr"></div>
+    <div class="acoes"><button type="button" id="retCancelar">Cancelar</button><button type="submit" class="pri" id="retOk">Entrar</button></div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="retencao/config.js"></script>
 <script>
 const SB_URL='https://irwvagffrguiljaxrzmd.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlyd3ZhZ2Zmcmd1aWxqYXhyem1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNDk5ODUsImV4cCI6MjEwNDkyNTk4NX0.YAApyaH6iIHEua_89fgCUpMzgXRIcWb_vNRkBQAoq5A';
@@ -231,6 +259,7 @@ $('lform').onsubmit=async ev=>{
   try{
     const r=await sbGet('gestores',`email=eq.${encodeURIComponent(email)}&senha_hash=eq.${encodeURIComponent(senha)}&ativo=eq.true&select=${SEL}`);
     if(!r.length){err.textContent='E-mail ou senha incorretos.';err.classList.add('show');return}
+    await conectarRetencao(email,senha);
     guardar(r[0]);entrar(r[0]);
   }catch(e){err.textContent='Não foi possível conectar. Tente novamente em instantes.';err.classList.add('show');console.error(e)}
   finally{b.disabled=false;b.textContent='Entrar na plataforma →'}
@@ -269,7 +298,7 @@ function montarMenu(){
 }
 function recentes(){try{return JSON.parse(localStorage.getItem('gf_hub_rec_'+sessao.id)||'[]').filter(i=>todos.some(m=>m.id===i))}catch(e){return[]}}
 function marcarRecente(id){try{const r=[id,...recentes().filter(x=>x!==id)].slice(0,4);localStorage.setItem('gf_hub_rec_'+sessao.id,JSON.stringify(r))}catch(e){}}
-function card(m){return `<button class="card" data-id="${m.id}">${m.ret?'<span class="badge">login próprio</span>':''}<div class="ic">${svg(m.icon)}</div><h3>${m.nome}</h3><p>${m.desc}</p></button>`}
+function card(m){return `<button class="card" data-id="${m.id}">${m.ret&&!retLogado?'<span class="badge">login próprio</span>':''}<div class="ic">${svg(m.icon)}</div><h3>${m.nome}</h3><p>${m.desc}</p></button>`}
 function montarHome(q){
   const p=(sessao.nome||'').split(' ')[0];
   const term=q.trim().toLowerCase();
@@ -288,8 +317,9 @@ function montarHome(q){
   $('home').querySelectorAll('.card').forEach(b=>b.onclick=()=>abrir(b.dataset.id));
   const bi=$('busca');bi.oninput=()=>{montarHome(bi.value);const n=$('busca');n.focus();n.setSelectionRange(n.value.length,n.value.length)};
 }
-function abrir(id,push=true){
+async function abrir(id,push=true){
   const m=todos.find(x=>x.id===id);
+  if(m&&m.ret&&!(await temSessaoRetencao())){pedirSenhaRetencao(id,push);return}
   document.body.classList.remove('open');
   document.querySelectorAll('.item').forEach(b=>b.classList.toggle('on',b.dataset.id===(m?id:'home')));
   const f=$('frame');
@@ -301,12 +331,62 @@ function abrir(id,push=true){
 }
 $('burger').onclick=()=>document.body.classList.toggle('open');
 function sair(){
+  try{const c=retClient();if(c)c.auth.signOut()}catch(e){}
+  retLogado=false;
   ['qg90_sessao_roi','qg90_sessao','qg90_admin'].forEach(k=>{try{sessionStorage.removeItem(k)}catch(e){}});
-  sessao=null;$('frame').removeAttribute('src');$('app').classList.remove('on');$('login').style.display='flex';
+  sessao=null;$('frame').removeAttribute('src');delete $('frame').dataset.id;$('app').classList.remove('on');$('login').style.display='flex';
   $('ls').value='';location.hash='';
 }
 $('sair').onclick=sair;
-retomar();
+
+/* ===== Ponte com a Retenção (outro projeto Supabase) =====
+   Os módulos da Retenção usam o login do Supabase Auth do projeto deles.
+   Ao entrar aqui, usamos o mesmo e-mail e senha para abrir essa sessão também.
+   A sessão fica salva neste navegador (mesmo domínio), então os módulos abrem
+   direto, sem um segundo login. Se a senha for diferente, pedimos uma vez só. */
+let sbRet=null,retLogado=false,retPendente=null;
+function retClient(){
+  if(!sbRet&&window.supabase&&window.APP_CONFIG)
+    sbRet=window.supabase.createClient(APP_CONFIG.SUPABASE_URL,APP_CONFIG.SUPABASE_ANON);
+  return sbRet;
+}
+async function temSessaoRetencao(){
+  const c=retClient();if(!c)return false;
+  try{const{data:{session}}=await c.auth.getSession();retLogado=!!session;return retLogado}catch(e){return false}
+}
+async function conectarRetencao(email,senha){
+  const c=retClient();if(!c)return false;
+  try{
+    const{data:{session}}=await c.auth.getSession();
+    if(session&&(session.user.email||'').toLowerCase()===email.toLowerCase()){retLogado=true;return true}
+    if(session)await c.auth.signOut();
+    // limite de 6s para não travar a entrada na plataforma
+    const{error}=await Promise.race([
+      c.auth.signInWithPassword({email,password:senha}),
+      new Promise(r=>setTimeout(()=>r({error:{message:'timeout'}}),6000))]);
+    retLogado=!error;return retLogado;
+  }catch(e){return false}
+}
+function pedirSenhaRetencao(id,push){
+  retPendente={id,push};
+  $('retEmail').value=(sessao&&sessao.email)||'';$('retSenha').value='';
+  $('retErr').classList.remove('show');
+  $('retModal').classList.add('on');
+  setTimeout(()=>($('retEmail').value?$('retSenha'):$('retEmail')).focus(),50);
+}
+function fecharRetModal(){$('retModal').classList.remove('on');retPendente=null}
+$('retCancelar').onclick=fecharRetModal;
+$('retForm').onsubmit=async ev=>{
+  ev.preventDefault();
+  const b=$('retOk');b.disabled=true;b.textContent='Verificando...';
+  const ok=await conectarRetencao($('retEmail').value.trim(),$('retSenha').value);
+  b.disabled=false;b.textContent='Entrar';
+  if(!ok){const e=$('retErr');e.textContent='E-mail ou senha da Retenção incorretos.';e.classList.add('show');return}
+  const p=retPendente;fecharRetModal();montarHome('');
+  if(p)abrir(p.id,p.push);
+};
+
+(async()=>{await temSessaoRetencao();retomar()})();
 </script>
 </body>
 </html>
