@@ -351,7 +351,7 @@ body.role-consultor #painel-prod-time,body.role-consultor #painel-cons-filter{di
           <button onclick="abrirCentralScriptsV2()" style="color:var(--am)" title="Versão nova, ainda em construção">🚧 Scripts v2 (beta)</button>
           <div class="dd-sep"></div>
           <div class="dd-lbl">Vídeos · abre em nova aba</div>
-          <button onclick="abrirEstudio()" title="Gravação de vídeos pelo celular: abre a página pública do Estúdio GeFit em nova aba. Os convites de gravação são enviados à parte.">🎥 Abrir Estúdio GeFit</button>
+          <button onclick="abrirEstudio()" title="Abre em nova aba a área da academia no Estúdio GeFit (pede a senha da academia). Os convites de gravação são enviados à parte.">🎥 Abrir Estúdio GeFit</button>
           <div class="dd-sep"></div>
           <button id="btn-add-cons-top" onclick="if(!ac()){toast('Selecione uma academia no seletor acima.',true);return}openM('m-cons')" style="display:none">➕ Consultor(a)</button>
           <div class="admin-ac-row" id="admin-ac-row" onclick="event.stopPropagation()">
@@ -4593,9 +4593,11 @@ function linkDaAcademia(arq){
   return base+arq+(a?'?a='+encodeURIComponent(a):'');
 }
 // ══ ESTÚDIO GEFIT ══
-// Só a página pública. Os convites de gravação (links com #código) são privados:
-// são enviados à pessoa por canal privado e nunca ficam no HTML/JS do Hub.
-const ESTUDIO_URL='https://studio.gefithub.com.br/';
+// Cada Hub abre só a área da sua academia no Estúdio (o login acontece no domínio do Estúdio).
+// Aqui fica apenas o endereço público da academia: nenhuma senha, convite (#código),
+// cookie ou ID do Drive. Tabela de caminhos no INTEGRACAO.md do Estúdio.
+const ESTUDIO_ACADEMIA='gefit';
+const ESTUDIO_URL='https://studio.gefithub.com.br/a/'+ESTUDIO_ACADEMIA;
 function abrirEstudio(){
   const w=window.open(ESTUDIO_URL,'_blank','noopener,noreferrer');
   if(w)try{w.opener=null}catch(e){}
