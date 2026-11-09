@@ -210,7 +210,7 @@ if(window.top!==window.self){window.top.location.href=window.location.href;}
 // ── CONFIGURAÇÃO SUPABASE ────────────────────────────────────
 const SUPABASE_URL  = APP_CONFIG.SUPABASE_URL;
 const SUPABASE_ANON = APP_CONFIG.SUPABASE_ANON;
-const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
 
 // ── STATE ────────────────────────────────────────────────────
 let selectedRole = 'treinador';
@@ -270,7 +270,7 @@ async function fazerLogin(){
         }));
         showSuccess('Bem-vindo, ' + gestor.nome + '! Redirecionando...');
         setTimeout(() => {
-          window.location.href = '../hub-unificado.html';
+          window.location.href = 'dashboard_gestor_v3.html';
         }, 1200);
       } else {
         showError('Perfil de gestor não encontrado. Verifique o tipo de acesso selecionado.');
@@ -295,7 +295,7 @@ async function fazerLogin(){
         }));
         showSuccess('Bem-vindo, ' + consultor.nome + '! Redirecionando...');
         setTimeout(() => {
-          window.location.href = '../hub-unificado.html';
+          window.location.href = 'painel_vendas.html';
         }, 1200);
       } else {
         showError('Perfil de consultor(a) não encontrado. Verifique o tipo de acesso selecionado.');
@@ -322,7 +322,7 @@ async function fazerLogin(){
         }));
         showSuccess('Bem-vindo, ' + treinador.nome + '! Carregando o sistema...');
         setTimeout(() => {
-          window.location.href = '../hub-unificado.html';
+          window.location.href = 'sistema_integrado_v3.html';
         }, 1200);
       } else {
         showError('Perfil de treinador não encontrado. Verifique o tipo de acesso selecionado.');
@@ -398,11 +398,11 @@ function showLogin(){
     const user = JSON.parse(localStorage.getItem('qg90_user') || '{}');
     if(session && user.role){
       if(user.role === 'gestor'){
-        window.location.href = '../hub-unificado.html';
+        window.location.href = 'dashboard_gestor_v3.html';
       } else if(user.role === 'treinador'){
-        window.location.href = '../hub-unificado.html';
+        window.location.href = 'sistema_integrado_v3.html';
       } else if(user.role === 'consultor'){
-        window.location.href = '../hub-unificado.html';
+        window.location.href = 'painel_vendas.html';
       }
     } else {
       // Limpa qualquer sessão residual

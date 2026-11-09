@@ -5102,7 +5102,7 @@ const AT_MODULOS=[
 ];
 let atSb=null,atPendente=null;
 function atClient(){
-  if(!atSb&&window.supabase&&window.APP_CONFIG)atSb=window.supabase.createClient(APP_CONFIG.SUPABASE_URL,APP_CONFIG.SUPABASE_ANON);
+  if(!atSb&&window.supabase&&window.APP_CONFIG)atSb=window.supabase.createClient(APP_CONFIG.SUPABASE_URL,APP_CONFIG.SUPABASE_ANON,window.gfOpcoesAuth);
   return atSb;
 }
 async function atSessao(){

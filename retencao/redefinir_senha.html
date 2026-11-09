@@ -72,7 +72,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const sb = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON);
+const sb = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_ANON, window.gfOpcoesAuth);
 let pronto = false;
 
 function erro(msg){ const e=document.getElementById('msgErro'); e.textContent=msg; e.classList.add('show'); }

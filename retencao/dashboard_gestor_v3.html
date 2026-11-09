@@ -1172,7 +1172,7 @@ function inicioSemana(){
 
 async function carregarDadosReais(){
   try {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
 
     // ── MODO ADMIN: acesso direto vindo do painel admin, sem login ──
     const urlParams = new URLSearchParams(window.location.search);
@@ -1205,6 +1205,7 @@ async function carregarDadosReais(){
     academiaId = gestor.academia_id;
 
     const { data: academia } = await sb.from('academias').select('nome').eq('id', academiaId).single();
+    if(!(await gfConfereAcademia(sb, academia?.nome))) return;
     academiaNome = academia?.nome || 'Academia';
     document.getElementById('academiaNome').textContent = academiaNome;
     document.getElementById('academiaLogoLetter').textContent = academiaNome.charAt(0).toUpperCase();

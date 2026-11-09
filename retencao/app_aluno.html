@@ -5,6 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>GeFit · Seu Desafio</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GeFit">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="apple-touch-icon" href="logo-gefit.png">
+<link rel="icon" href="logo-gefit.png">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -411,11 +418,17 @@ let estrelas = 0;
 
 // ── INIT ──────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
 
   // Pegar planner ID da URL
   const params = new URLSearchParams(window.location.search);
-  const plannerId = params.get('planner');
+  let plannerId = params.get('planner');
+  // lembra o planner neste celular: quem abrir pelo ícone da tela inicial cai direto no desafio
+  try{
+    if(plannerId) localStorage.setItem('planner_'+(APP_CONFIG.STORAGE_KEY||''), plannerId);
+    else plannerId = localStorage.getItem('planner_'+(APP_CONFIG.STORAGE_KEY||''));
+  }catch(e){}
+  if(plannerId) prepararManifest(plannerId);
 
   if(!plannerId){
     showError();
@@ -708,6 +721,48 @@ function showToast(msg){
   t.style.transform = 'translateX(-50%) translateY(0)';
   setTimeout(() => t.style.transform = 'translateX(-50%) translateY(-80px)', 2500);
 }
+</script>
+<button id="btnFixar" onclick="abrirFixar()" style="position:fixed;right:14px;bottom:84px;z-index:900;background:var(--accent);color:#0A0A0A;border:none;border-radius:999px;padding:10px 14px;font:700 13px Barlow,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.45);display:none">📲 Fixar na tela</button>
+<div id="fixarOverlay" onclick="if(event.target===this)fecharFixar()" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:flex-end;justify-content:center">
+  <div style="background:#141414;border:1px solid #2A2A2A;border-radius:18px 18px 0 0;max-width:480px;width:100%;padding:22px 20px 28px;color:#EEE;font:15px/1.5 Barlow,sans-serif">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><img src="logo-gefit.png" alt="GeFit" style="height:28px"><b style="font:800 20px 'Barlow Condensed',sans-serif;letter-spacing:.5px">Fixe o seu desafio na tela do celular</b></div>
+    <p style="margin:0 0 14px;color:#BBB">Assim ele vira um ícone, igual a um aplicativo, e você abre o seu dia com um toque.</p>
+    <div id="fixarIOS" style="background:#1C1C1C;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+      <b style="color:var(--accent)">iPhone (Safari)</b>
+      <ol style="margin:6px 0 0 18px;padding:0"><li>Abra este link no <b>Safari</b>.</li><li>Toque em <b>Compartilhar</b> (o quadrado com a seta para cima, na barra de baixo).</li><li>Role e toque em <b>Adicionar à Tela de Início</b>.</li><li>Toque em <b>Adicionar</b>, no canto de cima.</li></ol>
+    </div>
+    <div id="fixarAndroid" style="background:#1C1C1C;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <b style="color:var(--accent)">Android (Chrome)</b>
+      <ol style="margin:6px 0 0 18px;padding:0"><li>Abra este link no <b>Chrome</b>.</li><li>Toque nos <b>três pontinhos ⋮</b>, no canto de cima.</li><li>Toque em <b>Adicionar à tela inicial</b> (ou <b>Instalar app</b>).</li><li>Confirme em <b>Adicionar</b>.</li></ol>
+    </div>
+    <button id="fixarInstalar" onclick="instalarPWA()" style="display:none;width:100%;margin-bottom:8px;background:var(--accent);color:#0A0A0A;border:none;border-radius:12px;padding:12px;font:800 15px Barlow,sans-serif">Instalar agora</button>
+    <button onclick="fecharFixar()" style="width:100%;background:#2A2A2A;color:#EEE;border:none;border-radius:12px;padding:12px;font:700 15px Barlow,sans-serif">Entendi</button>
+  </div>
+</div>
+<script>
+let pwaPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaPrompt=e;});
+function jaFixado(){return window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;}
+function abrirFixar(){
+  const ua=navigator.userAgent, ios=/iPhone|iPad|iPod/i.test(ua), and=/Android/i.test(ua);
+  document.getElementById('fixarIOS').style.display=and?'none':'';
+  document.getElementById('fixarAndroid').style.display=ios?'none':'';
+  document.getElementById('fixarInstalar').style.display=pwaPrompt?'':'none';
+  document.getElementById('fixarOverlay').style.display='flex';
+}
+function fecharFixar(){document.getElementById('fixarOverlay').style.display='none';}
+async function instalarPWA(){if(!pwaPrompt)return;pwaPrompt.prompt();try{await pwaPrompt.userChoice}catch(e){}pwaPrompt=null;fecharFixar();}
+function prepararManifest(id){
+  try{
+    const base=location.href.split('#')[0].split('?')[0];
+    const icone=new URL('logo-gefit.png',location.href).href;
+    const m={name:'GeFit · Seu Desafio',short_name:'GeFit',start_url:base+'?planner='+encodeURIComponent(id),scope:base.replace(/[^\/]*$/,''),display:'standalone',background_color:'#0A0A0A',theme_color:'#0A0A0A',icons:[{src:icone,sizes:'360x356',type:'image/png',purpose:'any'}]};
+    const l=document.createElement('link');l.rel='manifest';
+    l.href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(m));
+    document.head.appendChild(l);
+  }catch(e){}
+}
+window.addEventListener('DOMContentLoaded',()=>{if(!jaFixado())document.getElementById('btnFixar').style.display='';});
 </script>
 </body>
 </html>

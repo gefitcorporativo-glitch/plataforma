@@ -754,7 +754,7 @@ async function salvarRevisaoSupabase(){
     if(typeof window.supabase !== 'undefined'){
       const SUPABASE_URL = APP_CONFIG.SUPABASE_URL;
       const SUPABASE_ANON = APP_CONFIG.SUPABASE_ANON;
-      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
 
       // Salvar revisão como tarefa pendente
       const tarefas = st.exercicios
@@ -801,7 +801,7 @@ async function carregarTreinadoresRevisao(){
     
     const SUPABASE_URL = APP_CONFIG.SUPABASE_URL;
     const SUPABASE_ANON = APP_CONFIG.SUPABASE_ANON;
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
 
     // Pegar academia do treinador logado via localStorage
     const treinadorLocal = JSON.parse(localStorage.getItem('qg90_treinador')||'{}');
