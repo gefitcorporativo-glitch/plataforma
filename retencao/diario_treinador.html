@@ -492,7 +492,7 @@ let historico = [];
 
 // ── INIT ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
 
   // Verificar sessão
   const { data: { session } } = await sb.auth.getSession();

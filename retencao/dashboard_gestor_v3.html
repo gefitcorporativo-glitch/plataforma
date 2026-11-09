@@ -1002,6 +1002,24 @@ body::before {
 </div>
 
 <!-- MODAL: REDEFINIR SENHA DA EQUIPE -->
+<div id="modalEditarEquipe" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:380px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800">✎ Editar cadastro</div>
+      <button onclick="document.getElementById('modalEditarEquipe').style.display='none'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px">✕</button>
+    </div>
+    <input type="hidden" id="edEqEmailAtual">
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+      <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em">Nome</label>
+      <input type="text" id="edEqNome" style="background:#111;border:1px solid var(--border2);border-radius:8px;padding:9px;color:var(--text);font-size:13px">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:16px">
+      <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em">E-mail de acesso</label>
+      <input type="email" id="edEqEmail" style="background:#111;border:1px solid var(--border2);border-radius:8px;padding:9px;color:var(--text);font-size:13px">
+    </div>
+    <button onclick="salvarEditarEquipe()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--orange);color:#000;font-size:14px;font-weight:800;cursor:pointer">Salvar</button>
+  </div>
+</div>
 <div id="modalSenhaEquipe" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:24px;width:100%;max-width:380px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
@@ -1055,6 +1073,7 @@ async function chamarEdgeFunction(payload){
 }
 
 function renderEquipe(){
+  if(!modoAdmin && !EQUIPE_STATUS_LIDO){ EQUIPE_STATUS_LIDO=true; carregarStatusEquipe(); }
   const el = document.getElementById('equipeLista');
   const aviso = document.getElementById('equipeAviso');
   if(modoAdmin){
@@ -1078,9 +1097,14 @@ function renderEquipe(){
       <div style="width:34px;height:34px;border-radius:50%;background:${p.cor};opacity:.15;display:flex;align-items:center;justify-content:center;flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700">${p.nome}</div>
-        <div style="font-size:11px;color:var(--text3)">${p.email||'sem e-mail cadastrado'} · <span style="color:${p.cor}">${p.tipoPapel}</span> · ${p.sub}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.email||'sem e-mail cadastrado'} · <span style="color:${p.cor}">${p.tipoPapel}</span> · ${p.sub}${EQUIPE_INATIVOS[(p.email||'').toLowerCase()]?' · <b style="color:#ff6b6b">INATIVO(A)</b>':''}</div>
       </div>
-      ${modoAdmin ? '' : `<button onclick="abrirModalSenhaEquipe('${(p.nome||'').replace(/'/g,"\\'")}','${p.email||''}')" style="padding:6px 12px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">🔑 Senha</button>`}
+      ${modoAdmin ? '' : `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+        <button onclick="abrirEditarEquipe('${(p.nome||'').replace(/'/g,"\\'")}','${p.email||''}')" style="${EQ_BTN}">✎ Editar</button>
+        <button onclick="abrirModalSenhaEquipe('${(p.nome||'').replace(/'/g,"\\'")}','${p.email||''}')" style="${EQ_BTN}">🔑 Senha</button>
+        <button onclick="ativarMembroEquipe('${p.email||''}',${EQUIPE_INATIVOS[(p.email||'').toLowerCase()]?'true':'false'})" style="${EQ_BTN}">${EQUIPE_INATIVOS[(p.email||'').toLowerCase()]?'▶ Reativar':'⏸ Inativar'}</button>
+        <button onclick="excluirMembroEquipe('${(p.nome||'').replace(/'/g,"\\'")}','${p.email||''}')" style="${EQ_BTN};color:#ff6b6b;border-color:rgba(255,107,107,.4)">🗑 Excluir</button>
+      </div>`}
     </div>`).join('');
 }
 
@@ -1158,6 +1182,51 @@ async function confirmarResetSenhaEquipe(){
   }
 }
 
+// ── Equipe: editar, inativar/reativar e excluir (Edge Function gestor-equipe) ──
+const EQ_BTN='padding:6px 10px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap';
+let EQUIPE_INATIVOS={}, EQUIPE_STATUS_LIDO=false;
+async function carregarStatusEquipe(){
+  try{
+    const r=await chamarEdgeFunction({action:'status_equipe'});
+    if(r&&r.lista){ EQUIPE_INATIVOS={}; r.lista.forEach(x=>{ if(x.inativo) EQUIPE_INATIVOS[String(x.email||'').toLowerCase()]=true; }); renderEquipe(); }
+  }catch(e){ console.warn('status da equipe', e); }
+}
+function abrirEditarEquipe(nome,email){
+  document.getElementById('edEqEmailAtual').value=email;
+  document.getElementById('edEqNome').value=nome;
+  document.getElementById('edEqEmail').value=email;
+  document.getElementById('modalEditarEquipe').style.display='flex';
+}
+async function salvarEditarEquipe(){
+  const email=document.getElementById('edEqEmailAtual').value;
+  const nome=document.getElementById('edEqNome').value.trim();
+  const novoEmail=document.getElementById('edEqEmail').value.trim().toLowerCase();
+  if(!nome||!novoEmail){ showToast('Preencha nome e e-mail'); return; }
+  const r=await chamarEdgeFunction({action:'editar_usuario', email, nome, novoEmail});
+  if(r.error){ showToast('Erro: '+r.error); return; }
+  showToast('✅ '+r.message+' Se o e-mail mudou, atualize também o acesso no Hub.');
+  document.getElementById('modalEditarEquipe').style.display='none';
+  await carregarDadosReais();
+}
+async function ativarMembroEquipe(email,estaInativo){
+  const ativar=!!estaInativo;
+  if(!confirm(ativar?'Reativar o acesso desta pessoa?':'Inativar esta pessoa? O login fica bloqueado, mas os alunos, planners e o histórico continuam guardados.')) return;
+  const r=await chamarEdgeFunction({action:'ativar_usuario', email, ativo:ativar});
+  if(r.error){ showToast('Erro: '+r.error); return; }
+  showToast('✅ '+r.message);
+  if(ativar) delete EQUIPE_INATIVOS[email.toLowerCase()]; else EQUIPE_INATIVOS[email.toLowerCase()]=true;
+  renderEquipe();
+}
+async function excluirMembroEquipe(nome,email){
+  const conf=prompt('Excluir de vez o cadastro de '+nome+'? Use só para cadastro errado.\nPara confirmar, digite o primeiro nome: '+String(nome).split(' ')[0]);
+  if(conf===null) return;
+  if(conf.trim().toLowerCase()!==String(nome).split(' ')[0].toLowerCase()){ showToast('Nome não confere. Nada foi excluído.'); return; }
+  const r=await chamarEdgeFunction({action:'excluir_usuario', email});
+  if(r.error){ showToast('⚠️ '+r.error); return; }
+  showToast('✅ '+r.message+' Se ela tinha acesso ao Hub, exclua lá também.');
+  await carregarDadosReais();
+}
+
 // Cores fixas para diferenciar treinadores nos gráficos
 const CORES_TREINADOR = ['#B3F400','#7EB8FF','#2DD4A0','#B09FFF','#FFD166','#FF4D6D','#D4FF4D','#9AF0D0'];
 
@@ -1172,7 +1241,7 @@ function inicioSemana(){
 
 async function carregarDadosReais(){
   try {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
 
     // ── MODO ADMIN: acesso direto vindo do painel admin, sem login ──
     const urlParams = new URLSearchParams(window.location.search);
@@ -1205,6 +1274,7 @@ async function carregarDadosReais(){
     academiaId = gestor.academia_id;
 
     const { data: academia } = await sb.from('academias').select('nome').eq('id', academiaId).single();
+    if(!(await gfConfereAcademia(sb, academia?.nome))) return;
     academiaNome = academia?.nome || 'Academia';
     document.getElementById('academiaNome').textContent = academiaNome;
     document.getElementById('academiaLogoLetter').textContent = academiaNome.charAt(0).toUpperCase();

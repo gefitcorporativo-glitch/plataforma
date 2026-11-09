@@ -181,7 +181,7 @@ const PERGUNTAS = [
 ];
 
 window.addEventListener('DOMContentLoaded', async () => {
-  sb = window.supabase.createClient(SB_URL, SB_ANON);
+  sb = window.supabase.createClient(SB_URL, SB_ANON, window.gfOpcoesAuth);
 
   // Verificar sessão
   const { data:{ session } } = await sb.auth.getSession();

@@ -186,7 +186,7 @@ tr:last-child td{border-bottom:none}
       <div id="loginErro" style="display:none;margin-top:10px;text-align:center;font-size:12px;color:var(--red)"></div>
     </div>
     <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px">
-      Credenciais fornecidas pela equipe GeFit · <a href="mailto:suporte@gefit.com.br" style="color:var(--orange)">suporte@gefit.com.br</a>
+      Credenciais fornecidas pela equipe de suporte
     </div>
   </div>
 
@@ -427,7 +427,7 @@ const DICAS = {
 
 // ── LOGIN ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
   const { data:{session} } = await sb.auth.getSession();
   if(session) await loginSucesso(session.user);
 });

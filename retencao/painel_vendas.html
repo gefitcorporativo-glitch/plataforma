@@ -354,7 +354,7 @@ function calcularDatas(){
 
 // ── LOGIN ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async()=>{
-  sb = window.supabase.createClient(SB_URL, SB_ANON);
+  sb = window.supabase.createClient(SB_URL, SB_ANON, window.gfOpcoesAuth);
   const {data:{session}} = await sb.auth.getSession();
   if(session) await loginSucesso(session.user);
 });
@@ -389,6 +389,7 @@ async function loginSucesso(user){
   academiaId=perfil.academia_id;
 
   const {data:acad}=await sb.from('academias').select('nome').eq('id',academiaId).single();
+  if(!(await gfConfereAcademia(sb, acad?.nome))) return;
   document.getElementById('hAcademia').textContent=acad?.nome||'Academia';
   document.getElementById('hConsultor').textContent=perfil.nome;
 

@@ -311,7 +311,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
 .qr-modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 28px;max-width:380px;width:90%;text-align:center}
 .qr-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px}
 .qr-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
-.qr-box{width:200px;height:200px;background:#fff;border-radius:12px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#333;padding:10px;text-align:center}
+.qr-box{width:240px;min-height:200px;height:auto;background:#fff;border-radius:12px;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#333;padding:10px;text-align:center}
 .qr-actions{display:flex;flex-direction:column;gap:10px}
 .btn-open-app{padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),#D4FF4D);color:#000;font-size:15px;font-weight:800;cursor:pointer;font-family:'Barlow Condensed',sans-serif;transition:opacity .2s}
 .btn-open-app:hover{opacity:.9}
@@ -523,6 +523,7 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
     <div class="h-itabs">
       <button class="h-itab-btn active" onclick="switchHTab('geral',this)">📊 Visão Geral</button>
       <button class="h-itab-btn" onclick="switchHTab('agenda',this)">📅 Minha Agenda</button>
+      <button class="h-itab-btn" onclick="switchHTab('planners',this);carregarListaPlanners()">📋 Planners</button>
     </div>
 
     <!-- ── ABA: VISÃO GERAL ── -->
@@ -577,6 +578,17 @@ body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-
     <!-- ── ABA: MINHA AGENDA ── -->
     <div class="h-ipane" id="htab-agenda">
       <div id="agendaWrap"><div class="home-empty">Carregando agenda...</div></div>
+    </div>
+
+    <!-- ── ABA: PLANNERS (lista, edição e link do aluno) ── -->
+    <div class="h-ipane" id="htab-planners">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <input id="plBusca" placeholder="🔍 Buscar aluno ou matrícula" oninput="renderListaPlanners()" style="flex:1;min-width:200px;background:#111;border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;outline:none;font-family:'Barlow',sans-serif">
+        <select id="plFiltro" onchange="renderListaPlanners()" style="background:#111;border:1px solid var(--border2);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'Barlow',sans-serif">
+          <option value="ativos">Desafio em andamento</option><option value="todos">Todos os planners</option>
+        </select>
+      </div>
+      <div id="plLista"><div class="home-empty">Carregando planners...</div></div>
     </div>
 
   </div>
@@ -1682,6 +1694,7 @@ function canAdvance(){
 
 function navigate(dir){
   const next=pState.step+dir;
+  if(dir<0&&pState.step===0){ voltarInicio(); return; }
   if(dir>0&&!canAdvance())return;
   if(next<0||next>=STEPS_NAMES.length)return;
   pState.step=next; updateAll();
@@ -1701,7 +1714,9 @@ function updateAll(){
 function updateNav(){
   const prev=document.getElementById('btnPrev');
   const next=document.getElementById('btnNext');
-  prev.disabled=pState.step===0;
+  prev.disabled=false;
+  let temInicio=false; try{ temInicio=!!currentAcademiaId; }catch(e){}
+  prev.textContent=pState.step===0?(temInicio?'← Voltar ao início':'← Voltar ao Hub'):'← Anterior';
   document.getElementById('navStepName').textContent=STEPS_NAMES[pState.step];
   document.getElementById('navStepNum').textContent=`${pState.step+1} de ${STEPS_NAMES.length}`;
   const can=canAdvance(); const isLast=pState.step===STEPS_NAMES.length-1;
@@ -1727,7 +1742,7 @@ function gerarApp(){
   aState.hojeFeito = false;
   aState.notaDia = null; aState.comprometimento=''; aState.showNotaDia=false;
 
-  document.getElementById('qrNome').textContent = pState.nome;
+  { const qn = document.getElementById('qrNome'); if(qn) qn.textContent = pState.nome; }
   document.getElementById('qrOverlay').style.display='flex';
 }
 
@@ -2503,7 +2518,7 @@ async function carregarDadosHome(){
     const { data: planners } = await sbSys
       .from('planners')
       .select('*, alunos(nome, matricula)')
-      .eq('treinador_resp_id', treinadorId)
+      .eq(treinadorId ? 'treinador_resp_id' : 'academia_id', treinadorId || currentAcademiaId)
       .order('criado_em', {ascending: false});
 
     const listaPlanners = planners || [];
@@ -2531,7 +2546,7 @@ async function carregarDadosHome(){
       .from('experiencias')
       .select('*')
       .eq('academia_id', currentAcademiaId)
-      .eq('treinador_id', treinadorId)
+      .eq(treinadorId ? 'treinador_id' : 'academia_id', treinadorId || currentAcademiaId)
       .order('data_inicio', {ascending: false});
 
     const listaExps = exps || [];
@@ -2701,7 +2716,7 @@ function switchHTab(tab, btn){
 
 async function carregarAgenda(treinadorId, meusAlunos){
   const wrap = document.getElementById('agendaWrap');
-  if(!treinadorId){ wrap.innerHTML = '<div class="home-empty">Treinador não identificado.</div>'; return; }
+  if(!treinadorId){ wrap.innerHTML = '<div class="home-empty">A agenda é de cada treinador(a). Na visão do gestor, acompanhe pela aba 📋 Planners.</div>'; return; }
   try {
     const { data: exps } = await sbSys.from('experiencias').select('*')
       .eq('academia_id', currentAcademiaId).eq('treinador_id', treinadorId)
@@ -2943,6 +2958,29 @@ function mostrarBannerModoAdmin(){
   document.body.insertBefore(b, document.body.firstChild);
 }
 
+// ── VOLTAR AO INÍCIO (etapa 1 do planner) ─────────────────────
+function voltarInicio(){
+  let temInicio=false; try{ temInicio=!!currentAcademiaId; }catch(e){}
+  if(temInicio){ mostrarHome(); window.scrollTo({top:0}); return; }
+  window.location.href = '../index.html';
+}
+
+// ── VISÃO DO GESTOR ───────────────────────────────────────────
+let visaoGestor = false;
+function ativarVisaoGestor(){
+  visaoGestor = true;
+  const b = document.createElement('div');
+  b.id = 'faixaGestor';
+  b.style.cssText = 'position:sticky;top:0;z-index:200;background:var(--orange-dim);border-bottom:2px solid var(--orange);color:var(--orange);font-size:12.5px;font-weight:700;padding:8px 16px;text-align:center;font-family:"Barlow",sans-serif';
+  b.innerHTML = '👔 Visão do gestor: planners de todos os treinadores da academia. Para criar um planner, escolha o treinador responsável na etapa 1.';
+  document.body.insertBefore(b, document.body.firstChild);
+  const sub = document.getElementById('homeNomeTreinador'); if(sub && sub.nextElementSibling) sub.nextElementSibling.textContent = 'Planners e indicadores de toda a equipe técnica.';
+  // agenda e "+ Aluno" são de cada treinador
+  document.querySelectorAll('button[onclick="abrirModalAddAluno()"],button[onclick="abrirModalAgendar()"]').forEach(x => x.style.display = 'none');
+  const ba = [...document.querySelectorAll('.h-itab-btn')].find(x => (x.getAttribute('onclick')||'').includes("'agenda'"));
+  if(ba) ba.style.display = 'none';
+}
+
 function fazerLogout(){
   if(modoAdmin){ window.close(); return; }
   if(sbSys) sbSys.auth.signOut();
@@ -2969,7 +3007,7 @@ let modoAdmin = false;
 async function initComSupabase(){
   try {
     // Inicializar cliente Supabase
-    sbSys = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    sbSys = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
 
     // ── MODO ADMIN: acesso direto vindo do painel admin, sem login ──
     const urlParams = new URLSearchParams(window.location.search);
@@ -3055,6 +3093,30 @@ async function initComSupabase(){
 
       return;
     }
+
+    // 3. Não é treinador: se for gestor(a) da academia, abre a VISÃO DO GESTOR
+    const { data: gestorRet } = await sbSys
+      .from('gestores')
+      .select('id, nome, academia_id')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    if(gestorRet){
+      currentAcademiaId = gestorRet.academia_id;
+      localStorage.setItem('qg90_treinador', JSON.stringify({ id: null, nome: gestorRet.nome, academia_id: gestorRet.academia_id, tipo: 'gestor' }));
+      await carregarTreinadores(gestorRet.academia_id);
+      await carregarAcademia(gestorRet.academia_id);
+      initPlanner();
+      if(window.TREINADORES_DB && window.TREINADORES_DB.length > 0) populateTreinadoresDB(window.TREINADORES_DB);
+      ativarVisaoGestor();
+      document.getElementById('planner-view').classList.remove('active');
+      document.getElementById('home-view').classList.add('active');
+      document.getElementById('btnHomeFixed').classList.remove('visible');
+      esconderLoading();
+      await carregarDadosHome();
+      const bp = [...document.querySelectorAll('.h-itab-btn')].find(b => (b.getAttribute('onclick')||'').includes("'planners'"));
+      if(bp){ switchHTab('planners', bp); carregarListaPlanners(); }
+      return;
+    }
   } catch(err){
     console.warn('Supabase init error:', err);
   }
@@ -3119,6 +3181,7 @@ async function carregarAcademia(academiaId){
 
     if(acad){
       const nomeEl = document.querySelector('.p-logo-sub');
+      if(!modoAdmin && !(await gfConfereAcademia(sbSys, acad.nome))) return;
       if(nomeEl && acad.nome) nomeEl.textContent = acad.nome;
       pState.academiaNome = acad.nome || '';
 
@@ -3198,9 +3261,13 @@ function aplicarModulos(modulos){
 async function salvarPlannerSupabase(){
   if(!sbSys || !currentAcademiaId){ return null; }
 
-  // Buscar ou criar aluno
+  // Buscar ou criar aluno (na edição, usa e atualiza o mesmo aluno)
   let alunoId = null;
-  try {
+  if(editingPlannerId && editingAlunoId){
+    alunoId = editingAlunoId;
+    try { await sbSys.from('alunos').update({ nome: pState.nome, matricula: pState.matricula || null, idade: parseInt(pState.idade) || null }).eq('id', alunoId); }
+    catch(err){ console.warn('Erro ao atualizar aluno:', err); }
+  } else try {
     // Tentar encontrar aluno existente
     const { data: alunoExist } = await sbSys
       .from('alunos')
@@ -3294,17 +3361,16 @@ async function salvarPlannerSupabase(){
       status: 'ativo',
     };
 
-    const { data: planner, error } = await sbSys
-      .from('planners')
-      .insert([plannerData])
-      .select()
-      .single();
+    const editando = !!editingPlannerId;
+    const { data: planner, error } = editando
+      ? await sbSys.from('planners').update(plannerData).eq('id', editingPlannerId).select().single()
+      : await sbSys.from('planners').insert([plannerData]).select().single();
 
     if(error){ console.error('Erro ao salvar planner:', error); return null; }
     currentPlannerId = planner.id;
 
     // Auto-cria compromisso de "revisão de treino" na Agenda, se uma data foi definida
-    if(pState.revisaoTreinoData){
+    if(pState.revisaoTreinoData && !editando){
       try {
         await sbSys.from('compromissos').insert([{
           academia_id: currentAcademiaId, treinador_id: treinadorRespId, aluno_id: alunoId,
@@ -3344,7 +3410,11 @@ function gerarQRCodeReal(plannerId){
   linkDiv.style.cssText = 'margin-top:10px;font-size:11px;color:#666;text-align:center;word-break:break-all;padding:0 10px';
   linkDiv.innerHTML = `<div style="margin-bottom:4px">Link do app:</div>
     <div style="background:#111;padding:6px 10px;border-radius:6px;font-size:10px;color:#B3F400;cursor:pointer"
-      onclick="navigator.clipboard.writeText('${appUrl}');showToast('✅ Link copiado!')">${appUrl}</div>`;
+      onclick="navigator.clipboard.writeText('${appUrl}');showToast('✅ Link copiado!')">${appUrl}</div>
+    <div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap">
+      <button onclick="copiarLinkAluno('${plannerId}')" style="${PL_BTN}">🔗 Copiar link</button>
+      <button onclick="enviarPlannerWhats('${plannerId}')" style="${PL_BTN};background:#1FAF54;border-color:#1FAF54;color:#fff">💬 Enviar pelo WhatsApp</button>
+    </div>`;
   qrContainer.appendChild(linkDiv);
 }
 
@@ -3356,14 +3426,16 @@ window.gerarApp = async function(){
   }
 
   // Mostrar loading
-  showToast('💾 Salvando planner...');
+  showToast(editingPlannerId ? '💾 Salvando alterações do planner...' : '💾 Salvando planner...');
 
   // Salvar no Supabase
   const plannerId = await salvarPlannerSupabase();
 
+  const eraEdicao = !!editingPlannerId;
   if(plannerId){
-    showToast('✅ Planner salvo com sucesso!');
+    showToast(eraEdicao ? '✅ Planner atualizado! O link do aluno continua o mesmo.' : '✅ Planner salvo com sucesso!');
     currentPlannerId = plannerId;
+    editingPlannerId = null; editingAlunoId = null; atualizarFaixaEdicao();
   } else {
     showToast('⚠️ Modo offline — dados não salvos no banco');
   }
@@ -3378,7 +3450,7 @@ window.gerarApp = async function(){
   aState.hojeFeito = false;
   aState.notaDia = null; aState.comprometimento=''; aState.showNotaDia=false;
 
-  document.getElementById('qrNome').textContent = pState.nome;
+  { const qn = document.getElementById('qrNome'); if(qn) qn.textContent = pState.nome; }
   document.getElementById('qrOverlay').style.display='flex';
 
   // Gerar QR Code real se salvou no banco E módulo ativo
@@ -3395,6 +3467,165 @@ window.gerarApp = async function(){
         </div>`;
     }
   }
+};
+
+
+// ══════════════════════════════════════════════════════════════
+// LISTA DE PLANNERS · EDIÇÃO · LINK DO ALUNO (WhatsApp e tela do celular)
+// ══════════════════════════════════════════════════════════════
+let editingPlannerId = null, editingAlunoId = null, plannersCache = [];
+const PSTATE_PADRAO = JSON.parse(JSON.stringify(pState));
+const PL_BTN = 'background:#111;border:1px solid var(--border2);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit';
+const plEsc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function nomeAcademiaPL(){ return ((window.APP_CONFIG && APP_CONFIG.NOME_MARCA) || 'nossa academia').replace(/\s*Retenção$/,''); }
+function linkAluno(id){ return location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/,'') + 'app_aluno.html?planner=' + encodeURIComponent(id); }
+function textoWhatsAluno(nome, id){
+  const pn = String(nome||'').trim().split(/\s+/)[0] || '';
+  return `Oi${pn?', '+pn:''}! Aqui está o seu planner do desafio na ${nomeAcademiaPL()} 💪\n${linkAluno(id)}\n\n`
+   + `📲 Deixe ele na tela do seu celular para abrir com um toque:\n`
+   + `• iPhone (Safari): toque em Compartilhar (o quadrado com a seta para cima) e depois em "Adicionar à Tela de Início".\n`
+   + `• Android (Chrome): toque nos três pontinhos ⋮ e depois em "Adicionar à tela inicial" (ou "Instalar app").\n\n`
+   + `Qualquer dúvida, me chama aqui!`;
+}
+function copiarLinkAluno(id){
+  const l = linkAluno(id);
+  (navigator.clipboard ? navigator.clipboard.writeText(l) : Promise.reject()).then(()=>showToast('✅ Link do aluno copiado!')).catch(()=>prompt('Copie o link do aluno:', l));
+}
+function telefoneAluno(a){ const t = a && (a.whatsapp || a.telefone || a.celular || a.fone || ''); const d = String(t).replace(/\D/g,''); return d ? (d.length<=11 ? '55'+d : d) : ''; }
+function enviarPlannerWhats(id){
+  const p = plannersCache.find(x => String(x.id)===String(id));
+  const aluno = p && p.alunos;
+  const nome = (aluno && aluno.nome) || pState.nome || '';
+  const tel = telefoneAluno(aluno);
+  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(textoWhatsAluno(nome, id))}`, '_blank');
+}
+function verQRPlanner(id){
+  const p = plannersCache.find(x => String(x.id)===String(id));
+  const qn = document.getElementById('qrNome'); if(qn) qn.textContent = (p && p.alunos && p.alunos.nome) || '';
+  document.getElementById('qrOverlay').style.display = 'flex';
+  gerarQRCodeReal(id);
+}
+function diaDoDesafio(p){
+  if(!p.inicio_desafio) return null;
+  const ini = new Date(p.inicio_desafio + 'T00:00:00'), hoje = new Date(); hoje.setHours(0,0,0,0);
+  return Math.floor((hoje - ini) / 86400000) + 1;
+}
+async function carregarListaPlanners(){
+  const el = document.getElementById('plLista'); if(!el) return;
+  if(!sbSys || !currentAcademiaId){ el.innerHTML = '<div class="home-empty">Entre no sistema para ver os planners.</div>'; return; }
+  el.innerHTML = '<div class="home-empty">Carregando planners...</div>';
+  try {
+    const tr = JSON.parse(localStorage.getItem('qg90_treinador')||'{}');
+    let q = sbSys.from('planners').select('*, alunos(*)').eq('academia_id', currentAcademiaId).order('criado_em', {ascending:false});
+    if(tr.id && tr.tipo !== 'gestor' && tr.role !== 'gestor') q = q.or(`treinador_resp_id.eq.${tr.id},treinador_planner_id.eq.${tr.id}`);
+    const { data, error } = await q;
+    if(error) throw error;
+    plannersCache = data || [];
+    renderListaPlanners();
+  } catch(err){
+    console.error('Erro ao carregar planners:', err);
+    el.innerHTML = '<div class="home-empty">Não foi possível carregar os planners agora. Tente de novo em instantes.</div>';
+  }
+}
+function renderListaPlanners(){
+  const el = document.getElementById('plLista'); if(!el) return;
+  const busca = (document.getElementById('plBusca')||{}).value || '';
+  const filtro = (document.getElementById('plFiltro')||{}).value || 'ativos';
+  const b = busca.trim().toLowerCase();
+  let lista = plannersCache.filter(p => {
+    const a = p.alunos || {};
+    if(b && !(`${a.nome||''} ${a.matricula||''}`.toLowerCase().includes(b))) return false;
+    if(filtro === 'ativos'){ const d = diaDoDesafio(p); return d !== null && d >= 1 && d <= 21; }
+    return true;
+  });
+  if(!lista.length){
+    el.innerHTML = `<div class="home-empty">${plannersCache.length ? 'Nenhum planner com esse filtro. Escolha "Todos os planners".' : 'Nenhum planner criado ainda. Use o botão + Planner.'}</div>`;
+    return;
+  }
+  const prog = id => { const x = (typeof PROGRAMS!=='undefined') && PROGRAMS.find(p => p.id===id); return x ? x.nome || x.name || x.titulo || id : (id||'-'); };
+  el.innerHTML = lista.map(p => {
+    const a = p.alunos || {}, d = diaDoDesafio(p);
+    const status = d === null ? 'Sem data de início' : d < 1 ? 'Começa em ' + new Date(p.inicio_desafio+'T00:00:00').toLocaleDateString('pt-BR') : d <= 21 ? `Dia ${d} de 21` : 'Desafio concluído';
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline">
+        <div><div style="font-weight:800;font-size:15px">${plEsc(a.nome||'Aluno sem nome')}</div>
+          <div style="font-size:12px;color:var(--muted)">${[p.programa?plEsc(prog(p.programa)):'', a.matricula?'Matrícula '+plEsc(a.matricula):''].filter(Boolean).join(' · ')}</div></div>
+        <div style="font-size:12px;font-weight:700;color:var(--orange)">${plEsc(status)}</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+        <button onclick="abrirEdicaoPlanner('${p.id}')" style="${PL_BTN}">✏️ Abrir e editar</button>
+        <button onclick="copiarLinkAluno('${p.id}')" style="${PL_BTN}">🔗 Copiar link do aluno</button>
+        <button onclick="enviarPlannerWhats('${p.id}')" style="${PL_BTN};background:#1FAF54;border-color:#1FAF54;color:#fff">💬 WhatsApp</button>
+        <button onclick="verQRPlanner('${p.id}')" style="${PL_BTN}">📱 QR Code</button>
+      </div></div>`;
+  }).join('');
+}
+// Preenche os campos do construtor a partir do pState (edição ou planner novo)
+function preencherFormularioPlanner(){
+  const set = (sel, v) => { const e = typeof sel==='string' && sel[0]!=='[' ? document.getElementById(sel) : document.querySelector(sel); if(e) e.value = (v==null?'':v); };
+  set('f-nome', pState.nome); set('f-matricula', pState.matricula); set('f-idade', pState.idade);
+  set('f-restricoes', pState.restricoesObs); set('f-inicio-desafio', pState.inicioDesafio);
+  set('f-meta21custom', pState.meta21custom); set('f-meta100custom', pState.meta100custom);
+  set('f-peso', pState.pesoCorp); set('f-msup-kg', pState.msuperiorKg); set('f-msup-reps', pState.msuperiorReps);
+  set('f-minf-kg', pState.minferiorKg); set('f-minf-reps', pState.minferiorReps);
+  set('select[oninput*="pState.msuperiorEx"]', pState.msuperiorEx); set('select[oninput*="pState.minferiorEx"]', pState.minferiorEx);
+  ['composicao','tmb','aguaIntra','aguaExtra','anguloFase'].forEach(k => set(`input[oninput*="pState.bio.${k}"]`, pState.bio[k]));
+  set('sel-treinador-resp', pState.treinadorResp); set('sel-treinador-planner', pState.treinadorPlanner);
+  if(pState.tipo) try{ selectType(pState.tipo); }catch(e){}
+  if(pState.profile) try{ selectProfile(pState.profile); }catch(e){}
+  try{ renderPrograms(); renderAreaList(); renderDaysAndConfigs(); renderMetas(); renderRestricoes(); updateNav(); }catch(e){ console.warn(e); }
+  try{ calcIndices(); }catch(e){}
+}
+function atualizarFaixaEdicao(){
+  let f = document.getElementById('faixaEdicaoPlanner');
+  if(!editingPlannerId){ if(f) f.remove(); return; }
+  if(!f){
+    f = document.createElement('div'); f.id = 'faixaEdicaoPlanner';
+    f.style.cssText = 'position:sticky;top:0;z-index:50;background:var(--orange);color:#111;font-weight:800;font-size:13px;padding:8px 14px;text-align:center';
+    const pv = document.getElementById('planner-view'); if(pv) pv.prepend(f);
+  }
+  f.textContent = `✏️ Editando o planner de ${pState.nome||'aluno'} · ao gerar o app, o mesmo planner é atualizado e o link do aluno não muda`;
+}
+async function abrirEdicaoPlanner(id){
+  const p = plannersCache.find(x => String(x.id)===String(id)); if(!p) return;
+  const a = p.alunos || {};
+  const nomeTreinador = tid => { const t = (window.TREINADORES_DB||[]).find(t => String(t.id)===String(tid)); return t ? t.nome : ''; };
+  Object.assign(pState, JSON.parse(JSON.stringify(PSTATE_PADRAO)), {
+    step: 0, nome: a.nome||'', matricula: a.matricula||'', idade: a.idade!=null?String(a.idade):'',
+    tipo: p.tipo_atendimento || 'academia', profile: p.perfil_aluno || '',
+    restricoesSel: p.restricoes || [], restricoesObs: p.restricoes_obs || '',
+    treinadorResp: nomeTreinador(p.treinador_resp_id), treinadorPlanner: nomeTreinador(p.treinador_planner_id),
+    programa: p.programa || '', areaFoco: p.area_foco_id, areasAtencao: p.areas_atencao || [],
+    dias: Array.isArray(p.dias_treino) && p.dias_treino.length===7 ? p.dias_treino : PSTATE_PADRAO.dias,
+    dayConfig: Array.isArray(p.day_config) && p.day_config.length===7 ? p.day_config : PSTATE_PADRAO.dayConfig,
+    inicioDesafio: p.inicio_desafio || '', revisaoTreinoData: p.revisao_treino_data || '',
+    meta21sel: p.meta21_opcoes || [], meta21custom: p.meta21_custom || '',
+    meta100sel: p.meta100_opcoes || [], meta100custom: p.meta100_custom || '',
+    pesoCorp: p.peso_corporal!=null?String(p.peso_corporal):'',
+    msuperiorEx: p.msuperior_ex||'', msuperiorKg: p.msuperior_kg!=null?String(p.msuperior_kg):'', msuperiorReps: p.msuperior_reps!=null?String(p.msuperior_reps):'',
+    minferiorEx: p.minferior_ex||'', minferiorKg: p.minferior_kg!=null?String(p.minferior_kg):'', minferiorReps: p.minferior_reps!=null?String(p.minferior_reps):'',
+    bio: { composicao: p.bio_composicao!=null?String(p.bio_composicao):'', tmb: p.bio_tmb!=null?String(p.bio_tmb):'', aguaIntra: p.bio_agua_intra!=null?String(p.bio_agua_intra):'', aguaExtra: p.bio_agua_extra!=null?String(p.bio_agua_extra):'', anguloFase: p.bio_angulo_fase!=null?String(p.bio_angulo_fase):'' }
+  });
+  editingPlannerId = p.id; editingAlunoId = p.aluno_id;
+  document.getElementById('home-view').classList.remove('active');
+  document.getElementById('planner-view').classList.add('active');
+  document.getElementById('btnHomeFixed').classList.add('visible');
+  initPlanner();
+  pState.inicioDesafio = p.inicio_desafio || pState.inicioDesafio; pState.revisaoTreinoData = p.revisao_treino_data || pState.revisaoTreinoData;
+  preencherFormularioPlanner();
+  atualizarFaixaEdicao();
+  window.scrollTo({top:0});
+}
+// "+ Planner" depois de uma edição começa um planner novo, em branco
+const irParaPlannerOriginal = irParaPlanner;
+window.irParaPlanner = function(){
+  if(editingPlannerId){
+    editingPlannerId = null; editingAlunoId = null;
+    Object.assign(pState, JSON.parse(JSON.stringify(PSTATE_PADRAO)));
+    irParaPlannerOriginal(); preencherFormularioPlanner(); atualizarFaixaEdicao();
+    return;
+  }
+  irParaPlannerOriginal();
 };
 
 // ── INICIALIZAR (chamado pelo onload do SDK Supabase) ─────────────────────

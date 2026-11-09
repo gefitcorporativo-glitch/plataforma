@@ -706,6 +706,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 <script>
+const BASE_RETENCAO=location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/,'');
 // ── ACESSO ADMIN ──────────────────────────────────────────────
 // Login real do Supabase Auth. Só entra quem está na tabela
 // admins_plataforma (ver supabase/sql/01_admins_plataforma.sql).
@@ -734,7 +735,7 @@ let filtroAlunoStatusAtual = 'todos';
 
 // ── LOGIN ─────────────────────────────────────────────────────
 function getSb(){
-  if(!sb) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  if(!sb) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, window.gfOpcoesAuth);
   return sb;
 }
 
@@ -1449,7 +1450,7 @@ async function salvarNovoUsuario(){
   try {
     await adminApi('criar_usuario', { perfil, academia_id: acadId, nome, email, senha, tipo });
     const perfilLabel = perfil==='treinador'?'Treinador(a)':perfil==='gestor'?'Gestor(a)':'Consultor(a)';
-    const credText=`${perfilLabel}: ${nome}\nE-mail: ${email}\nSenha: ${senha}\nURL: https://gefitcorporativo-glitch.github.io/retencao/${perfil==='consultor'?'painel_vendas.html':''}`;
+    const credText=`${perfilLabel}: ${nome}\nE-mail: ${email}\nSenha: ${senha}\nURL: ${BASE_RETENCAO}${perfil==='consultor'?'painel_vendas.html':''}`;
     window._nuCredText=credText;
     document.getElementById('nuCredenciais').innerHTML=credText.replace(/\n/g,'<br>');
     document.getElementById('nuResultado').style.display='block';
@@ -1500,7 +1501,7 @@ async function salvarNovaSenha(){
     showToast('✅ Senha redefinida com sucesso!');
 
     // Monta texto pronto para enviar ao cliente
-    const credText = `👤 ${nome}\nE-mail: ${email}\nSenha: ${novaSenha}\nLink de acesso: https://gefitcorporativo-glitch.github.io/retencao/`;
+    const credText = `👤 ${nome}\nE-mail: ${email}\nSenha: ${novaSenha}\nLink de acesso: ${BASE_RETENCAO}`;
     window._rsCredText = credText;
     const box = document.getElementById('rsCredenciais');
     box.innerHTML = '<strong style="color:var(--green)">✅ Pronto para enviar ao cliente:</strong><br><br>' + credText.replace(/\n/g,'<br>');
@@ -1517,7 +1518,7 @@ async function salvarNovaSenha(){
 function abrirModalEnviarAcesso(nome, email, acadNome){
   document.getElementById('eaEnvioNome').value = nome;
   document.getElementById('eaEnvioEmail').value = email;
-  const texto = `👤 ${nome}${acadNome?' — '+acadNome:''}\nE-mail: ${email}\nLink de acesso: https://gefitcorporativo-glitch.github.io/retencao/\n\n(Se esqueceu a senha, solicite uma nova.)`;
+  const texto = `👤 ${nome}${acadNome?' — '+acadNome:''}\nE-mail: ${email}\nLink de acesso: ${BASE_RETENCAO}\n\n(Se esqueceu a senha, solicite uma nova.)`;
   window._eaEnvioTexto = texto;
   document.getElementById('eaEnvioPreview').textContent = texto;
   document.getElementById('modalEnviarAcesso').classList.add('open');
@@ -1735,7 +1736,7 @@ async function naCadastrar(){
     naSetStep('naStep3','done');
 
     // Resultado
-    naCredenciaisTexto = `🏋️ ${nome}\n📍 ${cidade} / ${estado}\n\n🔗 URL: https://gefitcorporativo-glitch.github.io/retencao/\n\n`;
+    naCredenciaisTexto = `🏋️ ${nome}\n📍 ${cidade} / ${estado}\n\n🔗 URL: ${BASE_RETENCAO}\n\n`;
     naCredenciaisTexto += credentials.map(c=>`${c.tipo==='Gestor'?'📊':'🏃'} ${c.tipo}: ${c.nome}\n   E-mail: ${c.email}\n   Senha: ${c.senha}`).join('\n\n');
 
     document.getElementById('naCredenciais').innerHTML = credentials.map(c=>`
