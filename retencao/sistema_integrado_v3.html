@@ -3361,6 +3361,14 @@ async function salvarPlannerSupabase(){
       status: 'ativo',
     };
 
+    if(!editingPlannerId){
+      try {
+        const desde = new Date(Date.now() - 30*60*1000).toISOString();
+        const { data: recentes } = await sbSys.from('planners').select('id').eq('academia_id', currentAcademiaId).eq('aluno_id', alunoId).gte('criado_em', desde).order('criado_em', {ascending:false}).limit(1);
+        if(recentes && recentes.length){ editingPlannerId = recentes[0].id; editingAlunoId = alunoId; showToast('ℹ️ Já existia um planner deste aluno salvo agora há pouco. Ele foi atualizado, sem duplicar.'); }
+      } catch(e){ console.warn('conferência de duplicado', e); }
+    }
+    ultimoAlunoSalvoId = alunoId;
     const editando = !!editingPlannerId;
     const { data: planner, error } = editando
       ? await sbSys.from('planners').update(plannerData).eq('id', editingPlannerId).select().single()
@@ -3424,6 +3432,16 @@ window.gerarApp = async function(){
   if(!pState.nome||!pState.programa||!pState.areaFoco||pState.dias.filter(Boolean).length<3){
     showToast('⚠️ Complete o planner antes de gerar o app'); return;
   }
+  if(salvandoPlanner){ showToast('⏳ Este planner já está sendo salvo. Aguarde a confirmação, não precisa clicar de novo.'); return; }
+  // Mesmo aluno que acabou de ser salvo nesta tela: atualiza o mesmo planner em vez de criar outro
+  if(!editingPlannerId && ultimoPlannerSalvo && ultimoPlannerSalvo.chave === chavePlannerAtual()){
+    editingPlannerId = ultimoPlannerSalvo.id; editingAlunoId = ultimoPlannerSalvo.alunoId;
+    showToast('ℹ️ Este planner já foi salvo. Vamos só atualizar o mesmo, sem criar outro.');
+  }
+  salvandoPlanner = true;
+  const btnsGerar = document.querySelectorAll('.btn-gerar');
+  btnsGerar.forEach(b => { b.disabled = true; b.dataset.txt = b.dataset.txt || b.textContent; b.textContent = '⏳ Salvando o planner... aguarde'; b.style.opacity = '.6'; });
+  try {
 
   // Mostrar loading
   showToast(editingPlannerId ? '💾 Salvando alterações do planner...' : '💾 Salvando planner...');
@@ -3435,6 +3453,7 @@ window.gerarApp = async function(){
   if(plannerId){
     showToast(eraEdicao ? '✅ Planner atualizado! O link do aluno continua o mesmo.' : '✅ Planner salvo com sucesso!');
     currentPlannerId = plannerId;
+    ultimoPlannerSalvo = { id: plannerId, alunoId: ultimoAlunoSalvoId, chave: chavePlannerAtual() };
     editingPlannerId = null; editingAlunoId = null; atualizarFaixaEdicao();
   } else {
     showToast('⚠️ Modo offline — dados não salvos no banco');
@@ -3467,7 +3486,13 @@ window.gerarApp = async function(){
         </div>`;
     }
   }
+  } finally {
+    salvandoPlanner = false;
+    document.querySelectorAll('.btn-gerar').forEach(b => { b.disabled = false; if(b.dataset.txt) b.textContent = b.dataset.txt; b.style.opacity = ''; });
+  }
 };
+let salvandoPlanner = false, ultimoPlannerSalvo = null, ultimoAlunoSalvoId = null;
+function chavePlannerAtual(){ return String((pState.matricula||'') + '|' + (pState.nome||'')).trim().toLowerCase(); }
 
 
 // ══════════════════════════════════════════════════════════════
@@ -3520,7 +3545,7 @@ async function carregarListaPlanners(){
     if(tr.id && tr.tipo !== 'gestor' && tr.role !== 'gestor') q = q.or(`treinador_resp_id.eq.${tr.id},treinador_planner_id.eq.${tr.id}`);
     const { data, error } = await q;
     if(error) throw error;
-    plannersCache = data || [];
+    plannersCache = (data || []).filter(p => p.status !== 'excluido');
     renderListaPlanners();
   } catch(err){
     console.error('Erro ao carregar planners:', err);
@@ -3557,6 +3582,7 @@ function renderListaPlanners(){
         <button onclick="copiarLinkAluno('${p.id}')" style="${PL_BTN}">🔗 Copiar link do aluno</button>
         <button onclick="enviarPlannerWhats('${p.id}')" style="${PL_BTN};background:#1FAF54;border-color:#1FAF54;color:#fff">💬 WhatsApp</button>
         <button onclick="verQRPlanner('${p.id}')" style="${PL_BTN}">📱 QR Code</button>
+        <button onclick="excluirPlanner('${p.id}')" style="${PL_BTN};color:#ff6b6b;border-color:rgba(255,107,107,.45)">🗑 Excluir</button>
       </div></div>`;
   }).join('');
 }
@@ -3616,9 +3642,31 @@ async function abrirEdicaoPlanner(id){
   atualizarFaixaEdicao();
   window.scrollTo({top:0});
 }
+// Excluir planner (ex.: duplicado ou feito por engano). Pede o primeiro nome do aluno para confirmar.
+async function excluirPlanner(id){
+  const p = plannersCache.find(x => x.id === id); if(!p) return;
+  const nome = ((p.alunos||{}).nome || 'aluno').trim(); const pn = nome.split(' ')[0];
+  const conf = prompt('Excluir o planner de ' + nome + '? O link do aluno deixa de funcionar.\n\nPara confirmar, digite: ' + pn);
+  if(conf === null) return;
+  if(conf.trim().toLowerCase() !== pn.toLowerCase()){ showToast('Nome não confere. Nada foi excluído.'); return; }
+  try {
+    const { data: apagados, error } = await sbSys.from('planners').delete().eq('id', id).select('id');
+    if(error || !apagados || !apagados.length){
+      // Sem permissão para apagar de vez (ou há registros ligados): marca como excluído e some das listas
+      const { error: e2 } = await sbSys.from('planners').update({ status: 'excluido' }).eq('id', id);
+      if(e2){ showToast('⚠️ Não foi possível excluir: ' + (e2.message || 'sem permissão')); return; }
+    }
+    if(ultimoPlannerSalvo && ultimoPlannerSalvo.id === id) ultimoPlannerSalvo = null;
+    plannersCache = plannersCache.filter(x => x.id !== id);
+    renderListaPlanners();
+    showToast('🗑 Planner excluído.');
+  } catch(err){ console.error(err); showToast('⚠️ Erro ao excluir o planner.'); }
+}
+
 // "+ Planner" depois de uma edição começa um planner novo, em branco
 const irParaPlannerOriginal = irParaPlanner;
 window.irParaPlanner = function(){
+  ultimoPlannerSalvo = null;
   if(editingPlannerId){
     editingPlannerId = null; editingAlunoId = null;
     Object.assign(pState, JSON.parse(JSON.stringify(PSTATE_PADRAO)));
