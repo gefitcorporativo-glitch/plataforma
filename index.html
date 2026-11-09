@@ -3312,8 +3312,8 @@ function msgAcesso(){
   const mods=(a.modulos_ativos||[]).map(m=>(MODULOS_QG90.find(x=>x.key===m)||{}).label).filter(Boolean);
   const primeiro=(a.nomePessoa||a.nome||'').trim().split(/\s+/)[0];
   let t=`Olá, ${primeiro}! 👋\nAqui está o seu acesso à plataforma da ${acad}:\n\n🔗 Link: ${base}\n📧 E-mail: ${a.email}\n🔑 Senha: ${a.senha_hash}\n`;
-  if(mods.length&&a.tipo!=='treinador')t+=`\n✅ Liberado para você: ${mods.join(', ')}\n`;
-  if(a.tipo==='treinador'){
+  if(mods.length&&!(a.tipo==='treinador'&&typeof AT_MODULOS!=='undefined'))t+=`\n✅ Liberado para você: ${mods.join(', ')}\n`;
+  if(a.tipo==='treinador'&&typeof AT_MODULOS!=='undefined'){
     t=`Olá, ${primeiro}! 👋\nAqui está o seu acesso à Área do Treinador da ${acad} (planner, carteira de alunos, diário e revisão de treino):\n\n🔗 Link: ${base}retencao/\n📧 E-mail: ${a.email}\n🔑 Senha: ${a.senha_hash}\n`;
     if(mods.length)t+=`\n🧭 O mesmo login também abre a plataforma (${mods.join(', ')}): ${base}\n`;
   }
@@ -5135,7 +5135,8 @@ function closeM(id){document.getElementById(id).classList.remove('open')}
 // pela Edge Function "gestor-equipe" (a chave secreta nunca vem para o navegador).
 async function retSync(payload){
   try{
-    if(typeof atClient!=='function'||!atClient())return{skip:true};
+    if(typeof atClient!=='function')return{none:true};
+    if(!atClient())return{skip:true};
     const ses=await atSessao();if(!ses)return{skip:true};
     const r=await fetch(APP_CONFIG.SUPABASE_URL+'/functions/v1/gestor-equipe',{method:'POST',headers:{'Content-Type':'application/json','apikey':APP_CONFIG.SUPABASE_ANON,'Authorization':'Bearer '+ses.access_token},body:JSON.stringify(payload)});
     const j=await r.json().catch(()=>({}));
@@ -5144,7 +5145,7 @@ async function retSync(payload){
   }catch(e){return{error:String(e.message||e)}}
 }
 function retMsg(r){
-  if(!r)return'';
+  if(!r||r.none)return'';
   if(r.skip)return' (Área do Treinador: entre em "Área do Treinador" e toque em Conectar com o login de gestor para sincronizar)';
   if(r.error)return' · ⚠️ Área do Treinador: '+r.error;
   return' · Área do Treinador também atualizada';
@@ -5153,6 +5154,7 @@ async function atStatusAcesso(login){
   const el=document.getElementById('acesso-ret-status');if(!el)return;
   if(!(acessoAberto&&(acessoAberto.tipo==='treinador'||acessoAberto.tipo==='consultor'))){el.style.display='none';return}
   const r=await retSync({action:'status_equipe'});
+  if(r.none){el.style.display='none';return}
   const btnCriar=`<button class="btn-gh btn-sm" style="margin-left:6px" onclick="sincronizarAcessoRet()">🔄 Criar / sincronizar agora</button>`;
   if(r.skip){el.innerHTML='Área do Treinador: para conferir e sincronizar, abra "Área do Treinador" no menu e toque em <b>Conectar</b> com o login de gestor(a).';return}
   if(r.error){el.innerHTML='Área do Treinador: ⚠️ '+r.error;return}
