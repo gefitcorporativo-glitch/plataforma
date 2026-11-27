@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+<script src="gefit-auth.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cadastro · GeFit</title>
@@ -269,8 +270,8 @@ async function carregar(){
   }
   if(REF){
     try{
-      const r=await fetch(`${SB_URL}/rest/v1/${P}leads?codigo=eq.${encodeURIComponent(REF)}&select=id,nome,codigo&limit=1`,{headers:H});
-      if(r.ok){const d=await r.json();if(d.length)indicador=d[0]}
+      const r=await fetch(`${SB_URL}/rest/v1/rpc/gefit_lead_indicador`,{method:'POST',headers:H,body:JSON.stringify({p_prefixo:P,p_codigo:REF})});
+      if(r.ok){const d=await r.json();if(d&&d.id)indicador=d}
     }catch(e){}
     if(!indicador){const m=REF.match(/^([A-Za-zÀ-ú]+)/);indicador={id:null,nome:m?m[1]:'',codigo:REF}}
     aplicarConvite();
@@ -318,19 +319,7 @@ function codigoBase(nome,dig){
   const s=semAcento((camp&&camp.codigo_sigla)||'GEFIT').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12);
   return n+'['+s+']'+dig.slice(-4);
 }
-async function codigoUnico(base,norm){
-  try{
-    const r=await fetch(`${SB_URL}/rest/v1/${P}leads?codigo=like.${encodeURIComponent(base.replace(/[\[\]]/g,'*'))}*&select=codigo,whatsapp_norm`,{headers:H});
-    if(!r.ok)return base;
-    const d=(await r.json()).filter(x=>x.codigo&&x.codigo.startsWith(base));
-    const mesmo=d.find(x=>x.whatsapp_norm===norm&&(x.codigo===base||/^[A-Z]$/.test(x.codigo.slice(base.length))));
-    if(mesmo)return mesmo.codigo;
-    const usados=new Set(d.map(x=>x.codigo));
-    if(!usados.has(base))return base;
-    for(const l of 'BCDEFGHJKLMNPQRSTUVWXZ'){if(!usados.has(base+l))return base+l}
-    return base+Date.now().toString(36).slice(-3).toUpperCase();
-  }catch(e){return base}
-}
+async function codigoUnico(base,norm){return base} // resolvido no banco (gefit_lead_registrar)
 
 async function montarLead(){
   const d=wpp.value.replace(/\D/g,'');
@@ -359,30 +348,12 @@ async function montarLead(){
 }
 const CAMPOS_COMPLETAR=['idade','treina','tempo_parado','cargo','academia_nome','cidade'];
 async function gravar(lead){
-  // mesmo WhatsApp na mesma academia = mesma pessoa: completa a ficha em vez de duplicar
-  const toque={data:new Date().toISOString(),campanha:lead.campanha_slug,origem:lead.origem,utm_source:lead.utm_source||null,utm_content:lead.utm_content||null,indicado_por:lead.indicado_por_codigo||null};
-  let ex=null;
-  if(lead.whatsapp_norm&&lead.academia_id){
-    const r=await fetch(`${SB_URL}/rest/v1/${P}leads?academia_id=eq.${encodeURIComponent(lead.academia_id)}&whatsapp_norm=eq.${encodeURIComponent(lead.whatsapp_norm)}&select=*&order=created_at.asc&limit=1`,{headers:H});
-    if(!r.ok)throw new Error(await r.text());
-    ex=(await r.json())[0]||null;
-  }
-  if(ex){
-    const patch={updated_at:new Date().toISOString(),historico:[...(Array.isArray(ex.historico)?ex.historico:[]),toque],respostas:{...(ex.respostas||{}),...(lead.respostas||{})}};
-    CAMPOS_COMPLETAR.forEach(k=>{if((ex[k]==null||ex[k]==='')&&lead[k]!=null)patch[k]=lead[k]});
-    if(!ex.codigo&&lead._precisaCodigo)patch.codigo=await codigoUnico(codigoBase(lead.nome,lead._digitos),lead.whatsapp_norm);
-    if(!ex.indicado_por_codigo&&lead.indicado_por_codigo){patch.indicado_por_codigo=lead.indicado_por_codigo;patch.indicado_por_lead=lead.indicado_por_lead;patch.indicado_por_nome=lead.indicado_por_nome}
-    const r=await fetch(`${SB_URL}/rest/v1/${P}leads?id=eq.${ex.id}`,{method:'PATCH',headers:{...H,'Prefer':'return=minimal'},body:JSON.stringify(patch)});
-    if(!r.ok)throw new Error(await r.text());
-    lead.codigo=patch.codigo||ex.codigo||null;
-    return;
-  }
-  const novo={...lead,origem_primeira:lead.origem,historico:[toque]};
-  delete novo._precisaCodigo;delete novo._digitos;delete novo._tentou;
-  if(lead._precisaCodigo&&!novo.codigo)novo.codigo=await codigoUnico(codigoBase(lead.nome,lead._digitos),lead.whatsapp_norm);
-  const r=await fetch(`${SB_URL}/rest/v1/${P}leads`,{method:'POST',headers:{...H,'Prefer':'return=minimal'},body:JSON.stringify(novo)});
-  if(!r.ok){const t=await r.text();if(t.includes('codigo')&&novo.codigo&&!lead._tentou){lead._tentou=true;lead.codigo=novo.codigo+Date.now().toString(36).slice(-2).toUpperCase();return gravar(lead)}throw new Error(t)}
-  lead.codigo=novo.codigo||null;
+  // Segurança (Onda 1): a página não lê nem altera a tabela de leads; o banco aplica a regra de duplicado.
+  const dados={...lead};delete dados._precisaCodigo;delete dados._digitos;delete dados._tentou;delete dados.codigo;
+  const base=lead._precisaCodigo?codigoBase(lead.nome,lead._digitos):null;
+  const r=await fetch(`${SB_URL}/rest/v1/rpc/gefit_lead_registrar`,{method:'POST',headers:H,body:JSON.stringify({p_prefixo:P,p_lead:dados,p_codigo_base:base})});
+  if(!r.ok)throw new Error(await r.text());
+  const res=await r.json(); lead.codigo=(res&&res.codigo)||null;
 }
 function filaLer(){try{return JSON.parse(localStorage.getItem(FILA)||'[]')}catch(e){return[]}}
 function filaSalvar(f){try{localStorage.setItem(FILA,JSON.stringify(f))}catch(e){}}
